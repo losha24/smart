@@ -1,35 +1,5 @@
-const CACHE="smart-money-v1"
+const cacheName="smartMoney-v1";
+const assets=["./","./index.html","./style.css","./app.js","./loan.js","./mortgage.js","./admin.js","./update.js","./storage.js"];
 
-self.addEventListener("install",e=>{
-
-self.skipWaiting()
-
-})
-
-self.addEventListener("activate",e=>{
-
-caches.keys().then(keys=>{
-
-keys.forEach(key=>{
-
-if(key!==CACHE){
-
-caches.delete(key)
-
-}
-
-})
-
-})
-
-})
-
-self.addEventListener("fetch",event=>{
-
-event.respondWith(
-
-fetch(event.request).catch(()=>caches.match(event.request))
-
-)
-
-})
+self.addEventListener("install",e=>{ e.waitUntil(caches.open(cacheName).then(c=>c.addAll(assets))) });
+self.addEventListener("fetch",e=>{ e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))) });
