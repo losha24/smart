@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartMoney AI</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+<img src="logo.png" class="logo">
+<h1>SmartMoney AI</h1>
+</header>
+
+<nav class="tabs">
+<button onclick="showPage('dashboard')">דשבורד</button>
+<button onclick="showPage('budget')">תקציב</button>
+<button onclick="showPage('ideas')">AI רעיונות</button>
+<button onclick="showPage('invest')">השקעות</button>
+<button onclick="showPage('goals')">יעדים</button>
+<button onclick="showPage('aiFinance')">AI פיננסי</button>
+<button onclick="showPage('admin')">ניהול</button>
+<button onclick="checkUpdate()">עדכון</button>
+</nav>
+
+<section id="dashboard" class="page">
+<h2>סיכום</h2>
+<div id="summary"></div>
+</section>
+
+<section id="budget" class="page">
+<h2>ניהול תקציב</h2>
+<input id="desc" placeholder="תיאור">
+<input id="amount" type="number" placeholder="סכום">
+<select id="type">
+<option value="income">הכנסה</option>
+<option value="expense">הוצאה</option>
+</select>
+<button onclick="addTransaction()">הוסף</button>
+<ul id="transactions"></ul>
+</section>
+
+<section id="ideas" class="page">
+<h2>AI רעיונות להרוויח כסף</h2>
+<button onclick="generateIdeas()">קבל רעיונות</button>
+<ul id="ideasList"></ul>
+</section>
+
+<section id="invest" class="page">
+<h2>מעקב השקעות</h2>
+<input id="assetName" placeholder="נכס">
+<input id="assetValue" type="number" placeholder="סכום">
+<button onclick="addAsset()">הוסף</button>
+<ul id="assetList"></ul>
+</section>
+
+<section id="goals" class="page">
+<h2>יעדים פיננסיים</h2>
+<input id="goalName" placeholder="יעד">
+<input id="goalAmount" type="number" placeholder="סכום">
+<button onclick="addGoal()">הוסף יעד</button>
+<ul id="goalList"></ul>
+</section>
+
+<section id="aiFinance" class="page">
+<h2>AI פיננסי</h2>
+<input id="salary" type="number" placeholder="הכנסה חודשית">
+<input id="expensesAI" type="number" placeholder="הוצאות חודשיות">
+<input id="targetAI" type="number" placeholder="יעד כסף">
+<button onclick="analyzeFinance()">ניתוח</button>
+<div id="aiResult"></div>
+</section>
+
+<section id="admin" class="page">
+<h2>ניהול</h2>
+<input id="adminPass" type="password" placeholder="סיסמה">
+<button onclick="loginAdmin()">כניסה</button>
+
+<div id="adminPanel" style="display:none">
+<button onclick="resetData()">איפוס נתונים</button>
+<button onclick="exportData()">ייצוא נתונים</button>
+</div>
+</section>
+
+<script src="app.js"></script>
+<script src="ideas.js"></script>
+<script src="ai-finance.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>
