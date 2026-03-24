@@ -1,54 +1,151 @@
-body{
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap');
 
-font-family:Arial;
-background:#f4f4f4;
-text-align:center;
-padding:20px;
-
+body {
+    margin: 0;
+    font-family: 'Assistant', sans-serif;
+    background: #f4f7f6;
+    color: #333;
+    transition: 0.3s;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
-h1{
-
-color:#2c3e50;
-
+header, .logo-container, nav, .section, footer {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
 }
 
-input{
-
-padding:10px;
-margin:5px;
-
+header {
+    padding: 20px 20px 5px 20px;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1b5e20;
 }
 
-button{
-
-padding:10px 15px;
-margin:5px;
-border:none;
-background:#2ecc71;
-color:white;
-border-radius:6px;
-cursor:pointer;
-
+.logo-container {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 15px;
 }
 
-button:hover{
-
-background:#27ae60;
-
+.logo-container img {
+    width: 70px;
+    height: 70px;
+    border-radius: 15px;
 }
 
-ul{
-
-list-style:none;
-padding:0;
-
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 12px;
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border-radius: 0 0 15px 15px;
 }
 
-footer{
+button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(45deg,#43a047,#2e7d32);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: 0.2s;
+    justify-content: center;
+}
 
-margin-top:40px;
-font-size:12px;
-color:#666;
+button:active {
+    transform: scale(0.95);
+}
 
+button.red { background: linear-gradient(45deg,#e53935,#c62828); }
+button.blue { background: linear-gradient(45deg,#1e88e5,#1565c0); }
+button.gray { background: linear-gradient(45deg,#757575,#424242); }
+button.purple { background: linear-gradient(45deg,#8e24aa,#6a1b9a); }
+button.orange { background: linear-gradient(45deg,#fb8c00,#ef6c00); }
+
+.section {
+    display: none;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.section.active { display: block; }
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dash-container { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+.chart-box { width: 220px; height: 220px; margin: 0 auto; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; width: 100%; }
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 5px 0;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+    font-family: inherit;
+    text-align: center;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: center; }
+
+.action-btn { padding: 6px 10px; border-radius: 8px; border: none; color: white; cursor: pointer; font-size: 12px; }
+.edit-btn { background: #ffa000; margin: 0 2px; }
+.delete-btn { background: #d32f2f; margin: 0 2px; }
+
+.toggle-tbl-btn { background: #607d8b; margin: 15px auto; width: 100%; max-width: 300px; color: white; border-radius: 8px; padding: 12px; border: none; cursor: pointer; }
+.table-content { display: none; margin-top: 10px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
+.table-content.show { display: block; }
+
+.extra-info {
+    background: #fff3e0;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 15px auto;
+    font-weight: bold;
+    color: #e65100;
+    text-align: center;
+    border: 2px dashed #ffb74d;
+    max-width: 300px;
+    display: none;
+}
+
+.dark {
+    background: #1a1a1a;
+    color: #eee;
+}
+
+.dark .card { background: #252525; color: #eee; }
+.dark nav { background: #252525; }
+.dark input { background: #333; color: #eee; border-color: #444; }
+
+footer {
+    padding: 30px;
+    color: #888;
+    font-size: 13px;
 }
