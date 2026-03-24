@@ -1,62 +1,58 @@
-let incomes=[], expenses=[], loanMonthly=0, mortMonthly=0;
-let myChart = null;
+// app.js – קובץ מרכזי למערכת "כסף חכם"
 
-function showSection(id){
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+// משתנים גלובליים
+let incomes = [], expenses = [], loanMonthly = 0, mortMonthly = 0;
+let currentVersion = "1.4.0";
+
+// פונקציות עזר
+function pmt(P, r, n) {
+    if (P <= 0 || n <= 0) return 0;
+    if (r === 0) return P / n;
+    return (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 }
 
-function toggleDark(){ document.body.classList.toggle('dark'); }
-
-function pmt(P,r,n){ return (r===0)?(P/n):(P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1); }
-
-function addItem(type){
-    const pre=type==='incomes'?'inc':'exp';
-    const name=document.getElementById(pre+'_name').value, val=+document.getElementById(pre+'_val').value;
-    if(!name||!val) return;
-    (type==='incomes'?incomes:expenses).push({name,val});
-    document.getElementById(pre+'_name').value=""; document.getElementById(pre+'_val').value="";
-    refresh();
+// עדכון דאשבורד
+function updateDash() {
+    const tInc = incomes.reduce((a,b)=>a+b.val,0);
+    const tExp = expenses.reduce((a,b)=>a+b.val,0);
+    const tDebt = loanMonthly + mortMonthly;
+    const avail = tInc - tExp - tDebt;
+    const el = document.getElementById('dash_stats');
+    if(el) el.innerHTML = `הכנסות: ${tInc.toLocaleString()} ₪ | הוצאות: ${tExp.toLocaleString()} ₪<br>חובות: ${tDebt.toLocaleString()} ₪<br><span style="color:${avail>=0?'#2e7d32':'#d32f2f'}">פנוי: ${avail.toLocaleString()} ₪</span>`;
 }
 
-function editItem(type, idx){
-    const list = type==='incomes' ? incomes : expenses;
-    const n = prompt("שם חדש:", list[idx].name), v = prompt("סכום חדש:", list[idx].val);
-    if(n !== null && v !== null && !isNaN(v)){ list[idx].name = n; list[idx].val = Number(v); refresh(); }
+// שמירה לאחסון מקומי
+function save() {
+    const data = {
+        incomes, expenses,
+        l: {a:l_amt?.value, r:l_rt?.value, y:l_yrs?.value, e:l_extra?.value||""},
+        m1:{a:m_a1?.value,r:m_r1?.value,y:m_y1?.value,e:m_e1?.value||""},
+        m2:{a:m_a2?.value,r:m_r2?.value,y:m_y2?.value,e:m_e2?.value||""},
+        m3:{a:m_a3?.value,r:m_r3?.value,y:m_y3?.value,e:m_e3?.value||""}
+    };
+    localStorage.setItem("financeData", JSON.stringify(data));
 }
 
-function deleteItem(type,idx){ (type==='incomes'?incomes:expenses).splice(idx,1); refresh(); }
-
-function renderItemsTable(type){
-    const list=type==='incomes'?incomes:expenses;
-    const container=document.getElementById(type==='incomes'?'inc_table':'exp_table');
-    if(!list.length){ container.innerHTML=""; return; }
-    let h=`<table><tr><th>שם</th><th>₪</th><th>פעולה</th></tr>`;
-    list.forEach((item,i)=> h+=`<tr><td>${item.name}</td><td>${item.val.toLocaleString()}</td><td><button class="action-btn edit-btn" onclick="editItem('${type}',${i})">✏️</button><button class="action-btn delete-btn" onclick="deleteItem('${type}',${i})">🗑️</button></td></tr>`);
-    container.innerHTML=h+"</table>";
-}
-
-function updateDash(){
-    const tInc=incomes.reduce((a,b)=>a+b.val,0), tExp=expenses.reduce((a,b)=>a+b.val,0), tDebt=loanMonthly+mortMonthly, avail=tInc-tExp-tDebt;
-    document.getElementById('dash_stats').innerHTML=`הכנסות: ${tInc.toLocaleString()} ₪ | הוצאות: ${tExp.toLocaleString()} ₪<br>חובות: ${tDebt.toLocaleString()} ₪<br><span style="color:${avail>=0?'#2e7d32':'#d32f2f'}">פנוי: ${avail.toLocaleString()} ₪</span>`;
-    if(myChart){ myChart.data.datasets[0].data=[tInc,tExp,tDebt]; myChart.update(); }
-    else {
-        const ctx = document.getElementById('budgetChart').getContext('2d');
-        myChart = new Chart(ctx,{type:'doughnut',data:{labels:['הכנסות','הוצאות','חובות'],datasets:[{data:[tInc,tExp,tDebt],backgroundColor:['#4caf50','#ff9800','#f44336'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{display:false}}}});
+// טעינת נתונים מ-localStorage
+function loadData(){
+    const d = JSON.parse(localStorage.getItem("financeData"));
+    if(!d) return;
+    incomes = d.incomes||[]; expenses = d.expenses||[];
+    if(d.l){ l_amt.value=d.l.a; l_rt.value=d.l.r; l_yrs.value=d.l.y; l_extra.value=d.l.e||""; }
+    for(let i=1;i<=3;i++){
+        if(d['m'+i]){
+            document.getElementById('m_a'+i).value = d['m'+i].a;
+            document.getElementById('m_r'+i).value = d['m'+i].r;
+            document.getElementById('m_y'+i).value = d['m'+i].y;
+            document.getElementById('m_e'+i).value = d['m'+i].e||"";
+        }
     }
 }
 
-function save(){
-    const data={ incomes, expenses };
-    localStorage.setItem("financeData",JSON.stringify(data));
-}
-
-function refresh(){ renderItemsTable('incomes'); renderItemsTable('expenses'); updateDash(); save(); }
-
-window.onload=()=>{
-    const d=JSON.parse(localStorage.getItem("financeData"));
-    if(d){ incomes=d.incomes||[]; expenses=d.expenses||[]; }
+// אתחול המערכת
+window.onload = ()=>{
+    loadData();
     refresh();
+    calcLoan();
+    calcM();
 };
-
-function resetAll(){ if(confirm("לאפס הכל?")){ localStorage.clear(); location.reload(); } }
