@@ -1,1 +1,0 @@
-const ADMIN_CODE="123456"
