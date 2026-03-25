@@ -1,0 +1,6 @@
+body{font-family:Arial;margin:0;background:#f4f7f6;text-align:center}
+.logo{width:120px;margin-top:10px}
+nav{margin:15px}
+button{padding:10px;border:none;border-radius:8px;margin:4px;background:#2c7be5;color:white}
+.section{display:none}
+.section.active{display:block}
