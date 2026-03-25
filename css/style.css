@@ -1,6 +1,16 @@
-body{font-family:Arial;margin:0;background:#f4f7f6;text-align:center}
-.logo{width:120px;margin-top:10px}
-nav{margin:15px}
-button{padding:10px;border:none;border-radius:8px;margin:4px;background:#2c7be5;color:white}
-.section{display:none}
-.section.active{display:block}
+body { margin:0; font-family: 'Assistant', sans-serif; background:#f4f7f6; color:#333; }
+header { text-align:center; padding:20px; }
+.logo-container { text-align:center; }
+.main-logo { width:140px; max-width:60%; display:block; margin:auto; }
+nav { display:flex; flex-wrap:wrap; justify-content:center; gap:5px; padding:10px; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,0.05);}
+button { padding:10px; border:none; border-radius:8px; cursor:pointer; font-weight:600;}
+button.orange{background:#fb8c00;color:white;}
+button.red{background:#e53935;color:white;}
+button.blue{background:#1e88e5;color:white;}
+button.gray{background:#757575;color:white;}
+button.purple{background:#8e24aa;color:white;}
+.section { display:none; padding:15px; }
+.section.active{ display:block; }
+footer { text-align:center; padding:15px; color:#888; font-size:13px; }
+.dark { background:#1a1a1a; color:#eee; }
+.dark .section { background:#252525; color:#eee; }
