@@ -3,59 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyBudget Ultimate | Alexey</title>
+    <title>MyBudget | נקי</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary: #2e7d32; --danger: #d32f2f; --bg: #f0f2f5;
-            --white: #ffffff; --bank: #1565c0; --credit: #ef6c00;
-        }
+        :root { --primary: #2e7d32; --danger: #d32f2f; --bg: #f0f2f5; --white: #ffffff; }
         body { font-family: 'Segoe UI', system-ui; background: var(--bg); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 500px; margin: auto; padding-bottom: 80px; }
-        
-        /* כרטיס סיכום ראשי */
-        .main-status {
-            background: var(--primary); color: white; padding: 25px; 
-            border-radius: 20px; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            margin-bottom: 15px; position: sticky; top: 10px; z-index: 10;
-        }
+        .main-status { background: var(--primary); color: white; padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 15px; position: sticky; top: 10px; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .main-status h2 { margin: 10px 0; font-size: 2.2rem; }
-        .progress-container { background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; margin: 10px 0; overflow: hidden; }
-        .progress-bar { background: #fbc02d; height: 100%; width: 0%; transition: 1s; }
-
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .info-card { background: var(--white); padding: 12px; border-radius: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-
-        /* טבלאות */
         .section { background: var(--white); border-radius: 18px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .section-header { border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 10px; font-weight: bold; color: var(--primary); }
-        
         .row { display: grid; grid-template-columns: 2fr 1fr 1fr 0.4fr; padding: 12px 0; border-bottom: 1px solid #f5f5f5; align-items: center; cursor: pointer; }
-        .row:last-child { border-bottom: none; }
         .name { font-weight: 500; font-size: 0.95rem; }
         .sub { font-size: 0.75rem; color: #888; }
         .amt { text-align: left; font-weight: bold; }
-        .tag { font-size: 0.7rem; padding: 3px 6px; border-radius: 5px; font-weight: bold; text-align: center; }
-        .del { color: #ddd; text-align: center; }
+        .del { color: #eee; text-align: center; }
         .del:hover { color: var(--danger); }
-
-        /* מודאל (חלון עריכה/הוספה) */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 100; }
         .modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 380px; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; }
-        .btn-save { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 10px; }
-
-        .fab { position: fixed; bottom: 20px; left: 20px; background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: none; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        .btn-save { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .fab { position: fixed; bottom: 20px; left: 20px; background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="main-status">
-        <small>נשאר מהמשכורות (נטו)</small>
+        <small>יתרה לשימוש (נטו)</small>
         <h2 id="neto">₪ 0</h2>
-        <div class="progress-container"><div class="progress-bar" id="pBar"></div></div>
-        <small id="usageTxt">0% בשימוש</small>
     </div>
 
     <div class="info-grid">
@@ -79,54 +57,45 @@
 <div id="modal" class="modal">
     <div class="modal-content">
         <h3 id="modalTitle">הוספת נתון</h3>
-        <select id="mType">
-            <option value="inc">הכנסה</option>
-            <option value="exp">הוצאה</option>
-        </select>
-        <input type="text" id="mName" placeholder="שם (למשל: ארנונה)">
-        <input type="number" id="mAmt" placeholder="סכום חודשי">
-        <input type="text" id="mSrc" placeholder="מקור (מרכנתיל / אשראי)">
+        <select id="mType"><option value="inc">הכנסה</option><option value="exp">הוצאה</option></select>
+        <input type="text" id="mName" placeholder="שם (למשל: משכורת)">
+        <input type="number" id="mAmt" placeholder="סכום">
+        <input type="text" id="mSrc" placeholder="מקור (למשל: בנק)">
         <input type="number" id="mRem" placeholder="תשלומים שנותרו (0 אם אין)">
-        <input type="text" id="mNote" placeholder="הערה (למשל: עד תאריך...)">
-        
+        <input type="text" id="mNote" placeholder="הערה / תאריך">
         <input type="hidden" id="editIdx">
-        <button class="btn-save" onclick="saveData()">שמור שינויים</button>
-        <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:10px; color:gray;">ביטול</button>
+        <button class="btn-save" onclick="saveData()">שמור</button>
+        <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:10px; color:gray; cursor:pointer;">ביטול</button>
     </div>
 </div>
 
 <script>
-    // נתוני התחלה מהאקסל שלך
-    let db = JSON.parse(localStorage.getItem('my_budget_db')) || {
-        inc: [
-            { name: "משכורת לושה", amt: 11824, src: "ממוצע", note: "" },
-            { name: "משכורת אלונה", amt: 2877, src: "ממוצע", note: "" },
-            { name: "ביטוח לאומי - נכות", amt: 3820, src: "קצבה", note: "עד 10/02/2030" }
-        ],
-        exp: [
-            { name: "משכנתא", amt: 5323, src: "בנק", rem: 0, note: "" },
-            { name: "ארנונה", amt: 309, src: "מרכנתיל", rem: 1, note: "" },
-            { name: "ביטוח רכב", amt: 370, src: "אשראי", rem: 12, note: "" }
-        ]
+    // נתוני דוגמה ראשוניים - יימחקו ברגע שתתחיל להזין
+    let db = JSON.parse(localStorage.getItem('budget_db_clean')) || {
+        inc: [{ name: "דוגמה: משכורת", amt: 10000, src: "בנק", note: "" }],
+        exp: [{ name: "דוגמה: שכר דירה", amt: 3500, src: "אשראי", rem: 0, note: "" }]
     };
 
     function openModal(type = 'inc', idx = null) {
         document.getElementById('modal').style.display = 'flex';
-        if (idx !== null) {
+        const isEdit = idx !== null;
+        document.getElementById('modalTitle').innerText = isEdit ? "עריכה" : "הוספה";
+        document.getElementById('editIdx').value = isEdit ? idx : "";
+        
+        if (isEdit) {
             const item = db[type][idx];
-            document.getElementById('modalTitle').innerText = "עריכת נתון";
             document.getElementById('mType').value = type;
             document.getElementById('mName').value = item.name;
             document.getElementById('mAmt').value = item.amt;
             document.getElementById('mSrc').value = item.src;
             document.getElementById('mRem').value = item.rem || 0;
             document.getElementById('mNote').value = item.note || "";
-            document.getElementById('editIdx').value = idx;
         } else {
-            document.getElementById('modalTitle').innerText = "הוספת נתון";
-            document.getElementById('editIdx').value = "";
             document.getElementById('mName').value = "";
             document.getElementById('mAmt').value = "";
+            document.getElementById('mSrc').value = "";
+            document.getElementById('mRem').value = "0";
+            document.getElementById('mNote').value = "";
         }
     }
 
@@ -145,63 +114,45 @@
 
         if (!item.name || isNaN(item.amt)) return alert("נא למלא שם וסכום");
 
-        if (idx !== "") {
-            // אם סוג הנתון השתנה בעריכה
-            const oldType = idx.includes('exp') ? 'exp' : 'inc'; // לוגיקה פשוטה לזיהוי
-            db[type][idx] = item;
-        } else {
-            db[type].push(item);
-        }
+        if (idx !== "") db[type][idx] = item;
+        else db[type].push(item);
 
-        update();
+        localStorage.setItem('budget_db_clean', JSON.stringify(db));
+        render();
         closeModal();
     }
 
     function deleteItem(e, type, idx) {
         e.stopPropagation();
-        if (confirm("למחוק שורה זו?")) {
+        if (confirm("למחוק?")) {
             db[type].splice(idx, 1);
-            update();
+            localStorage.setItem('budget_db_clean', JSON.stringify(db));
+            render();
         }
     }
 
-    function update() {
-        localStorage.setItem('my_budget_db', JSON.stringify(db));
-        render();
-    }
-
     function render() {
-        let totalIn = db.inc.reduce((s, i) => s + i.amt, 0);
-        let totalOut = db.exp.reduce((s, e) => s + e.amt, 0);
-        let neto = totalIn - totalOut;
+        let tIn = db.inc.reduce((s, i) => s + i.amt, 0);
+        let tOut = db.exp.reduce((s, e) => s + e.amt, 0);
+        document.getElementById('neto').innerText = `₪${(tIn - tOut).toLocaleString()}`;
+        document.getElementById('tIn').innerText = `₪${tIn.toLocaleString()}`;
+        document.getElementById('tOut').innerText = `₪${tOut.toLocaleString()}`;
 
-        document.getElementById('neto').innerText = `₪${neto.toLocaleString()}`;
-        document.getElementById('tIn').innerText = `₪${totalIn.toLocaleString()}`;
-        document.getElementById('tOut').innerText = `₪${totalOut.toLocaleString()}`;
-        
-        const percent = Math.min((totalOut / totalIn) * 100, 100);
-        document.getElementById('pBar').style.width = percent + "%";
-        document.getElementById('usageTxt').innerText = `${percent.toFixed(1)}% מההכנסה בשימוש`;
-
-        // רינדור הכנסות
         document.getElementById('incList').innerHTML = db.inc.map((item, i) => `
             <div class="row" onclick="openModal('inc', ${i})">
-                <div class="name">${item.name} ${item.note ? `<div class="sub" style="color:red">${item.note}</div>` : ''}</div>
+                <div class="name">${item.name} <div class="sub">${item.note}</div></div>
                 <div class="sub">${item.src}</div>
                 <div class="amt" style="color:var(--primary)">₪${item.amt.toLocaleString()}</div>
                 <div class="del" onclick="deleteItem(event, 'inc', ${i})"><i class="fas fa-times"></i></div>
-            </div>
-        `).join('');
+            </div>`).join('');
 
-        // רינדור הוצאות
         document.getElementById('expList').innerHTML = db.exp.map((item, i) => `
             <div class="row" onclick="openModal('exp', ${i})">
-                <div class="name">${item.name} ${item.rem > 0 ? `<div class="sub">נותרו ${item.rem} תשלומים</div>` : ''}</div>
-                <div><span class="tag ${item.src.includes('אשראי') ? 'tag-credit' : 'tag-bank'}" style="background:#eee">${item.src}</span></div>
+                <div class="name">${item.name} ${item.rem > 0 ? `<div class="sub">נותרו ${item.rem}</div>` : ''}</div>
+                <div class="sub">${item.src}</div>
                 <div class="amt" style="color:var(--danger)">₪${item.amt.toLocaleString()}</div>
                 <div class="del" onclick="deleteItem(event, 'exp', ${i})"><i class="fas fa-times"></i></div>
-            </div>
-        `).join('');
+            </div>`).join('');
     }
 
     render();
