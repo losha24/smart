@@ -3,164 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyBudget Pro | Alexey</title>
+    <title>MyBudget Live | Alexey</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary: #2e7d32; /* ירוק אקסל */
-            --secondary: #fbc02d; /* צהוב */
-            --danger: #d32f2f; /* אדום הוצאות */
-            --blue: #1565c0; /* כחול בנק */
-            --orange: #ef6c00; /* כתום אשראי */
-            --bg: #f4f7f6;
-            --white: #ffffff;
-        }
-
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
+        :root { --primary: #2e7d32; --danger: #d32f2f; --bg: #f4f7f6; --white: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
         .container { max-width: 500px; margin: auto; }
-
-        /* כרטיס סיכום ראשי */
-        .main-status {
-            background: var(--primary); color: white; padding: 25px; 
-            border-radius: 20px; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-        }
-        .main-status h2 { margin: 10px 0; font-size: 2.2rem; }
-        .progress-container { background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; margin: 15px 0; }
-        .progress-bar { background: var(--secondary); height: 100%; width: 0%; border-radius: 4px; transition: 1s; }
-
-        /* כרטיסי מידע קטנים */
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .info-card { background: var(--white); padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .info-card small { color: #888; display: block; margin-bottom: 5px; }
-        .info-card b { font-size: 1.1rem; }
-
-        /* סקשנים של נתונים */
-        .section { background: var(--white); border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .section-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 10px;
-        }
-        .section-header b { color: var(--primary); }
-
-        /* שורות נתונים */
-        .row { display: grid; grid-template-columns: 2fr 1.2fr 1fr; padding: 12px 0; border-bottom: 1px solid #f9f9f9; align-items: center; }
-        .row:last-child { border-bottom: none; }
-        .row .name { font-weight: 500; font-size: 0.95rem; }
-        .row .sub-text { font-size: 0.75rem; color: #888; }
-        .row .amount { text-align: left; font-weight: bold; }
         
-        /* תגיות */
-        .tag { font-size: 0.7rem; padding: 3px 8px; border-radius: 5px; font-weight: bold; }
-        .tag-bank { background: #e3f2fd; color: var(--blue); }
-        .tag-credit { background: #fff3e0; color: var(--orange); }
+        /* סיכום */
+        .main-card { background: var(--primary); color: white; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
+        .main-card h2 { margin: 5px 0; font-size: 2rem; }
 
-        .prime-info { text-align: center; font-size: 0.8rem; background: #fffde7; padding: 5px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #ffe57f; }
+        /* טבלה */
+        .section { background: var(--white); border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .row { display: grid; grid-template-columns: 2fr 1fr 1fr 0.5fr; padding: 12px 0; border-bottom: 1px solid #eee; align-items: center; }
+        .row:last-child { border-bottom: none; }
+        .amt { font-weight: bold; text-align: left; }
+        .delete-btn { color: #ccc; cursor: pointer; text-align: center; }
+        .delete-btn:hover { color: var(--danger); }
 
-        /* כפתור הוספה */
-        .add-btn {
-            position: fixed; bottom: 20px; left: 20px; background: var(--primary);
-            color: white; width: 55px; height: 55px; border-radius: 50%;
-            border: none; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
+        /* טופס הוספה */
+        .add-form { display: none; background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 2px solid var(--primary); }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        button { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-save { background: var(--primary); color: white; }
+        .btn-cancel { background: #eee; }
+
+        .fab { position: fixed; bottom: 20px; left: 20px; background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="prime-info">📊 נכון לתאריך: 25/03/2026 | <b>ריבית פריים: 6%</b></div>
-
-    <div class="main-status">
-        <small>נשאר מהמשכורות (ביחד)</small>
-        <h2 id="neto">₪ 0.00</h2>
-        <div class="progress-container"><div class="progress-bar" id="pBar"></div></div>
-        <small id="usageTxt">0% מההכנסה נוצלה</small>
+    <div class="main-card">
+        <small>נשאר ביד (נטו)</small>
+        <h2 id="netoDisplay">₪ 0</h2>
     </div>
 
-    <div class="info-grid">
-        <div class="info-card"><small>סה"כ הכנסות</small><b id="totalIn" style="color:var(--primary)">₪ 0</b></div>
-        <div class="info-card"><small>חיוב חודשי</small><b id="totalOut" style="color:var(--danger)">₪ 0</b></div>
+    <div class="add-form" id="addForm">
+        <h3>הוספת נתון חדש</h3>
+        <select id="fType"><option value="income">הכנסה</option><option value="expense">הוצאה</option></select>
+        <input type="text" id="fName" placeholder="שם (למשל: חשמל)">
+        <input type="number" id="fAmt" placeholder="סכום">
+        <input type="text" id="fSrc" placeholder="מקור (למשl: מרכנתיל)">
+        <div class="btn-group">
+            <button class="btn-save" onclick="saveNewItem()">שמור</button>
+            <button class="btn-cancel" onclick="toggleForm()">ביטול</button>
+        </div>
     </div>
 
     <div class="section">
-        <div class="section-header"><b>הכנסות ומשכורות</b></div>
-        <div id="incomeList"></div>
+        <b>הכנסות</b>
+        <div id="incList"></div>
     </div>
 
     <div class="section">
-        <div class="section-header"><b>פירוט הוצאות</b></div>
-        <div id="expenseList"></div>
+        <b>הוצאות</b>
+        <div id="expList"></div>
     </div>
 </div>
 
-<button class="add-btn">+</button>
+<div class="fab" onclick="toggleForm()"><i class="fas fa-plus"></i></div>
 
 <script>
-    // אובייקט הנתונים המשקף בדיוק את האקסל שלך
-    const budgetData = {
-        salaries: [
-            { name: "משכורת לושה (ממוצע)", amount: 11824.22 },
-            { name: "משכורת אלונה (ממוצע)", amount: 2877.00 }
-        ],
-        extraIncomes: [
-            { name: "ביטוח לאומי - ילדים", amount: 269.00, note: "" },
-            { name: "ביטוח לאומי - נכות", amount: 3820.00, note: "עד 10/02/2030" }
+    // טעינת נתונים מהזיכרון של הדפדפן או שימוש בברירת מחדל מהאקסל
+    let myData = JSON.parse(localStorage.getItem('budget_alexey')) || {
+        incomes: [
+            { name: "משכורות", amt: 14701, src: "בנק" },
+            { name: "קצבאות", amt: 4089, src: "ביטוח לאומי" }
         ],
         expenses: [
-            { name: "משכנתא", source: "בנק", monthly: 5323.89, total: 0, remaining: 0 },
-            { name: "ארנונה", source: "מרכנתיל", monthly: 309.05, total: 618.10, remaining: 1 },
-            { name: "ביטוח רכב", source: "אשראי קרנות", monthly: 370.67, total: 4448.00, remaining: 12 },
-            { name: "אשראי מרכנתיל", source: "אשראי", monthly: 826.01, total: 0, remaining: 0 },
-            { name: "אשראי לייף סטייל", source: "אשראי", monthly: 1947.92, total: 0, remaining: 0 },
-            { name: "ועד דירה", source: "מרכנתיל", monthly: 150.00, total: 200.00, remaining: 0 },
-            { name: "חשמל", source: "מרכנתיל", monthly: 133.00, total: 0, remaining: 0 }
+            { name: "משכנתא", amt: 5323, src: "בנק" },
+            { name: "ארנונה", amt: 309, src: "מרכנתיל" }
         ]
     };
 
+    function toggleForm() {
+        const form = document.getElementById('addForm');
+        form.style.display = form.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function saveNewItem() {
+        const type = document.getElementById('fType').value;
+        const newItem = {
+            name: document.getElementById('fName').value,
+            amt: parseFloat(document.getElementById('fAmt').value),
+            src: document.getElementById('fSrc').value
+        };
+
+        if (newItem.name && newItem.amt) {
+            if (type === 'income') myData.incomes.push(newItem);
+            else myData.expenses.push(newItem);
+            
+            updateAndSave();
+            toggleForm();
+            // איפוס שדות
+            document.getElementById('fName').value = '';
+            document.getElementById('fAmt').value = '';
+        }
+    }
+
+    function deleteItem(type, index) {
+        if (confirm('למחוק את השורה הזו?')) {
+            if (type === 'inc') myData.incomes.splice(index, 1);
+            else myData.expenses.splice(index, 1);
+            updateAndSave();
+        }
+    }
+
+    function updateAndSave() {
+        localStorage.setItem('budget_alexey', JSON.stringify(myData));
+        render();
+    }
+
     function render() {
-        // חישוב הכנסות
-        const totalSalaries = budgetData.salaries.reduce((s, i) => s + i.amount, 0);
-        const totalExtra = budgetData.extraIncomes.reduce((s, i) => s + i.amount, 0);
-        const totalIn = totalSalaries + totalExtra;
+        const tIn = myData.incomes.reduce((s, i) => s + i.amt, 0);
+        const tOut = myData.expenses.reduce((s, e) => s + e.amt, 0);
+        document.getElementById('netoDisplay').innerText = `₪${(tIn - tOut).toLocaleString()}`;
 
-        // חישוב הוצאות
-        const totalOut = budgetData.expenses.reduce((s, e) => s + e.monthly, 0);
-        const neto = totalIn - totalOut;
-
-        // עדכון תצוגה עליונה
-        document.getElementById('neto').innerText = `₪${neto.toLocaleString()}`;
-        document.getElementById('totalIn').innerText = `₪${totalIn.toLocaleString()}`;
-        document.getElementById('totalOut').innerText = `₪${totalOut.toLocaleString()}`;
-        
-        const percent = (totalOut / totalIn) * 100;
-        document.getElementById('pBar').style.width = percent + "%";
-        document.getElementById('usageTxt').innerText = `${percent.toFixed(1)}% מההכנסה מנוצלת`;
-
-        // רינדור הכנסות
-        let incHtml = '';
-        budgetData.salaries.forEach(s => {
-            incHtml += `<div class="row"><div class="name">${s.name}</div><div></div><div class="amount" style="color:var(--primary)">₪${s.amount.toLocaleString()}</div></div>`;
-        });
-        budgetData.extraIncomes.forEach(i => {
-            incHtml += `<div class="row">
-                <div class="name">${i.name} ${i.note ? `<div class="sub-text" style="color:var(--danger)">${i.note}</div>` : ''}</div>
-                <div></div>
-                <div class="amount" style="color:var(--primary)">₪${i.amount.toLocaleString()}</div>
-            </div>`;
-        });
-        document.getElementById('incomeList').innerHTML = incHtml;
-
-        // רינדור הוצאות
-        document.getElementById('expenseList').innerHTML = budgetData.expenses.map(e => `
+        document.getElementById('incList').innerHTML = myData.incomes.map((item, index) => `
             <div class="row">
-                <div class="name">
-                    ${e.name}
-                    ${e.remaining > 0 ? `<div class="sub-text">נותרו ${e.remaining} תשלומים</div>` : ''}
-                </div>
-                <div><span class="tag ${e.source === 'בנק' ? 'tag-bank' : 'tag-credit'}">${e.source}</span></div>
-                <div class="amount" style="color:var(--danger)">
-                    ₪${e.monthly.toLocaleString()}
-                    ${e.total > 0 ? `<div class="sub-text" style="text-decoration:line-through; opacity:0.5">₪${e.total.toLocaleString()}</div>` : ''}
-                </div>
+                <div class="name">${item.name}</div>
+                <div style="font-size:0.8rem; color:gray">${item.src}</div>
+                <div class="amt" style="color:var(--primary)">₪${item.amt.toLocaleString()}</div>
+                <div class="delete-btn" onclick="deleteItem('inc', ${index})"><i class="fas fa-trash"></i></div>
+            </div>
+        `).join('');
+
+        document.getElementById('expList').innerHTML = myData.expenses.map((item, index) => `
+            <div class="row">
+                <div class="name">${item.name}</div>
+                <div style="font-size:0.8rem; color:gray">${item.src}</div>
+                <div class="amt" style="color:var(--danger)">₪${item.amt.toLocaleString()}</div>
+                <div class="delete-btn" onclick="deleteItem('exp', ${index})"><i class="fas fa-trash"></i></div>
             </div>
         `).join('');
     }
