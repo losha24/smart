@@ -1,6 +1,6 @@
-const VERSION = "3.1.2";
+const VERSION = "3.1.3";
 
-// אתחול נתונים
+// טעינת נתונים
 if (localStorage.appVersion !== VERSION) {
     localStorage.clear();
     localStorage.appVersion = VERSION;
@@ -12,20 +12,17 @@ let xp = Number(localStorage.xp) || 0;
 let level = Number(localStorage.level) || 1;
 let passive = Number(localStorage.passive) || 0;
 let myItems = JSON.parse(localStorage.myItems || "[]");
-let currentTask = JSON.parse(localStorage.currentTask || "null");
 let working = false;
 
-// רשימות
 const works = [
-    { name: "שטיפת כלים", pay: 50, time: 5, xp: 15 },
-    { name: "אבטחה", pay: 150, time: 10, xp: 30 },
-    { name: "פיתוח PWA", pay: 500, time: 25, xp: 70 }
+    { name: "שטיפת כלים", pay: 60, time: 5, xp: 15 },
+    { name: "אבטחה", pay: 180, time: 10, xp: 30 },
+    { name: "מתכנת PWA", pay: 550, time: 25, xp: 80 }
 ];
 
 const marketItems = [
-    { id: 1, name: "נעלי עבודה", price: 300, desc: "+20% שכר", type: 'bonus' },
-    { id: 2, name: "קורס השקעות", price: 1000, desc: "+50% XP", type: 'bonus' },
-    { id: 3, name: "דירת משרד", price: 10000, desc: "+100 פסיבי", type: 'passive', val: 100 }
+    { id: 1, name: "נעלי ריצה", price: 500, desc: "+20% שכר", type: 'bonus' },
+    { id: 2, name: "משרד פרטי", price: 5000, desc: "+50 לשעה", type: 'passive', val: 50 }
 ];
 
 function save() {
@@ -35,7 +32,6 @@ function save() {
     localStorage.level = level;
     localStorage.passive = passive;
     localStorage.myItems = JSON.stringify(myItems);
-    localStorage.currentTask = JSON.stringify(currentTask);
 }
 
 function updateUI() {
@@ -47,76 +43,65 @@ function updateUI() {
     save();
 }
 
-function message(t, type = '') {
-    const el = document.getElementById("message");
-    el.innerText = t;
-    el.className = type;
+function message(t, cls = '') {
+    const m = document.getElementById("message");
+    m.innerText = t;
+    m.className = cls;
 }
 
-// ניווט - תיקון כפתורים
-function openTab(tab) {
-    // הסרת מחלקה פעילה מכל הכפתורים
-    document.querySelectorAll(".topbar button").forEach(btn => btn.classList.remove("active"));
-    
-    // הוספת מחלקה לכפתור שנלחץ
-    const activeBtn = document.getElementById("btn" + tab.charAt(0).toUpperCase() + tab.slice(1));
+function openTab(tabName) {
+    // עדכון עיצוב כפתורים
+    document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
+    const activeBtn = document.getElementById("btn" + tabName.charAt(0).toUpperCase() + tabName.slice(1));
     if (activeBtn) activeBtn.classList.add("active");
 
-    const content = document.getElementById("content");
-    
-    if (tab === 'home') {
-        content.innerHTML = `<div class="card"><h3>מצב חשבון</h3><p>מזומן: ${Math.floor(money)}₪</p><p>בנק: ${bank}₪</p><p>הכנסה פסיבית: ${passive}₪</p></div>`;
+    const container = document.getElementById("content");
+    container.innerHTML = ""; // ניקוי
+
+    if (tabName === 'home') {
+        container.innerHTML = `<div class="card"><h3>סטטיסטיקה</h3><p>רווח פסיבי: ${passive}₪</p><p>סה"כ בבנק: ${bank}₪</p></div>`;
     } 
-    else if (tab === 'work') {
-        let html = `<h3>לוח עבודות</h3><div class="progress" style="width:100%; height:10px; background:#334155; border-radius:5px; margin-bottom:10px;"><div id="workbar" style="width:0%; height:100%; background:#22c55e;"></div></div>`;
+    else if (tabName === 'work') {
+        let h = `<h3>מרכז תעסוקה</h3><div class="xpbar" style="margin-bottom:15px;"><div id="workbar" style="width:0%; height:100%; background:#22c55e;"></div></div>`;
         works.forEach((w, i) => {
-            html += `<button class="action" onclick="startWork(${i})">${w.name} (${w.pay}₪)</button>`;
+            h += `<button class="action" onclick="startWork(${i})">${w.name} (${w.pay}₪)</button>`;
         });
-        content.innerHTML = html;
+        container.innerHTML = h;
     }
-    else if (tab === 'invest') {
-        content.innerHTML = `<h3>השקעות</h3><button class="action" onclick="doInvest(500)">השקעה במניות (500₪)</button><button class="action" onclick="doInvest(2000)">קריפטו (2000₪)</button>`;
+    else if (tabName === 'bank') {
+        container.innerHTML = `<h3>בנק ישראל</h3>
+            <input id="bankAmt" type="number" placeholder="סכום" style="padding:12px; width:70%; border-radius:8px; border:none; margin-bottom:10px;">
+            <button class="action" onclick="handleBank('dep')">הפקדה</button>
+            <button class="action" style="background:#475569" onclick="handleBank('wit')">משיכה</button>`;
     }
-    else if (tab === 'bank') {
-        content.innerHTML = `<h3>בנק</h3><input id="bankAmt" type="number" placeholder="סכום" style="width:80%; padding:10px; margin-bottom:10px; border-radius:8px;"><button class="action" onclick="bankOp('dep')">הפקדה</button><button class="action" onclick="bankOp('wit')">משיכה</button>`;
-    }
-    else if (tab === 'market') {
-        let html = `<h3>שוק</h3>`;
+    else if (tabName === 'market') {
+        let h = `<h3>שוק</h3>`;
         marketItems.forEach(item => {
             const owned = myItems.some(it => it.id === item.id);
-            html += `<button class="action ${owned ? 'disabled' : ''}" onclick="buyItem(${item.id})">${item.name} (${item.price}₪)<br><small>${item.desc}</small></button>`;
+            h += `<button class="action ${owned ? 'disabled' : ''}" onclick="buyItem(${item.id})">${item.name} - ${item.price}₪<br><small>${item.desc}</small></button>`;
         });
-        html += `<div class="inventory"><h4>החפצים שלי:</h4>`;
-        myItems.forEach(it => html += `<span class="item-tag">📦 ${it.name} </span>`);
-        html += `</div>`;
-        content.innerHTML = html;
-    }
-    else if (tab === 'tasks') {
-        if(!currentTask) currentTask = { name: "בצע 3 עבודות", type: 'work', goal: 3, progress: 0, reward: 500 };
-        content.innerHTML = `<div class="card"><h3>משימה</h3><p>${currentTask.name}</p><p>התקדמות: ${currentTask.progress}/${currentTask.goal}</p><button class="action" onclick="claimTask()">אסוף פרס</button></div>`;
+        container.innerHTML = h;
     }
 }
 
-// לוגיקת עבודה
 function startWork(i) {
-    if (working) return message("כבר עובד...", "loss");
+    if (working) return message("עבודה בתהליך...", "loss");
     working = true;
     let w = works[i];
-    let t = 0;
+    let step = 0;
     const bar = document.getElementById("workbar");
-    let interval = setInterval(() => {
-        t++;
-        bar.style.width = (t / w.time * 100) + "%";
-        if (t >= w.time) {
-            clearInterval(interval);
-            let pay = w.pay * (myItems.some(it => it.id === 1) ? 1.2 : 1);
-            money += pay;
-            addXP(w.xp);
+    let inter = setInterval(() => {
+        step++;
+        if (bar) bar.style.width = (step / w.time * 100) + "%";
+        if (step >= w.time) {
+            clearInterval(inter);
             working = false;
-            if (currentTask && currentTask.type === 'work') currentTask.progress++;
+            let finalPay = w.pay * (myItems.some(it => it.id === 1) ? 1.2 : 1);
+            money += finalPay;
+            addXP(w.xp);
+            message(`הרווחת ${finalPay}₪!`, "gain");
+            if (bar) bar.style.width = "0%";
             updateUI();
-            message(`הרווחת ${pay}₪!`, "gain");
-            bar.style.width = "0%";
         }
     }, 1000);
 }
@@ -127,17 +112,21 @@ function addXP(v) {
         xp -= 100;
         level++;
         money += 500;
-        message("עליית רמה! קיבלת 500₪ בונוס", "gain");
+        message("רמה חדשה! קיבלת 500₪", "event");
     }
     updateUI();
 }
 
-function bankOp(type) {
-    let amt = Math.floor(Number(document.getElementById("bankAmt").value));
-    if (amt <= 0) return;
-    if (type === 'dep' && money >= amt) { money -= amt; bank += amt; message("הפקדה הצליחה", "gain"); }
-    else if (type === 'wit' && bank >= amt) { bank -= amt; money += amt; message("משיכה הצליחה", "gain"); }
-    else { message("אין מספיק כסף", "loss"); }
+function handleBank(type) {
+    let a = Math.floor(Number(document.getElementById("bankAmt").value));
+    if (a <= 0 || isNaN(a)) return message("הכנס סכום תקין", "loss");
+    if (type === 'dep') {
+        if (money >= a) { money -= a; bank += a; message("הפקדה בוצעה", "gain"); }
+        else message("אין מספיק מזומן", "loss");
+    } else {
+        if (bank >= a) { bank -= a; money += a; message("משיכה בוצעה", "gain"); }
+        else message("אין מספיק בבנק", "loss");
+    }
     updateUI();
 }
 
@@ -149,39 +138,25 @@ function buyItem(id) {
         if (item.type === 'passive') passive += item.val;
         updateUI();
         openTab('market');
-        message("תתחדש!", "gain");
+        message("תתחדש על הרכישה!", "gain");
     }
 }
 
-// אירועים אקראיים
-setInterval(() => {
-    if (Math.random() < 0.1) {
-        let eventMoney = 200;
-        money += eventMoney;
-        message("🎁 מצאת 200₪ ברחוב!", "event");
-        updateUI();
-    }
-}, 30000);
+// לולאות רקע
+setInterval(() => { money += passive; updateUI(); }, 5000);
+setInterval(() => { if(Math.random() < 0.05) { money += 150; message("🎁 מצאת בונוס של 150₪!", "event"); updateUI(); } }, 40000);
 
-// הכנסה פסיבית
-setInterval(() => {
-    money += passive;
-    updateUI();
-}, 5000);
-
-function resetGame() { if(confirm("לאפס הכל?")) { localStorage.clear(); location.reload(); } }
+function resetGame() { if(confirm("למחוק הכל?")) { localStorage.clear(); location.reload(); } }
 
 function checkUpdate() {
     fetch("version.json?t=" + Date.now()).then(r => r.json()).then(v => {
-        if (v.version !== VERSION) {
-            localStorage.clear();
-            alert("מעדכן גרסה...");
-            location.reload();
-        } else {
-            message("האפליקציה מעודכנת", "gain");
-        }
+        if (v.version !== VERSION) { localStorage.clear(); location.reload(); }
+        else message("הגרסה מעודכנת", "gain");
     });
 }
 
-updateUI();
-openTab('home');
+// הפעלה ראשונית
+document.addEventListener("DOMContentLoaded", () => {
+    updateUI();
+    openTab('home');
+});
