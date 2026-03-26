@@ -3,54 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money AI v3.1.2</title>
+    <title>Smart Money AI 3.1.3</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
-<img src="logo.png" class="logo" alt="Smart Money">
+<img src="logo.png" class="logo">
 
 <div class="stats-container">
-    <div class="stat-card">💵 מזומן: <span id="money">0</span></div>
+    <div class="stat-card">💰 מזומן: <span id="money">0</span></div>
     <div class="stat-card">🏦 בנק: <span id="bank">0</span></div>
     <div class="stat-card">⭐ רמה: <span id="level">1</span></div>
-    <div class="stat-card">📈 פסיבי: <span id="passive">0</span></div>
+    <div class="stat-card">🕒 פסיבי: <span id="passive">0</span></div>
 </div>
 
 <div class="xp-container">
     <div class="xpbar"><div id="xpfill"></div></div>
 </div>
 
-<div id="message-box"><div id="message">ברוכים הבאים!</div></div>
-
 <nav class="topbar">
     <div class="nav-row">
-        <button onclick="openTab('home')" id="btnHome" class="active">🏠 בית</button>
+        <button onclick="openTab('home')" id="btnHome">🏠 בית</button>
         <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
-        <button onclick="openTab('invest')" id="btnInvest">📈 השקעות</button>
+        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
     </div>
     <div class="nav-row">
         <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
-        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-        <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
+        <button onclick="checkUpdate()" id="btnUpdate">🔄 עדכון</button>
+        <button onclick="resetGame()" id="btnReset">🧹 איפוס</button>
     </div>
 </nav>
 
+<div id="message-box"><div id="message"></div></div>
+
 <div id="content"></div>
 
-<div class="footer-actions">
-    <button class="action secondary" onclick="checkUpdate()">🔄 עדכון גרסה</button>
-    <button class="action secondary" style="background:#450a0a" onclick="resetGame()">🧹 איפוס משחק</button>
-</div>
-
-<footer>Smart Money AI © 2026 | v3.1.2</footer>
+<footer>Smart Money AI | גרסה 3.1.3</footer>
 
 <script src="game.js"></script>
-<script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log("SW error:", err));
-    }
-</script>
 </body>
 </html>
