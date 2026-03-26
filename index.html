@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html lang="he">
-
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Smart Money</title>
 
 <link rel="stylesheet" href="style.css">
@@ -15,116 +12,40 @@
 
 <body>
 
-<header>
-
 <img src="logo.png" class="logo">
 
 <div class="topbar">
 
-<div>💰 <span id="money">0</span></div>
-<div>🏦 <span id="bank">0</span></div>
-<div>⭐ <span id="level">1</span></div>
+<button onclick="openTab('home')" id="btnHome">🏠 בית</button>
+
+<button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
+
+<button onclick="openTab('invest')" id="btnInvest">📈 השקעה</button>
+
+<button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
+
+<button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+
+<button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
+
+<button onclick="installApp()" id="installBtn">📲 התקנה</button>
+
+<button onclick="checkUpdate()">🔄 עדכון</button>
+
+<button onclick="resetGame()">🧹 איפוס משחק</button>
 
 </div>
 
 <div id="message"></div>
 
-</header>
-
-<div class="tabs">
-
-<button onclick="showTab('home')" class="tabBtn">🏠 בית</button>
-<button onclick="showTab('work')" class="tabBtn">💼 עבודה</button>
-<button onclick="showTab('invest')" class="tabBtn">📈 השקעות</button>
-<button onclick="showTab('business')" class="tabBtn">🏢 עסקים</button>
-<button onclick="showTab('bankTab')" class="tabBtn">🏦 בנק</button>
-<button onclick="showTab('market')" class="tabBtn">📊 בורסה</button>
-<button onclick="updateGame()" class="tabBtn">🔄 עדכון</button>
-<button onclick="resetGame()" class="tabBtn reset">♻️ איפוס משחק</button>
-
-</div>
-
-<div id="installBox">
-<button id="installBtn">📲 התקן אפליקציה</button>
-</div>
-
-<div id="home" class="tab">
-
-<h2>סטטיסטיקות</h2>
-
-<p>כסף: <span id="homeMoney"></span></p>
-<p>השקעות: <span id="homeInvest"></span></p>
-<p>הפסדים: <span id="homeLoss"></span></p>
-<p>בנק: <span id="homeBank"></span></p>
-<p>הכנסה פסיבית: <span id="homePassive"></span></p>
-
-</div>
-
-
-<div id="work" class="tab">
-
-<h2>עבודה</h2>
-
-<div class="progressTitle">התקדמות עבודה</div>
-
-<canvas id="progressCanvas"></canvas>
-
-<button onclick="startJob(5,50)">משימה קטנה (5ש) 💰50</button>
-<button onclick="startJob(15,150)">עבודה משרדית (15ש) 💰150</button>
-<button onclick="startJob(30,400)">בניית אתר (30ש) 💰400</button>
-<button onclick="startJob(60,1000)">פרויקט גדול (60ש) 💰1000</button>
-
-</div>
-
-
-<div id="invest" class="tab">
-
-<h2>השקעות</h2>
-
-<button onclick="invest(200)">קריפטו (200)</button>
-<button onclick="invest(500)">סטארטאפ (500)</button>
-<button onclick="invest(2000)">נדל״ן (2000)</button>
-<button onclick="invest(5000)">חברת טכנולוגיה (5000)</button>
-
-</div>
-
-
-<div id="business" class="tab">
-
-<h2>בניית עסקים</h2>
-
-<button onclick="buyBusiness(1000,5)">קיוסק 💰1000</button>
-<button onclick="buyBusiness(5000,25)">חנות 💰5000</button>
-<button onclick="buyBusiness(20000,120)">מפעל 💰20000</button>
-
-</div>
-
-
-<div id="bankTab" class="tab">
-
-<h2>בנק</h2>
-
-<button onclick="deposit()">הפקד 500</button>
-<button onclick="withdraw()">משוך 500</button>
-
-</div>
-
-
-<div id="market" class="tab">
-
-<h2>בורסה</h2>
-
-<button onclick="trade()">בצע מסחר</button>
-
-</div>
+<div id="content"></div>
 
 <footer>
-
-© Smart Money Game
-
+Smart Money © 2026  
+גרסה 1.2
 </footer>
 
-<script src="game.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
