@@ -1,108 +1,178 @@
-let money=100
-let bank=0
-let level=1
-let xp=0
-let passive=0
+// Smart Money v2 PRO
 
-loadGame()
+let game = JSON.parse(localStorage.getItem("smartmoney")) || {
+money: 1000,
+bank: 0,
+income: 0,
+level: 1,
+xp: 0
+};
 
 function saveGame(){
-
-localStorage.setItem("money",money)
-localStorage.setItem("bank",bank)
-localStorage.setItem("level",level)
-localStorage.setItem("xp",xp)
-localStorage.setItem("passive",passive)
-
+localStorage.setItem("smartmoney", JSON.stringify(game));
+updateUI();
 }
 
-function loadGame(){
+function updateUI(){
 
-money=Number(localStorage.getItem("money"))||100
-bank=Number(localStorage.getItem("bank"))||0
-level=Number(localStorage.getItem("level"))||1
-xp=Number(localStorage.getItem("xp"))||0
-passive=Number(localStorage.getItem("passive"))||0
+let content = document.getElementById("content");
 
-}
-
-function updateMessage(msg){
-
-document.getElementById("message").innerText=msg
-
-}
-
-function setActive(btn){
-
-document.querySelectorAll(".topbar button").forEach(b=>b.classList.remove("active"))
-
-document.getElementById(btn).classList.add("active")
+content.innerHTML = `
+<div class="stats">
+💰 כסף: ${game.money} ₪ |
+🏦 בנק: ${game.bank} ₪ |
+📈 הכנסה פסיבית: ${game.income} ₪ |
+⭐ רמה: ${game.level}
+</div>
+`;
 
 }
 
 function openTab(tab){
 
-if(tab==="home"){showHome();setActive("btnHome")}
-if(tab==="work"){showWork();setActive("btnWork")}
-if(tab==="invest"){showInvest();setActive("btnInvest")}
-if(tab==="bank"){showBank();setActive("btnBank")}
-if(tab==="market"){showMarket();setActive("btnMarket")}
-if(tab==="tasks"){showTasks();setActive("btnTasks")}
+let content = document.getElementById("content");
+
+if(tab === "home"){
+
+content.innerHTML = `
+<h2>ברוכים הבאים</h2>
+<p>ניהול כסף חכם</p>
+`;
 
 }
 
-function showHome(){
+if(tab === "work"){
 
-document.getElementById("content").innerHTML=
+content.innerHTML = `
+<h2>עבודות</h2>
 
-`
+<button onclick="doWork(50)">עבודה קטנה +50</button>
+<button onclick="doWork(120)">עבודה רגילה +120</button>
+<button onclick="doWork(300)">עבודה קשה +300</button>
 
-<h2>📊 מצב כלכלי</h2>
-
-<p>💰 כסף: ${money}</p>
-
-<p>🏦 כסף בבנק: ${bank}</p>
-
-<p>📈 הכנסה פסיבית כל 5 שניות: ${passive}</p>
-
-<p>⭐ רמה: ${level}</p>
-
-`
-
-saveGame()
+`;
 
 }
 
-function addXP(v){
+if(tab === "invest"){
 
-xp+=v
+content.innerHTML = `
+<h2>השקעות</h2>
 
-if(xp>=100){
+<button onclick="buyInvestment(500,5)">השקעה קטנה</button>
+<button onclick="buyInvestment(2000,25)">נדלן</button>
+<button onclick="buyInvestment(5000,80)">עסק</button>
 
-xp=0
-level++
+`;
 
-updateMessage("עלית רמה!")
+}
+
+if(tab === "bank"){
+
+content.innerHTML = `
+<h2>בנק</h2>
+
+<button onclick="deposit()">הפקדה</button>
+<button onclick="withdraw()">משיכה</button>
+
+`;
+
+}
+
+if(tab === "market"){
+
+loadMarket();
+
+}
+
+if(tab === "tasks"){
+
+loadTasks();
 
 }
 
 }
 
-setInterval(()=>{
+function doWork(amount){
 
-money+=passive
+game.money += amount;
+game.xp += 5;
 
-saveGame()
+if(game.xp >= 100){
+game.level++;
+game.xp = 0;
+}
 
-},5000)
+saveGame();
+
+}
+
+function buyInvestment(cost,income){
+
+if(game.money >= cost){
+
+game.money -= cost;
+game.income += income;
+
+saveGame();
+
+}else{
+
+alert("אין מספיק כסף");
+
+}
+
+}
+
+function deposit(){
+
+let amount = prompt("כמה להפקיד?");
+
+amount = Number(amount);
+
+if(game.money >= amount){
+
+game.money -= amount;
+game.bank += amount;
+
+saveGame();
+
+}
+
+}
+
+function withdraw(){
+
+let amount = prompt("כמה למשוך?");
+
+amount = Number(amount);
+
+if(game.bank >= amount){
+
+game.bank -= amount;
+game.money += amount;
+
+saveGame();
+
+}
+
+}
 
 function resetGame(){
 
-if(confirm("לאפס את המשחק?")){
+if(confirm("לאפס משחק?")){
 
-localStorage.clear()
-location.reload()
+localStorage.removeItem("smartmoney");
+location.reload();
 
+}
+
+}
+
+function installApp(){
+
+if(deferredPrompt){
+deferredPrompt.prompt();
 }
 
 }
@@ -111,44 +181,37 @@ async function checkUpdate(){
 
 try{
 
-let res=await fetch("version.json?"+Date.now())
+let response = await fetch("version.json?"+Date.now());
+let data = await response.json();
 
-let data=await res.json()
+let currentVersion = localStorage.getItem("version");
 
-let current=localStorage.getItem("version")
+if(currentVersion !== data.version){
 
-if(current!==data.version){
-
-localStorage.setItem("version",data.version)
-
-location.reload(true)
+localStorage.setItem("version",data.version);
+location.reload(true);
 
 }else{
 
-location.reload()
+location.reload();
 
 }
 
-}catch(e){
+}catch{
 
-location.reload()
-
-}
+location.reload();
 
 }
 
-let deferredPrompt
+}
 
-window.addEventListener("beforeinstallprompt",(e)=>{
+// Service Worker
 
-e.preventDefault()
+if("serviceWorker" in navigator){
 
-deferredPrompt=e
-
-})
-
-function installApp(){
-
-alert("להתקנה:\nבדפדפן לחץ על הוסף למסך הבית")
+navigator.serviceWorker.register("sw.js");
 
 }
+
+updateUI();
+openTab("home");
