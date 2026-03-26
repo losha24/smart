@@ -12,7 +12,7 @@
 <img src="logo.png" class="logo" alt="Smart Money">
 
 <div class="stats-container">
-    <div class="stat-card">💰 כסף: <span id="money">0</span></div>
+    <div class="stat-card">💰 מזומן: <span id="money">0</span></div>
     <div class="stat-card">🏦 בנק: <span id="bank">0</span></div>
     <div class="stat-card">⭐ רמה: <span id="level">1</span></div>
     <div class="stat-card">💹 מניות: <span id="stocksCount">0</span></div>
@@ -30,10 +30,11 @@
     </div>
     <div class="nav-row">
         <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+        <button onclick="openTab('invest')" id="btnInvest">📈 השקעות</button>
         <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
-        <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
     </div>
     <div class="nav-row">
+        <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
         <button onclick="checkUpdate()" id="btnUpdate">🔄 עדכון</button>
         <button onclick="resetGame()" style="background:#450a0a">🧹 איפוס</button>
     </div>
@@ -43,8 +44,8 @@
 
 <div id="content"></div>
 
-<footer id="copyright">
-    &copy; 2026 Alexey Zavodisker | Smart Money AI | Version 3.2
+<footer>
+    &copy; 2026 Alexey Zavodisker | Smart Money AI | גרסה 3.2
 </footer>
 
 <script src="game.js"></script>
