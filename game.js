@@ -1,191 +1,305 @@
-let game = JSON.parse(localStorage.getItem("smartmoney")) || {
+let money=Number(localStorage.money)||100
+let bank=Number(localStorage.bank)||0
+let xp=Number(localStorage.xp)||0
+let level=Number(localStorage.level)||1
 
-money: 1000,
-bank: 0,
-income: 0,
-level: 1,
-xp: 0
+let passive=0
+let working=false
 
-};
+const works=[
+{name:"עבודה קלה",pay:50,time:5},
+{name:"עבודה משרדית",pay:120,time:10},
+{name:"פרילנס",pay:300,time:20},
+{name:"פרויקט גדול",pay:800,time:60}
+]
 
-function saveGame(){
+const invests=[
+{name:"קריפטו",cost:200},
+{name:"מניה",cost:500},
+{name:"נדלן קטן",cost:1000}
+]
 
-localStorage.setItem("smartmoney",JSON.stringify(game));
+function save(){
 
-updateUI();
+localStorage.money=money
+localStorage.bank=bank
+localStorage.xp=xp
+localStorage.level=level
 
 }
 
 function updateUI(){
 
-document.getElementById("money").innerText = game.money;
-document.getElementById("bank").innerText = game.bank;
-document.getElementById("income").innerText = game.income;
-document.getElementById("level").innerText = game.level;
+document.getElementById("money").innerText=Math.floor(money)
+document.getElementById("bank").innerText=Math.floor(bank)
+document.getElementById("level").innerText=level
+
+document.getElementById("xpfill").style.width=(xp%100)+"%"
+
+save()
+
+}
+
+function message(t){
+
+document.getElementById("message").innerText=t
 
 }
 
 function openTab(tab){
 
-let c = document.getElementById("content");
+document.querySelectorAll(".topbar button").forEach(b=>b.classList.remove("active"))
+document.getElementById("btn"+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add("active")
 
-if(tab==="home"){
-
-c.innerHTML=`
-<h2>ברוכים הבאים</h2>
-<p>התחל לעבוד ולהשקיע</p>
-`;
-
-}
-
-if(tab==="work"){
-
-c.innerHTML=`
-
-<h2>עבודות</h2>
-
-<button onclick="work(50)">שליח +50</button>
-
-<button onclick="work(120)">מלצר +120</button>
-
-<button onclick="work(300)">פרילנסר +300</button>
-
-`;
+if(tab==="home")home()
+if(tab==="work")workPage()
+if(tab==="invest")investPage()
+if(tab==="bank")bankPage()
+if(tab==="market")marketPage()
+if(tab==="tasks")tasksPage()
 
 }
 
-if(tab==="invest"){
+function home(){
 
-c.innerHTML=`
+document.getElementById("content").innerHTML=
 
-<h2>השקעות</h2>
-
-<button onclick="invest(500,5)">
-מניות קטנות  
-עלות 500  
-רווח פסיבי 5
-</button>
-
-<button onclick="invest(2000,20)">
-נדלן קטן  
-עלות 2000  
-רווח 20
-</button>
-
-<button onclick="invest(5000,60)">
-עסק  
-עלות 5000  
-רווח 60
-</button>
-
-`;
+`<h2>מצב כלכלי</h2>
+<p>הכנסה פסיבית: ${passive} כל 5 שניות</p>`
 
 }
 
-if(tab==="bank"){
+function workPage(){
 
-c.innerHTML=`
+let html="<h2>עבודות</h2>"
 
-<h2>בנק</h2>
+works.forEach((w,i)=>{
 
-<button onclick="deposit()">הפקדה</button>
+html+=`<button class="action" onclick="startWork(${i})">
+${w.name}  
+💰 ${w.pay}  
+⏱ ${w.time}s
+</button>`
 
-<button onclick="withdraw()">משיכה</button>
+})
 
-`;
+html+=`<div class="progress"><div id="workbar" class="progressFill"></div></div>`
 
-}
-
-}
-
-function work(amount){
-
-game.money+=amount;
-game.xp+=10;
-
-if(game.xp>=100){
-
-game.level++;
-game.xp=0;
+document.getElementById("content").innerHTML=html
 
 }
 
-saveGame();
+function startWork(i){
+
+if(working)return message("סיים עבודה קודם")
+
+let w=works[i]
+
+working=true
+
+let t=0
+
+let bar=document.getElementById("workbar")
+
+let interval=setInterval(()=>{
+
+t++
+
+bar.style.width=(t/w.time*100)+"%"
+
+if(t>=w.time){
+
+clearInterval(interval)
+
+money+=w.pay
+xp+=10
+passive+=1
+
+working=false
+
+levelUp()
+
+updateUI()
+
+message("הרווחת "+w.pay)
 
 }
 
-function invest(cost,income){
-
-if(game.money>=cost){
-
-game.money-=cost;
-
-game.income+=income;
-
-saveGame();
+},1000)
 
 }
+
+function investPage(){
+
+let html="<h2>השקעות</h2>"
+
+invests.forEach((inv,i)=>{
+
+html+=`<button class="action" onclick="invest(${i})">
+${inv.name}  
+💰 ${inv.cost}
+</button>`
+
+})
+
+document.getElementById("content").innerHTML=html
+
+}
+
+function invest(i){
+
+let inv=invests[i]
+
+if(money<inv.cost)return message("אין מספיק כסף")
+
+money-=inv.cost
+
+let result=Math.random()
+
+if(result>0.5){
+
+let gain=inv.cost*1.5
+money+=gain
+message("רווח "+gain)
+
+}else{
+
+message("הפסד בהשקעה")
+
+}
+
+updateUI()
+
+}
+
+function bankPage(){
+
+document.getElementById("content").innerHTML=
+
+`<h2>בנק</h2>
+
+<button class="action" onclick="deposit()">הפקדה 100</button>
+<button class="action" onclick="withdraw()">משיכה 100</button>`
 
 }
 
 function deposit(){
 
-let a=Number(prompt("כמה להפקיד"));
+if(money<100)return
 
-if(game.money>=a){
+money-=100
+bank+=100
 
-game.money-=a;
-
-game.bank+=a;
-
-saveGame();
-
-}
+updateUI()
 
 }
 
 function withdraw(){
 
-let a=Number(prompt("כמה למשוך"));
+if(bank<100)return
 
-if(game.bank>=a){
+bank-=100
+money+=100
 
-game.bank-=a;
-
-game.money+=a;
-
-saveGame();
+updateUI()
 
 }
 
-}
+function marketPage(){
 
-function resetGame(){
-
-if(confirm("לאפס משחק?")){
-
-localStorage.removeItem("smartmoney");
-
-location.reload();
+document.getElementById("content").innerHTML="<h2>שוק</h2> בקרוב"
 
 }
 
+function tasksPage(){
+
+document.getElementById("content").innerHTML=
+
+`<h2>משימות</h2>
+
+<button class="action" onclick="task()">בצע משימה</button>`
+
 }
 
-async function checkUpdate(){
+function task(){
 
-location.reload(true);
+money+=200
+xp+=20
+
+updateUI()
+
+}
+
+function levelUp(){
+
+if(xp>=100){
+
+xp=0
+level++
+
+money+=500
+
+message("עלית רמה!")
+
+}
 
 }
 
 setInterval(()=>{
 
-game.money+=game.income;
+money+=passive
 
-saveGame();
+updateUI()
 
-},5000);
+},5000)
 
-updateUI();
+function resetGame(){
 
-openTab("home");
+if(!confirm("לאפס משחק?"))return
+
+localStorage.clear()
+
+location.reload()
+
+}
+
+function checkUpdate(){
+
+fetch("version.json")
+.then(r=>r.json())
+.then(v=>{
+
+if(v.version!=="3")location.reload()
+else location.reload()
+
+})
+
+}
+
+let deferredPrompt
+
+window.addEventListener("beforeinstallprompt",e=>{
+
+e.preventDefault()
+
+deferredPrompt=e
+
+})
+
+function installApp(){
+
+if(!deferredPrompt){
+
+alert("להתקנה:\nפתח תפריט דפדפן\nהוסף למסך הבית")
+
+return
+
+}
+
+deferredPrompt.prompt()
+
+}
+
+updateUI()
+
+openTab("home")
