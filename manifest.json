@@ -3,7 +3,7 @@
 "short_name":"SmartMoney",
 "start_url":"index.html",
 "display":"standalone",
-"background_color":"#101820",
+"background_color":"#0f172a",
 "theme_color":"#10b981",
 "icons":[
 {
