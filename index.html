@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Smart Money</title>
 
 <link rel="stylesheet" href="style.css">
-
 <link rel="manifest" href="manifest.json">
 
 </head>
@@ -16,31 +16,85 @@
 
 <header>
 
-<h1>💰 Smart Money</h1>
+<div class="topbar">
 
-<div class="money">
-כסף: <span id="money">$100</span>
+<img src="logo.png" class="logo">
+
+<div class="stats">
+
+<div>💰 כסף: <span id="money">0</span></div>
+<div>🏦 בנק: <span id="bank">0</span></div>
+<div>⭐ רמה: <span id="level">1</span></div>
+
+</div>
+
 </div>
 
 </header>
 
-<div class="container">
 
-<button onclick="work()">💼 לעבוד</button>
+<div class="tabs">
 
-<button onclick="buyBusiness()">🏢 לקנות עסק ($500)</button>
-
-<button onclick="invest()">📈 להשקיע ($200)</button>
-
-<button onclick="updateGame()">🔄 עדכון גרסה</button>
+<button onclick="showTab('work')">💼 עבודה</button>
+<button onclick="showTab('invest')">📈 השקעות</button>
+<button onclick="showTab('bank')">🏦 בנק</button>
+<button onclick="updateGame()">🔄 עדכון</button>
 
 </div>
+
+
+<div id="work" class="tab">
+
+<h2>עבודות</h2>
+
+<button onclick="startJob(5,50)">משימה קטנה (5 שניות) 💵50</button>
+
+<button onclick="startJob(15,150)">עבודה משרדית (15 שניות) 💵150</button>
+
+<button onclick="startJob(30,400)">פרויקט קטן (30 שניות) 💵400</button>
+
+<button onclick="startJob(60,1000)">פרויקט גדול (60 שניות) 💵1000</button>
+
+<div class="progressBox">
+
+<canvas id="progressCanvas"></canvas>
+
+</div>
+
+</div>
+
+
+<div id="invest" class="tab">
+
+<h2>השקעות</h2>
+
+<button onclick="invest(200,1.5)">השקעה קטנה (200)</button>
+
+<button onclick="invest(500,2)">סטארטאפ (500)</button>
+
+<button onclick="invest(2000,3)">נדל״ן (2000)</button>
+
+<button onclick="invest(5000,5)">חברת טכנולוגיה (5000)</button>
+
+</div>
+
+
+<div id="bank" class="tab">
+
+<h2>בנק</h2>
+
+<button onclick="deposit()">הפקד 500</button>
+
+<button onclick="withdraw()">משוך 500</button>
+
+<p>הכסף בבנק מוגן ממשברים</p>
+
+</div>
+
 
 <footer>
 
-<div id="income">
-הכנסה פסיבית: $0 / 5s
-</div>
+<div id="event"></div>
 
 </footer>
 
