@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<img src="logo.png" class="logo">
+<img src="logo.png" class="logo" alt="Smart Money">
 
 <div class="stats-container">
     <div class="stat-card">💵 מזומן: <span id="money">0</span></div>
@@ -22,22 +22,26 @@
     <div class="xpbar"><div id="xpfill"></div></div>
 </div>
 
-<div id="message-box"><div id="message">מוכן לעשות כסף?</div></div>
+<div id="message-box"><div id="message">ברוכים הבאים!</div></div>
 
-<div class="topbar">
-    <button onclick="openTab('home')" id="btnHome" class="active">🏠 בית</button>
-    <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
-    <button onclick="openTab('invest')" id="btnInvest">📈 השקעות</button>
-    <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
-    <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-    <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
-</div>
+<nav class="topbar">
+    <div class="nav-row">
+        <button onclick="openTab('home')" id="btnHome" class="active">🏠 בית</button>
+        <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
+        <button onclick="openTab('invest')" id="btnInvest">📈 השקעות</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
+        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+        <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
+    </div>
+</nav>
 
 <div id="content"></div>
 
-<div style="padding: 20px;">
-    <button class="action secondary" onclick="checkUpdate()">🔄 בדוק עדכון גרסה</button>
-    <button class="action secondary" style="background:#ef4444" onclick="resetGame()">🧹 איפוס הכל</button>
+<div class="footer-actions">
+    <button class="action secondary" onclick="checkUpdate()">🔄 עדכון גרסה</button>
+    <button class="action secondary" style="background:#450a0a" onclick="resetGame()">🧹 איפוס משחק</button>
 </div>
 
 <footer>Smart Money AI © 2026 | v3.1.2</footer>
@@ -45,7 +49,7 @@
 <script src="game.js"></script>
 <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
+        navigator.serviceWorker.register('sw.js').catch(err => console.log("SW error:", err));
     }
 </script>
 </body>
