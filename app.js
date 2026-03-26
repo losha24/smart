@@ -1,61 +1,51 @@
-// ניהול תצוגות, בר, לוגו, עדכון מידע
-document.addEventListener("DOMContentLoaded", () => {
-    const moneyEl = document.getElementById("money");
-    const bankEl = document.getElementById("bank");
-    const incomeEl = document.getElementById("income");
-    const levelEl = document.getElementById("level");
-    const levelBar = document.getElementById("level-bar");
-    const levelText = document.getElementById("level-text");
+// נתוני משחק
+let data = JSON.parse(localStorage.getItem("smartMoney")) || {
+    money:100,
+    bank:0,
+    invested:0,
+    lost:0,
+    passive:0,
+    level:1,
+    xp:0,
+    xpNeed:100,
+    tasksDone:0
+};
 
-    let state = {
-        money: 0,
-        bank: 0,
-        passiveIncome: 0,
-        level: 1,
-        xp: 0
-    };
+// שמירה
+function save(){ localStorage.setItem("smartMoney",JSON.stringify(data)); }
 
-    function updateUI() {
-        moneyEl.textContent = `💰 ${state.money} ₪`;
-        bankEl.textContent = `🏦 ${state.bank} ₪`;
-        incomeEl.textContent = `💵 הכנסה פסיבית: ${state.passiveIncome} ₪`;
-        levelEl.textContent = `⭐ רמה: ${state.level}`;
-        const xpPercent = Math.min(100, (state.xp/100)*100);
-        levelBar.style.width = `${xpPercent}%`;
-        levelText.textContent = `ניסיון ${state.xp}/100`;
+// הודעה
+function msg(t){ document.getElementById("message").innerText = t; }
+
+// מעבר בין קטגוריות
+function openTab(tab){
+    document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
+    document.getElementById("btn"+tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add("active");
+    let c = document.getElementById("content");
+    c.innerHTML = "";
+
+    switch(tab){
+        case "home":
+            c.innerHTML = `
+            <div class="card">💰 כסף: ${data.money}</div>
+            <div class="card">🏦 בבנק: ${data.bank}</div>
+            <div class="card">📈 השקעות: ${data.invested}</div>
+            <div class="card">❌ הפסדים: ${data.lost}</div>
+            <div class="card">⏱ הכנסה פסיבית: ${data.passive}/10s</div>
+            <div class="card">⭐ רמה: ${data.level}</div>
+            <div class="card">XP: ${data.xp}/${data.xpNeed}
+                <div class="progress"><div style="width:${data.xp/data.xpNeed*100}%"></div></div>
+            </div>
+            `;
+            break;
+
+        case "work": renderWork(); break;
+        case "invest": renderInvest(); break;
+        case "bank": renderBank(); break;
+        case "market": renderMarket(); break;
+        case "tasks": renderTasks(); break;
     }
+}
 
-    function addMoney(amount) {
-        state.money += amount;
-        state.passiveIncome += Math.floor(amount/10);
-        state.xp += amount;
-        if(state.xp >= 100){
-            state.level++;
-            state.xp = state.xp - 100;
-            alert(`עלית רמה! קיבלת פרס!`);
-        }
-        updateUI();
-    }
-
-    // כפתורי בר
-    document.getElementById("reset-btn").addEventListener("click", () => {
-        if(confirm("אתה בטוח שברצונך לאפס את המשחק?")){
-            state = {money:0, bank:0, passiveIncome:0, level:1, xp:0};
-            updateUI();
-        }
-    });
-
-    document.getElementById("home-btn").addEventListener("click", () => {
-        alert(`בית: כסף ${state.money} ₪, בנק ${state.bank} ₪, השקעות ${state.passiveIncome} ₪`);
-    });
-
-    updateUI();
-
-    // הכנסה פסיבית כל 5 שניות
-    setInterval(() => {
-        if(state.passiveIncome>0){
-            state.money += state.passiveIncome;
-            updateUI();
-        }
-    }, 5000);
-});
+// --- טעינת דף ראשוני ---
+openTab("home");
