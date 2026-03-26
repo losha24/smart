@@ -1,94 +1,87 @@
+/* עיצוב כללי */
 body{
-
-font-family:Arial;
-background:#0f172a;
-color:white;
-margin:0;
-text-align:center;
-
+    font-family: Arial, sans-serif;
+    background:#0f172a;
+    color:white;
+    margin:0;
+    text-align:center;
 }
 
+/* לוגו גדול במרכז */
 .logo{
-
-width:200px;
-display:block;
-margin:auto;
-margin-top:10px;
-
+    width:200px;
+    display:block;
+    margin:auto;
+    margin-top:10px;
 }
 
+/* בר עליון */
 .topbar{
-
-display:flex;
-flex-wrap:wrap;
-justify-content:center;
-gap:8px;
-padding:10px;
-
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+    padding:10px;
 }
 
+/* כפתורים */
 .topbar button{
-
-background:#1e293b;
-color:white;
-border:none;
-padding:10px 12px;
-border-radius:10px;
-font-size:14px;
-cursor:pointer;
-
+    background:#1e293b;
+    color:white;
+    border:none;
+    padding:10px 12px;
+    border-radius:10px;
+    font-size:14px;
+    cursor:pointer;
+    transition:0.2s;
 }
 
+/* כפתור לחוץ */
 .topbar button.active{
-
-background:red;
-
+    background:red;
 }
 
+/* hover */
+.topbar button:hover{
+    background:#3b82f6;
+}
+
+/* תוכן */
 #content{
-
-padding:15px;
-
+    padding:15px;
 }
 
+/* כרטיסים */
 .card{
-
-background:#1e293b;
-margin:10px;
-padding:12px;
-border-radius:12px;
-
+    background:#1e293b;
+    margin:10px;
+    padding:12px;
+    border-radius:12px;
 }
 
+/* בר התקדמות */
 .progress{
-
-height:12px;
-background:#334155;
-border-radius:8px;
-overflow:hidden;
-margin-top:6px;
-
+    height:12px;
+    background:#334155;
+    border-radius:8px;
+    overflow:hidden;
+    margin-top:6px;
 }
-
 .progress div{
-
-height:100%;
-background:#22c55e;
-
+    height:100%;
+    background:#22c55e;
 }
 
+/* הודעות */
 #message{
-
-color:#f87171;
-font-size:18px;
-margin-top:5px;
-
+    color:#f87171;
+    font-size:18px;
+    margin-top:5px;
 }
 
+/* Footer */
 footer{
-
-margin-top:20px;
-font-size:12px;
-opacity:0.6;
-
+    margin-top:20px;
+    font-size:12px;
+    opacity:0.6;
 }
