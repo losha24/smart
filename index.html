@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Smart Money</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="manifest" href="manifest.json">
+
+</head>
+
+<body>
+
+<header>
+
+<h1>💰 Smart Money</h1>
+
+<div class="money">
+כסף: <span id="money">$100</span>
+</div>
+
+</header>
+
+<div class="container">
+
+<button onclick="work()">💼 לעבוד</button>
+
+<button onclick="buyBusiness()">🏢 לקנות עסק ($500)</button>
+
+<button onclick="invest()">📈 להשקיע ($200)</button>
+
+<button onclick="updateGame()">🔄 עדכון גרסה</button>
+
+</div>
+
+<footer>
+
+<div id="income">
+הכנסה פסיבית: $0 / 5s
+</div>
+
+</footer>
+
+<script src="game.js"></script>
+
+</body>
+</html>
