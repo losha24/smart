@@ -3,13 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Money v3</title>
-
+<title>Smart Money v3.1</title>
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
-
 </head>
-
 <body>
 
 <img src="logo.png" class="logo">
@@ -25,30 +22,25 @@
 </div>
 
 <div class="topbar">
-
 <button onclick="openTab('home')" id="btnHome">🏠 בית</button>
 <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
 <button onclick="openTab('invest')" id="btnInvest">📈 השקעות</button>
 <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
 <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
 <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
-
 <button onclick="installApp()" id="installBtn">📲 התקנה</button>
-<button onclick="checkUpdate()">🔄 עדכון</button>
-<button onclick="resetGame()">🧹 איפוס</button>
-
+<button onclick="checkUpdate()" id="updateBtn">🔄 עדכון</button>
+<button onclick="resetGame()" id="resetBtn">🧹 איפוס</button>
 </div>
 
 <div id="message"></div>
-
 <div id="content"></div>
 
 <footer>
 Smart Money © 2026  
-Version 3
+Version 3.1
 </footer>
 
 <script src="game.js"></script>
-
 </body>
 </html>
