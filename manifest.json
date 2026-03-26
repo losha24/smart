@@ -1,9 +1,9 @@
 {
-  "name": "Smart Money v2 PRO",
-  "short_name": "SmartMoneyPRO",
-  "start_url": "/index.html",
-  "display": "standalone",
-  "background_color": "#0b1e3d",
-  "theme_color": "#1e90ff",
-  "icons": [{"src": "logo.png","sizes": "192x192","type": "image/png"}]
+"name":"Smart Money",
+"short_name":"SmartMoney",
+"start_url":"index.html",
+"display":"standalone",
+"background_color":"#0f172a",
+"theme_color":"#0f172a",
+"icons":[{"src":"logo.png","sizes":"512x512","type":"image/png"}]
 }
