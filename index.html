@@ -1,42 +1,52 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Money v2 PRO</title>
+
+<title>Smart Money v2</title>
+
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
+
 </head>
+
 <body>
 
-<!-- לוגו מרכזי גדול -->
 <img src="logo.png" class="logo">
 
-<!-- בר עליון -->
-<div class="topbar">
-  <button onclick="openTab('home')" id="btnHome">🏠 בית</button>
-  <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
-  <button onclick="openTab('invest')" id="btnInvest">📈 השקעה</button>
-  <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
-  <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-  <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
-  <button onclick="installApp()" id="installBtn">📲 התקנה</button>
-  <button onclick="checkUpdate()" id="updateBtn">🔄 עדכון</button>
-  <button onclick="resetGame()" id="resetBtn">🧹 איפוס משחק</button>
+<div class="stats">
+💰 כסף: <span id="money"></span>
+🏦 בנק: <span id="bank"></span>
+📈 הכנסה פסיבית: <span id="income"></span>
+⭐ רמה: <span id="level"></span>
 </div>
 
-<!-- הודעות -->
-<div id="message"></div>
+<div class="topbar">
 
-<!-- תוכן מרכזי -->
+<button onclick="openTab('home')">🏠 בית</button>
+
+<button onclick="openTab('work')">💼 עבודה</button>
+
+<button onclick="openTab('invest')">📈 השקעות</button>
+
+<button onclick="openTab('bank')">🏦 בנק</button>
+
+<button onclick="resetGame()">🧹 איפוס</button>
+
+<button onclick="checkUpdate()">🔄 עדכון</button>
+
+</div>
+
 <div id="content"></div>
 
-<!-- Footer -->
-<footer>Smart Money © 2026 Version 2.0 PRO</footer>
+<footer>
+Smart Money © 2026  
+Version 2
+</footer>
 
-<script src="app.js"></script>
-<script src="economy.js"></script>
-<script src="market.js"></script>
-<script src="tasks.js"></script>
+<script src="game.js"></script>
+
 </body>
 </html>
