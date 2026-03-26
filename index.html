@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Smart Money v2</title>
+<title>Smart Money v3</title>
 
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
@@ -17,33 +15,37 @@
 <img src="logo.png" class="logo">
 
 <div class="stats">
-💰 כסף: <span id="money"></span>
-🏦 בנק: <span id="bank"></span>
-📈 הכנסה פסיבית: <span id="income"></span>
-⭐ רמה: <span id="level"></span>
+💰 כסף: <span id="money">0</span> |
+🏦 בנק: <span id="bank">0</span> |
+⭐ רמה: <span id="level">1</span>
+</div>
+
+<div class="xpbar">
+<div id="xpfill"></div>
 </div>
 
 <div class="topbar">
 
-<button onclick="openTab('home')">🏠 בית</button>
+<button onclick="openTab('home')" id="btnHome">🏠 בית</button>
+<button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
+<button onclick="openTab('invest')" id="btnInvest">📈 השקעות</button>
+<button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
+<button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+<button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
 
-<button onclick="openTab('work')">💼 עבודה</button>
-
-<button onclick="openTab('invest')">📈 השקעות</button>
-
-<button onclick="openTab('bank')">🏦 בנק</button>
-
+<button onclick="installApp()" id="installBtn">📲 התקנה</button>
+<button onclick="checkUpdate()">🔄 עדכון</button>
 <button onclick="resetGame()">🧹 איפוס</button>
 
-<button onclick="checkUpdate()">🔄 עדכון</button>
-
 </div>
+
+<div id="message"></div>
 
 <div id="content"></div>
 
 <footer>
 Smart Money © 2026  
-Version 2
+Version 3
 </footer>
 
 <script src="game.js"></script>
