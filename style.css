@@ -19,42 +19,82 @@ padding:10px;
 
 display:flex;
 align-items:center;
-justify-content:center;
-gap:10px;
+justify-content:space-between;
+padding:5px 20px;
 
 }
 
 .logo{
 
-width:40px;
+width:60px;
 
 }
 
-.stats{
+.stats-left,
+.stats-right{
 
-display:flex;
-gap:15px;
-font-size:14px;
+font-size:16px;
+
+}
+
+.levelBox{
+
+margin-top:5px;
+
+}
+
+.levelBar{
+
+width:90%;
+height:10px;
+background:#111;
+margin:auto;
+border-radius:20px;
+
+}
+
+#levelProgress{
+
+height:10px;
+width:0%;
+background:#10b981;
+border-radius:20px;
+
+}
+
+#rewardBox{
+
+margin-top:5px;
+color:#facc15;
+font-weight:bold;
+
+}
+
+#message{
+
+margin-top:5px;
+color:#f87171;
 
 }
 
 .tabs{
 
 display:flex;
-justify-content:space-around;
+flex-wrap:wrap;
+justify-content:center;
 background:#111827;
-padding:10px;
 
 }
 
 .tabs button{
 
 flex:1;
-margin:2px;
+min-width:80px;
+margin:4px;
 padding:10px;
+background:#10b981;
 border:none;
 border-radius:8px;
-background:#10b981;
 color:white;
 
 }
@@ -69,9 +109,8 @@ button{
 
 width:90%;
 max-width:350px;
-margin:8px;
+margin:6px;
 padding:12px;
-font-size:16px;
 border:none;
 border-radius:10px;
 background:#059669;
@@ -79,28 +118,26 @@ color:white;
 
 }
 
-.progressBox{
-
-margin-top:20px;
-
-}
-
 canvas{
 
 width:90%;
-height:40px;
+height:30px;
 background:#1f2937;
 border-radius:10px;
+margin-top:10px;
 
 }
 
 footer{
 
-position:fixed;
-bottom:0;
-width:100%;
-background:#111827;
+margin-top:20px;
 padding:10px;
-font-size:12px;
+font-size:13px;
+
+}
+
+.copyright{
+
+opacity:0.6;
 
 }
