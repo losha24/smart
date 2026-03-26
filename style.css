@@ -1,107 +1,94 @@
 body{
 
-margin:0;
 font-family:Arial;
 background:#0f172a;
 color:white;
+margin:0;
 text-align:center;
 
 }
 
 .logo{
 
-width:140px;
+width:200px;
+display:block;
+margin:auto;
+margin-top:10px;
 
 }
 
 .topbar{
 
 display:flex;
-justify-content:space-around;
-background:#1e293b;
-padding:12px;
-font-size:18px;
-
-}
-
-#message{
-
-font-size:22px;
-color:#fbbf24;
-margin:10px;
-
-}
-
-.tabs{
-
-display:flex;
 flex-wrap:wrap;
+justify-content:center;
+gap:8px;
+padding:10px;
 
 }
 
-.tabBtn{
+.topbar button{
 
-flex:1;
-margin:3px;
-padding:12px;
-border:none;
-border-radius:8px;
-background:#2563eb;
+background:#1e293b;
 color:white;
+border:none;
+padding:10px 12px;
+border-radius:10px;
 font-size:14px;
+cursor:pointer;
 
 }
 
-.tabBtn:active{
+.topbar button.active{
 
 background:red;
 
 }
 
-.reset{
-
-background:#dc2626;
-
-}
-
-.tab{
+#content{
 
 padding:15px;
 
 }
 
-button{
+.card{
 
-width:90%;
-max-width:350px;
-padding:14px;
-margin:6px;
-border:none;
-border-radius:10px;
-background:#10b981;
-color:white;
-font-size:16px;
+background:#1e293b;
+margin:10px;
+padding:12px;
+border-radius:12px;
 
 }
 
-button:active{
+.progress{
 
-background:#059669;
-
-}
-
-canvas{
-
-width:90%;
-height:30px;
-background:#1f2937;
-border-radius:10px;
+height:12px;
+background:#334155;
+border-radius:8px;
+overflow:hidden;
+margin-top:6px;
 
 }
 
-.progressTitle{
+.progress div{
 
-margin-top:10px;
+height:100%;
+background:#22c55e;
+
+}
+
+#message{
+
+color:#f87171;
 font-size:18px;
+margin-top:5px;
+
+}
+
+footer{
+
+margin-top:20px;
+font-size:12px;
+opacity:0.6;
 
 }
