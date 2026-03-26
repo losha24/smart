@@ -10,8 +10,7 @@ text-align:center;
 
 .logo{
 
-width:90px;
-margin-top:10px;
+width:140px;
 
 }
 
@@ -20,8 +19,16 @@ margin-top:10px;
 display:flex;
 justify-content:space-around;
 background:#1e293b;
-padding:10px;
-margin-top:5px;
+padding:12px;
+font-size:18px;
+
+}
+
+#message{
+
+font-size:22px;
+color:#fbbf24;
+margin:10px;
 
 }
 
@@ -29,27 +36,37 @@ margin-top:5px;
 
 display:flex;
 flex-wrap:wrap;
-background:#111827;
 
 }
 
-.tabs button{
+.tabBtn{
 
 flex:1;
-margin:4px;
+margin:3px;
 padding:12px;
-background:#2563eb;
 border:none;
-border-radius:10px;
+border-radius:8px;
+background:#2563eb;
 color:white;
 font-size:14px;
-transition:0.2s;
 
 }
 
-.tabs button:active{
+.tabBtn:active{
 
-background:#1d4ed8;
+background:red;
+
+}
+
+.reset{
+
+background:#dc2626;
+
+}
+
+.tab{
+
+padding:15px;
 
 }
 
@@ -57,26 +74,19 @@ button{
 
 width:90%;
 max-width:350px;
-margin:6px;
 padding:14px;
-font-size:16px;
+margin:6px;
 border:none;
-border-radius:12px;
+border-radius:10px;
 background:#10b981;
 color:white;
-transition:0.2s;
+font-size:16px;
 
 }
 
 button:active{
 
 background:#059669;
-
-}
-
-.tab{
-
-padding:15px;
 
 }
 
@@ -89,16 +99,9 @@ border-radius:10px;
 
 }
 
-#message{
+.progressTitle{
 
-color:#f87171;
-margin-top:5px;
-
-}
-
-footer{
-
-margin-top:20px;
-opacity:0.5;
+margin-top:10px;
+font-size:18px;
 
 }
