@@ -3,35 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money AI 3.1.6</title>
+    <title>Smart Money AI v3.2</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <img src="logo.png" class="logo">
-    <div class="stats-container">
-        <div class="stat-card">💵 כסף: <span id="money">0</span></div>
-        <div class="stat-card">💹 מניות: <span id="stocksCount">0</span></div>
-        <div class="stat-card">⭐ רמה: <span id="level">1</span></div>
-        <div class="stat-card">🏦 בנק: <span id="bank">0</span></div>
+
+<img src="logo.png" class="logo" alt="Smart Money">
+
+<div class="stats-container">
+    <div class="stat-card">💰 כסף: <span id="money">0</span></div>
+    <div class="stat-card">🏦 בנק: <span id="bank">0</span></div>
+    <div class="stat-card">⭐ רמה: <span id="level">1</span></div>
+    <div class="stat-card">💹 מניות: <span id="stocksCount">0</span></div>
+</div>
+
+<div class="xp-container">
+    <div class="xpbar"><div id="xpfill"></div></div>
+</div>
+
+<nav class="topbar">
+    <div class="nav-row">
+        <button onclick="openTab('home')" id="btnHome">🏠 בית</button>
+        <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
+        <button onclick="openTab('stock')" id="btnStock">💹 בורסה</button>
     </div>
-    <div class="xp-container">
-        <div class="xpbar"><div id="xpfill"></div></div>
+    <div class="nav-row">
+        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+        <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
+        <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
     </div>
-    <nav class="topbar">
-        <div class="nav-row">
-            <button onclick="openTab('home')" id="btnHome">🏠 בית</button>
-            <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
-            <button onclick="openTab('stock')" id="btnStock">💹 בורסה</button>
-        </div>
-        <div class="nav-row">
-            <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
-            <button onclick="checkUpdate()" id="btnUpdate">🔄 עדכון</button>
-            <button onclick="resetGame()" style="background:#450a0a">🧹 איפוס</button>
-        </div>
-    </nav>
-    <div id="message-box"><div id="message">טוען...</div></div>
-    <div id="content"></div>
-    <script src="game.js"></script>
+    <div class="nav-row">
+        <button onclick="checkUpdate()" id="btnUpdate">🔄 עדכון</button>
+        <button onclick="resetGame()" style="background:#450a0a">🧹 איפוס</button>
+    </div>
+</nav>
+
+<div id="message-box"><div id="message">ברוכים הבאים לגרסה 3.2</div></div>
+
+<div id="content"></div>
+
+<footer id="copyright">
+    &copy; 2026 Alexey Zavodisker | Smart Money AI | Version 3.2
+</footer>
+
+<script src="game.js"></script>
 </body>
 </html>
