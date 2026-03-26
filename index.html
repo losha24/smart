@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="he">
+
 <head>
 
 <meta charset="UTF-8">
@@ -16,51 +17,49 @@
 
 <header>
 
-<div class="topbar">
-
-<div class="stats-left">
-
-💰 <span id="money">0</span>
-
-</div>
-
 <img src="logo.png" class="logo">
 
-<div class="stats-right">
+<div class="topbar">
 
-🏦 <span id="bank">0</span>
+<div>💰 <span id="money">0</span></div>
 
-</div>
+<div>🏦 <span id="bank">0</span></div>
 
-</div>
-
-<div class="levelBox">
-
-<div class="levelText">
-⭐ רמה <span id="level">1</span>
-</div>
-
-<div class="levelBar">
-
-<div id="levelProgress"></div>
+<div>⭐ <span id="level">1</span></div>
 
 </div>
-
-</div>
-
-<div id="rewardBox"></div>
 
 <div id="message"></div>
 
 </header>
 
+
 <div class="tabs">
 
+<button onclick="showTab('home')">🏠 בית</button>
 <button onclick="showTab('work')">💼 עבודה</button>
 <button onclick="showTab('invest')">📈 השקעות</button>
 <button onclick="showTab('bankTab')">🏦 בנק</button>
-<button onclick="resetGame()">♻️ איפוס</button>
-<button onclick="updateGame()">🔄 עדכון</button>
+<button onclick="resetGame()">♻️</button>
+
+</div>
+
+
+<div id="home" class="tab">
+
+<h2>סטטיסטיקות</h2>
+
+<p>כסף: <span id="homeMoney"></span></p>
+
+<p>השקעתי: <span id="homeInvest"></span></p>
+
+<p>הפסדים: <span id="homeLoss"></span></p>
+
+<p>בבנק: <span id="homeBank"></span></p>
+
+<p>הכנסה פסיבית: <span id="homePassive"></span></p>
+
+<p>כל כמה זמן: <span id="homeTimer"></span></p>
 
 </div>
 
@@ -69,13 +68,15 @@
 
 <h2>עבודות</h2>
 
-<button onclick="startJob(5,50,1)">משימה קטנה 5ש 💵50</button>
+<button onclick="startJob(5,50)">שליחות קטנה</button>
 
-<button onclick="startJob(15,150,3)">עבודה משרדית 15ש 💵150</button>
+<button onclick="startJob(15,150)">עבודה משרדית</button>
 
-<button onclick="startJob(30,400,7)">פרויקט קטן 30ש 💵400</button>
+<button onclick="startJob(30,350)">בניית אתר</button>
 
-<button onclick="startJob(60,1000,15)">פרויקט גדול 60ש 💵1000</button>
+<button onclick="startJob(60,900)">פרויקט גדול</button>
+
+<button onclick="startJob(90,2000)">ייעוץ עסקי</button>
 
 <canvas id="progressCanvas"></canvas>
 
@@ -86,13 +87,15 @@
 
 <h2>השקעות</h2>
 
-<button onclick="invest(200,1.5)">השקעה קטנה 200</button>
+<button onclick="invest(200)">קריפטו</button>
 
-<button onclick="invest(500,2)">סטארטאפ 500</button>
+<button onclick="invest(500)">סטארטאפ</button>
 
-<button onclick="invest(2000,3)">נדל״ן 2000</button>
+<button onclick="invest(1500)">מסחר</button>
 
-<button onclick="invest(5000,5)">חברת טכנולוגיה 5000</button>
+<button onclick="invest(3000)">נדל״ן</button>
+
+<button onclick="invest(7000)">חברת AI</button>
 
 </div>
 
@@ -105,17 +108,11 @@
 
 <button onclick="withdraw()">משוך 500</button>
 
-<p>כסף בבנק מוגן ממשברים</p>
-
 </div>
 
 <footer>
 
-<div id="passiveIncome"></div>
-
-<div class="copyright">
 © Smart Money Game
-</div>
 
 </footer>
 
