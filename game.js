@@ -25,6 +25,7 @@ function updateUI() {
     document.getElementById("money").innerText = Math.floor(money).toLocaleString();
     document.getElementById("bank").innerText = Math.floor(bank).toLocaleString();
     document.getElementById("level").innerText = level;
+    document.getElementById("stocksCount").innerText = stocks;
     document.getElementById("xpfill").style.width = (xp % 100) + "%";
     save();
 }
@@ -43,101 +44,65 @@ function openTab(tabName) {
     container.innerHTML = "";
 
     if (tabName === 'home') {
-        container.innerHTML = `<div class="card"><h3>סטטוס אישי</h3><p>רמה: ${level}</p><p>מניות שברשותך: ${stocks}</p></div>`;
+        container.innerHTML = `<div class="card"><h3>סטטוס אישי</h3><p>ברוך הבא לגרסה המעודכנת!</p><p>מניות בתיק: ${stocks}</p></div>`;
     } 
     else if (tabName === 'stock') {
-        // שינוי מחיר מניה בכניסה לטאב
-        let change = (Math.random() * 40 - 20); // -20 עד +20
-        stockPrice = Math.max(10, Math.floor(stockPrice + change));
-        let colorClass = change >= 0 ? 'up' : 'down';
-        
+        let volatility = (Math.random() * 40 - 20);
+        stockPrice = Math.max(10, Math.floor(stockPrice + volatility));
         container.innerHTML = `
-            <div class="stock-card">
-                <h3>בורסת SmartMoney</h3>
-                <div class="stock-price ${colorClass}">₪${stockPrice}</div>
-                <p>מניות בתיק: ${stocks}</p>
+            <div class="card">
+                <h2>📈 בורסה</h2>
+                <div style="font-size:24px; color:${volatility >=0 ? '#4ade80' : '#f87171'}">${stockPrice}₪</div>
+                <p>מניות ברשותך: ${stocks}</p>
                 <button class="action" onclick="buyStock()">קנה מניה</button>
                 <button class="action" style="background:#475569" onclick="sellStock()">מכור מניה</button>
             </div>`;
     }
     else if (tabName === 'work') {
-        container.innerHTML = `<h3>עבודה</h3><button class="action" onclick="doWork()">צא לעבוד (5 שניות)</button><div class="xpbar"><div id="workbar" style="width:0%; height:100%; background:#22c55e;"></div></div>`;
+        container.innerHTML = `<h3>עבודה</h3><button class="action" onclick="doWork()">צא לעבוד (בונוס XP)</button>`;
     }
     else if (tabName === 'install') {
         container.innerHTML = `
-            <div class="install-guide">
-                <strong>איך להתקין על מסך הבית?</strong><br>
-                1. לחץ על כפתור <strong>השיתוף</strong> (חץ למעלה ב-iPhone) או על <strong>3 הנקודות</strong> (ב-Android).<br>
-                2. בחר באפשרות <strong>"הוספה למסך הבית"</strong> (Add to Home Screen).<br>
-                3. אשר את ההוספה והאפליקציה תופיע בשולחן העבודה שלך!
-                <button class="action" style="margin-top:15px;" onclick="tryNativeInstall()">נסה התקנה אוטומטית</button>
+            <div class="card" style="text-align:right;">
+                <h3>📲 איך מתקינים?</h3>
+                <p><b>iPhone:</b> לחץ שיתוף > הוספה למסך הבית.</p>
+                <p><b>Android:</b> לחץ 3 נקודות > התקן אפליקציה.</p>
+                <button class="action" onclick="tryNativeInstall()">נסה התקנה אוטומטית</button>
             </div>`;
     }
 }
 
 function buyStock() {
     if (money >= stockPrice) {
-        money -= stockPrice;
-        stocks++;
-        message("קנית מניה!", "gain");
-        openTab('stock');
-        updateUI();
-    } else message("אין מספיק כסף", "loss");
+        money -= stockPrice; stocks++;
+        updateUI(); openTab('stock');
+    } else message("אין מספיק מזומן", "loss");
 }
 
 function sellStock() {
     if (stocks > 0) {
-        money += stockPrice;
-        stocks--;
-        message("מכרת מניה!", "gain");
-        openTab('stock');
-        updateUI();
-    } else message("אין לך מניות", "loss");
-}
-
-function doWork() {
-    let t = 0;
-    message("עובד...", "event");
-    let inter = setInterval(() => {
-        t++;
-        document.getElementById("workbar").style.width = (t/5*100) + "%";
-        if(t>=5) {
-            clearInterval(inter);
-            money += 100;
-            xp += 20;
-            message("הרווחת 100₪!", "gain");
-            updateUI();
-        }
-    }, 1000);
-}
-
-// לוגיקת התקנה
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-});
-
-function tryNativeInstall() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-    } else {
-        message("השתמש במדריך הידני למעלה", "event");
+        money += stockPrice; stocks--;
+        updateUI(); openTab('stock');
     }
 }
 
-function checkUpdate() {
-    message("מרענן גרסה...", "event");
-    // מחיקת Cache כוחנית
+async function checkUpdate() {
+    message("מנקה זיכרון ומעדכן...", "event");
+    if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) await caches.delete(key);
+    }
     if ('serviceWorker' in navigator) {
-        caches.keys().then(names => {
-            for (let name of names) caches.delete(name);
-        });
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) await reg.unregister();
     }
-    setTimeout(() => location.reload(true), 1000);
+    setTimeout(() => { window.location.reload(true); }, 1000);
 }
+
+function resetGame() { if(confirm("לאפס הכל?")) { localStorage.clear(); location.reload(true); } }
 
 document.addEventListener("DOMContentLoaded", () => {
     updateUI();
     openTab('home');
+    message("המערכת מוכנה", "gain");
 });
