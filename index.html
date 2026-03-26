@@ -22,9 +22,7 @@
 <div class="topbar">
 
 <div>💰 <span id="money">0</span></div>
-
 <div>🏦 <span id="bank">0</span></div>
-
 <div>⭐ <span id="level">1</span></div>
 
 </div>
@@ -33,52 +31,48 @@
 
 </header>
 
-
 <div class="tabs">
 
-<button onclick="showTab('home')">🏠 בית</button>
-<button onclick="showTab('work')">💼 עבודה</button>
-<button onclick="showTab('invest')">📈 השקעות</button>
-<button onclick="showTab('bankTab')">🏦 בנק</button>
-<button onclick="resetGame()">♻️</button>
+<button onclick="showTab('home')" class="tabBtn">🏠 בית</button>
+<button onclick="showTab('work')" class="tabBtn">💼 עבודה</button>
+<button onclick="showTab('invest')" class="tabBtn">📈 השקעות</button>
+<button onclick="showTab('business')" class="tabBtn">🏢 עסקים</button>
+<button onclick="showTab('bankTab')" class="tabBtn">🏦 בנק</button>
+<button onclick="showTab('market')" class="tabBtn">📊 בורסה</button>
+<button onclick="updateGame()" class="tabBtn">🔄 עדכון</button>
+<button onclick="resetGame()" class="tabBtn reset">♻️ איפוס משחק</button>
 
 </div>
 
+<div id="installBox">
+<button id="installBtn">📲 התקן אפליקציה</button>
+</div>
 
 <div id="home" class="tab">
 
 <h2>סטטיסטיקות</h2>
 
 <p>כסף: <span id="homeMoney"></span></p>
-
-<p>השקעתי: <span id="homeInvest"></span></p>
-
+<p>השקעות: <span id="homeInvest"></span></p>
 <p>הפסדים: <span id="homeLoss"></span></p>
-
-<p>בבנק: <span id="homeBank"></span></p>
-
+<p>בנק: <span id="homeBank"></span></p>
 <p>הכנסה פסיבית: <span id="homePassive"></span></p>
-
-<p>כל כמה זמן: <span id="homeTimer"></span></p>
 
 </div>
 
 
 <div id="work" class="tab">
 
-<h2>עבודות</h2>
+<h2>עבודה</h2>
 
-<button onclick="startJob(5,50)">שליחות קטנה</button>
-
-<button onclick="startJob(15,150)">עבודה משרדית</button>
-
-<button onclick="startJob(30,350)">בניית אתר</button>
-
-<button onclick="startJob(60,900)">פרויקט גדול</button>
-
-<button onclick="startJob(90,2000)">ייעוץ עסקי</button>
+<div class="progressTitle">התקדמות עבודה</div>
 
 <canvas id="progressCanvas"></canvas>
+
+<button onclick="startJob(5,50)">משימה קטנה (5ש) 💰50</button>
+<button onclick="startJob(15,150)">עבודה משרדית (15ש) 💰150</button>
+<button onclick="startJob(30,400)">בניית אתר (30ש) 💰400</button>
+<button onclick="startJob(60,1000)">פרויקט גדול (60ש) 💰1000</button>
 
 </div>
 
@@ -87,15 +81,21 @@
 
 <h2>השקעות</h2>
 
-<button onclick="invest(200)">קריפטו</button>
+<button onclick="invest(200)">קריפטו (200)</button>
+<button onclick="invest(500)">סטארטאפ (500)</button>
+<button onclick="invest(2000)">נדל״ן (2000)</button>
+<button onclick="invest(5000)">חברת טכנולוגיה (5000)</button>
 
-<button onclick="invest(500)">סטארטאפ</button>
+</div>
 
-<button onclick="invest(1500)">מסחר</button>
 
-<button onclick="invest(3000)">נדל״ן</button>
+<div id="business" class="tab">
 
-<button onclick="invest(7000)">חברת AI</button>
+<h2>בניית עסקים</h2>
+
+<button onclick="buyBusiness(1000,5)">קיוסק 💰1000</button>
+<button onclick="buyBusiness(5000,25)">חנות 💰5000</button>
+<button onclick="buyBusiness(20000,120)">מפעל 💰20000</button>
 
 </div>
 
@@ -105,8 +105,16 @@
 <h2>בנק</h2>
 
 <button onclick="deposit()">הפקד 500</button>
-
 <button onclick="withdraw()">משוך 500</button>
+
+</div>
+
+
+<div id="market" class="tab">
+
+<h2>בורסה</h2>
+
+<button onclick="trade()">בצע מסחר</button>
 
 </div>
 
