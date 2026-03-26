@@ -1,71 +1,95 @@
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: #0f172a; /* כחול כהה עמוק */
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f172a;
     color: #f8fafc;
     margin: 0;
     text-align: center;
     direction: rtl;
-    line-height: 1.5;
+    user-select: none;
 }
 
-/* לוגו ואנימציה קלה */
-.logo { width: 130px; margin: 20px auto; display: block; filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.3)); }
+.logo { width: 100px; margin: 15px auto; display: block; }
 
+/* סטטיסטיקות */
 .stats-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 15px;
+    gap: 10px;
+    padding: 10px;
 }
-
 .stat-card {
-    background: linear-gradient(145deg, #1e293b, #0f172a);
-    padding: 15px;
-    border-radius: 16px;
-    font-weight: 700;
+    background: #1e293b;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: bold;
     border: 1px solid #334155;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
 }
 
-/* מד XP מעוצב */
-.xp-container { padding: 0 20px; }
+/* מד XP */
+.xp-container { padding: 0 15px 10px; }
 .xpbar {
-    width: 100%; height: 12px; background: #334155;
-    border-radius: 6px; overflow: hidden; border: 1px solid #475569;
+    width: 100%; height: 10px; background: #334155;
+    border-radius: 5px; overflow: hidden;
 }
-#xpfill { height: 100%; width: 0%; background: linear-gradient(90deg, #fbbf24, #f59e0b); transition: width 0.5s ease; }
+#xpfill { height: 100%; width: 0%; background: #fbbf24; transition: width 0.4s ease; }
 
-/* מערכת הודעות ואירועים */
-#message-box { min-height: 50px; padding: 10px; display: flex; align-items: center; justify-content: center; }
-#message { padding: 10px 20px; border-radius: 10px; font-size: 15px; transition: 0.3s; }
-.gain { background: rgba(34, 197, 94, 0.15); color: #4ade80 !important; border: 1px solid #22c55e; }
-.loss { background: rgba(239, 68, 68, 0.15); color: #f87171 !important; border: 1px solid #ef4444; }
-.event { background: rgba(245, 158, 11, 0.15); color: #fbbf24 !important; border: 1px solid #f59e0b; animation: pulse 2s infinite; }
-
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-
-/* תפריט ניווט */
+/* תפריט 2 שורות */
 .topbar {
-    display: flex; overflow-x: auto; gap: 10px; padding: 15px;
-    background: #1e293b; position: sticky; top: 0; z-index: 100;
-    scrollbar-width: none;
+    background: #1e293b;
+    padding: 10px 5px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.nav-row {
+    display: flex;
+    justify-content: space-around;
+    gap: 5px;
 }
 .topbar button {
-    white-space: nowrap; background: #334155; color: #cbd5e1;
-    border: none; padding: 12px 20px; border-radius: 12px; font-weight: 600;
+    flex: 1;
+    background: #334155;
+    color: white;
+    border: none;
+    padding: 10px 2px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
 }
-.topbar button.active { background: #2563eb; color: white; box-shadow: 0 0 15px rgba(37, 99, 235, 0.4); }
+/* כפתור פעיל הופך לאדום */
+.topbar button.active {
+    background: #ef4444 !important;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+/* תוכן */
+#content { padding: 15px; min-height: 250px; }
+.card { background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; }
 
 /* כפתורי פעולה */
 button.action {
-    width: 100%; max-width: 350px; padding: 16px; margin: 10px auto;
-    background: #2563eb; color: white; border: none; border-radius: 14px;
-    font-size: 16px; font-weight: bold; cursor: pointer; transition: transform 0.1s;
+    display: block; width: 100%; max-width: 300px; margin: 10px auto;
+    padding: 14px; background: #2563eb; border: none;
+    border-radius: 10px; color: white; font-weight: bold;
 }
-button.action:active { transform: scale(0.98); }
-button.secondary { background: #475569; font-size: 14px; padding: 10px; }
+button.action:active { transform: scale(0.97); }
 
-.inventory { margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center; }
-.item-tag { background: #334155; padding: 6px 12px; border-radius: 20px; margin: 4px; font-size: 13px; border: 1px solid #475569; }
+/* הודעות ואירועים */
+#message-box { min-height: 45px; margin: 5px; display: flex; align-items: center; justify-content: center; }
+#message { font-size: 14px; padding: 5px 15px; border-radius: 20px; }
+.gain { color: #4ade80; }
+.loss { color: #f87171; }
+.event { color: #fbbf24; font-weight: bold; animation: flash 1s infinite; }
 
-footer { padding: 30px 10px; font-size: 11px; color: #64748b; }
+@keyframes flash { 50% { opacity: 0.7; } }
+
+.footer-actions { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.secondary { background: #334155 !important; font-size: 12px !important; padding: 8px !important; }
+
+footer { font-size: 10px; color: #64748b; padding-bottom: 20px; }
