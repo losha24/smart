@@ -1,56 +1,96 @@
 body{
 
+margin:0;
 font-family:Arial;
-background:#101820;
+background:#0f172a;
 color:white;
 text-align:center;
-margin:0;
 
 }
 
 header{
 
-background:#1f2937;
-padding:20px;
+background:#1e293b;
+padding:10px;
 
 }
 
-h1{
+.topbar{
 
-margin:0;
-
-}
-
-.money{
-
-font-size:22px;
-margin-top:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
 
 }
 
-.container{
+.logo{
 
-padding:20px;
+width:40px;
+
+}
+
+.stats{
+
+display:flex;
+gap:15px;
+font-size:14px;
+
+}
+
+.tabs{
+
+display:flex;
+justify-content:space-around;
+background:#111827;
+padding:10px;
+
+}
+
+.tabs button{
+
+flex:1;
+margin:2px;
+padding:10px;
+border:none;
+border-radius:8px;
+background:#10b981;
+color:white;
+
+}
+
+.tab{
+
+padding:15px;
 
 }
 
 button{
 
-width:220px;
-padding:15px;
-margin:10px;
-font-size:18px;
+width:90%;
+max-width:350px;
+margin:8px;
+padding:12px;
+font-size:16px;
 border:none;
 border-radius:10px;
-background:#10b981;
+background:#059669;
 color:white;
-cursor:pointer;
 
 }
 
-button:hover{
+.progressBox{
 
-background:#059669;
+margin-top:20px;
+
+}
+
+canvas{
+
+width:90%;
+height:40px;
+background:#1f2937;
+border-radius:10px;
 
 }
 
@@ -59,7 +99,8 @@ footer{
 position:fixed;
 bottom:0;
 width:100%;
-background:#1f2937;
-padding:15px;
+background:#111827;
+padding:10px;
+font-size:12px;
 
 }
