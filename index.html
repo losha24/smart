@@ -1,18 +1,51 @@
-
 <!DOCTYPE html>
-<html lang='he'>
+<html lang="he">
 <head>
-<meta charset='UTF-8'>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Smart Money v2 PRO</title>
-<link rel='stylesheet' href='style.css'>
-<script src='app.js' defer></script>
-<script src='economy.js' defer></script>
-<script src='bank.js' defer></script>
-<script src='market.js' defer></script>
-<script src='tasks.js' defer></script>
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+<script src="economy.js" defer></script>
+<script src="bank.js" defer></script>
+<script src="market.js" defer></script>
+<script src="tasks.js" defer></script>
 </head>
 <body>
-<h1>Smart Money v2 PRO</h1>
-<!-- תוכן המשחק -->
+
+<!-- לוגו -->
+<div class="logo-container">
+    <img src="logo.png" alt="Smart Money Logo" class="logo">
+</div>
+
+<!-- בר עליון -->
+<div class="top-bar">
+    <button id="home-btn">🏠 בית</button>
+    <div class="status">
+        <span id="money">💰 0 ₪</span>
+        <span id="bank">🏦 0 ₪</span>
+        <span id="income">💵 הכנסה פסיבית: 0 ₪</span>
+        <span id="level">⭐ רמה: 1</span>
+    </div>
+    <button id="install-btn">📲 התקנה</button>
+    <button id="reset-btn">♻️ איפוס משחק</button>
+</div>
+
+<!-- תוכן דינמי -->
+<div id="content" class="content">
+    <!-- כאן יופיעו כרטיסי עבודה, השקעה, משימות, שוק וכו' -->
+</div>
+
+<!-- בר התקדמות רמה -->
+<div class="level-bar-container">
+    <div class="level-bar" id="level-bar"></div>
+    <div class="level-text" id="level-text">ניסיון 0/100</div>
+</div>
+
+<!-- זכויות יוצרים -->
+<footer>
+    © 2026 Smart Money | גרסה 2 PRO
+</footer>
+
 </body>
 </html>
