@@ -1,33 +1,41 @@
-let money=100
+let money=500
 let bank=0
 let level=1
-let xp=0
+
+let totalInvest=0
+let totalLoss=0
+
 let passive=0
+let passiveTimer=8
 
 let jobActive=false
+let jobStart=0
 let jobTime=0
 let jobReward=0
-let jobPassive=0
-let jobStart=0
 
 const canvas=document.getElementById("progressCanvas")
 const ctx=canvas.getContext("2d")
 
-function msg(t){
-document.getElementById("message").innerText=t
-}
-
 function updateUI(){
+
+money=Math.floor(money)
 
 document.getElementById("money").innerText=money
 document.getElementById("bank").innerText=bank
 document.getElementById("level").innerText=level
 
-document.getElementById("passiveIncome").innerText=
-"הכנסה פסיבית: "+passive+" כל 10 שניות"
+document.getElementById("homeMoney").innerText=money
+document.getElementById("homeInvest").innerText=totalInvest
+document.getElementById("homeLoss").innerText=totalLoss
+document.getElementById("homeBank").innerText=bank
+document.getElementById("homePassive").innerText=passive
+document.getElementById("homeTimer").innerText=passiveTimer+" שניות"
 
-let progress=(xp/(level*1000))*100
-document.getElementById("levelProgress").style.width=progress+"%"
+}
+
+function msg(t){
+
+document.getElementById("message").innerText=t
 
 }
 
@@ -39,45 +47,37 @@ document.getElementById(name).style.display="block"
 
 }
 
-showTab("work")
+showTab("home")
 
-function startJob(time,reward,passiveGain){
+function startJob(time,reward){
 
-if(jobActive){
-msg("יש עבודה פעילה")
-return
-}
+if(jobActive)return
 
 jobActive=true
+jobStart=Date.now()
 jobTime=time
 jobReward=reward
-jobPassive=passiveGain
-jobStart=Date.now()
 
 }
 
-function drawProgress(){
+function draw(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height)
 
 if(jobActive){
 
-let elapsed=(Date.now()-jobStart)/1000
-
-let progress=elapsed/jobTime
+let e=(Date.now()-jobStart)/1000
+let p=e/jobTime
 
 ctx.fillStyle="#10b981"
-ctx.fillRect(0,0,canvas.width*progress,canvas.height)
+ctx.fillRect(0,0,canvas.width*p,canvas.height)
 
-if(progress>=1){
+if(p>=1){
 
 money+=jobReward
-passive+=jobPassive
-xp+=jobReward
-
 jobActive=false
 
-checkLevel()
+msg("קיבלת "+jobReward)
 
 save()
 
@@ -87,36 +87,33 @@ save()
 
 }
 
-setInterval(drawProgress,100)
+setInterval(draw,100)
 
-function invest(cost,mult){
+function invest(cost){
 
 if(money<cost){
+
 msg("אין מספיק כסף")
+
 return
+
 }
 
 money-=cost
 
-let chance=Math.random()
+totalInvest+=cost
 
-if(chance>0.5){
+let change=(Math.random()*cost*0.4)-(cost*0.2)
 
-let gain=Math.floor(cost*mult)
-money+=gain
-msg("השקעה הצליחה +"+gain)
+passive+=Math.floor(change/10)
 
-}else{
+if(change<0){
 
-let gain=Math.floor(cost*0.3)
-money+=gain
-msg("השקעה נכשלה")
+totalLoss+=Math.abs(change)
 
 }
 
-xp+=cost
-
-checkLevel()
+msg("השקעה שינתה הכנסה "+Math.floor(change/10))
 
 save()
 
@@ -125,14 +122,15 @@ save()
 function deposit(){
 
 if(money<500){
-msg("אין מספיק כסף להפקדה")
+
+msg("אין מספיק כסף")
+
 return
+
 }
 
 money-=500
 bank+=500
-
-msg("הפקדת 500 לבנק")
 
 save()
 
@@ -141,83 +139,51 @@ save()
 function withdraw(){
 
 if(bank<500){
+
 msg("אין כסף בבנק")
+
 return
+
 }
 
 bank-=500
 money+=500
 
-msg("משכת 500")
-
 save()
 
 }
 
-function checkLevel(){
+setInterval(()=>{
 
-if(xp>=level*1000){
+money+=passive
 
-xp=0
-level++
+updateUI()
 
-let reward=level*200
+},passiveTimer*1000)
 
-money+=reward
-
-document.getElementById("rewardBox").innerText=
-"🎉 עלית רמה וקיבלת "+reward
-
-}
-
-}
-
-function economicEvent(){
+function crisis(){
 
 let r=Math.random()
 
 if(r<0.2){
 
-money=Math.floor(money*0.7)
+money*=0.8
 
-msg("⚠️ משבר כלכלי")
+msg("⚠️ משבר אינפלציה!")
+
+}
+
+else if(r<0.3){
+
+passive*=0.7
+
+msg("⚠️ קריסת שוק")
 
 }
 
 }
 
-setInterval(economicEvent,60000)
-
-setInterval(()=>{
-
-money+=passive
-updateUI()
-
-},10000)
-
-function save(){
-
-localStorage.setItem("sm_money",money)
-localStorage.setItem("sm_bank",bank)
-localStorage.setItem("sm_level",level)
-localStorage.setItem("sm_xp",xp)
-localStorage.setItem("sm_passive",passive)
-
-updateUI()
-
-}
-
-function load(){
-
-money=parseInt(localStorage.getItem("sm_money"))||100
-bank=parseInt(localStorage.getItem("sm_bank"))||0
-level=parseInt(localStorage.getItem("sm_level"))||1
-xp=parseInt(localStorage.getItem("sm_xp"))||0
-passive=parseInt(localStorage.getItem("sm_passive"))||0
-
-updateUI()
-
-}
+setInterval(crisis,60000)
 
 function resetGame(){
 
@@ -226,32 +192,28 @@ location.reload()
 
 }
 
+function save(){
+
+localStorage.setItem("sm_money",money)
+localStorage.setItem("sm_bank",bank)
+localStorage.setItem("sm_passive",passive)
+localStorage.setItem("sm_invest",totalInvest)
+localStorage.setItem("sm_loss",totalLoss)
+
+updateUI()
+
+}
+
+function load(){
+
+money=parseInt(localStorage.getItem("sm_money"))||500
+bank=parseInt(localStorage.getItem("sm_bank"))||0
+passive=parseInt(localStorage.getItem("sm_passive"))||0
+totalInvest=parseInt(localStorage.getItem("sm_invest"))||0
+totalLoss=parseInt(localStorage.getItem("sm_loss"))||0
+
+updateUI()
+
+}
+
 load()
-
-async function updateGame(){
-
-let r=await fetch("version.json?"+Date.now())
-let data=await r.json()
-
-let current=localStorage.getItem("version")
-
-if(data.version!==current){
-
-localStorage.clear()
-localStorage.setItem("version",data.version)
-
-location.reload()
-
-}else{
-
-location.reload()
-
-}
-
-}
-
-if("serviceWorker" in navigator){
-
-navigator.serviceWorker.register("service-worker.js")
-
-}
