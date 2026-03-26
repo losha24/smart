@@ -3,49 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Money</title>
-
+<title>Smart Money v2 PRO</title>
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
-
 </head>
-
 <body>
 
+<!-- לוגו מרכזי גדול -->
 <img src="logo.png" class="logo">
 
+<!-- בר עליון -->
 <div class="topbar">
-
-<button onclick="openTab('home')" id="btnHome">🏠 בית</button>
-
-<button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
-
-<button onclick="openTab('invest')" id="btnInvest">📈 השקעה</button>
-
-<button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
-
-<button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-
-<button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
-
-<button onclick="installApp()" id="installBtn">📲 התקנה</button>
-
-<button onclick="checkUpdate()">🔄 עדכון</button>
-
-<button onclick="resetGame()">🧹 איפוס משחק</button>
-
+  <button onclick="openTab('home')" id="btnHome">🏠 בית</button>
+  <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
+  <button onclick="openTab('invest')" id="btnInvest">📈 השקעה</button>
+  <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
+  <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+  <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
+  <button onclick="installApp()" id="installBtn">📲 התקנה</button>
+  <button onclick="checkUpdate()" id="updateBtn">🔄 עדכון</button>
+  <button onclick="resetGame()" id="resetBtn">🧹 איפוס משחק</button>
 </div>
 
+<!-- הודעות שגיאה/הצלחה -->
 <div id="message"></div>
 
+<!-- תוכן מרכזי -->
 <div id="content"></div>
 
-<footer>
-Smart Money © 2026  
-גרסה 1.2
-</footer>
+<!-- Footer -->
+<footer>Smart Money © 2026 Version 2.0 PRO</footer>
 
 <script src="app.js"></script>
-
 </body>
 </html>
