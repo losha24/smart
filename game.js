@@ -1,200 +1,168 @@
-/**
- * Smart Money AI - Version 3.8
- * Developed by: Alexey Zavodisker
- * Date: 2026
- */
-
-const VERSION = "3.8";
-console.log(`Smart Money AI v${VERSION} - All rights reserved to Alexey Zavodisker`);
-
+const VERSION = "3.8.1";
 let working = false;
 
-// Helpers
+// טעינה ושמירה
 const load = (k, d) => { try { return localStorage[k] ? JSON.parse(localStorage[k]) : d; } catch { return d; } };
 const save = () => {
-    const data = { money, bank, xp, level, rep, passive, totalWorkDone, debt, theme, myProperties, mySkills, myBusiness, currentTaskId, stockPrices, myStocks };
+    const data = { money, bank, xp, level, rep, passive, totalWorkDone, debt, theme, myProperties, mySkills, myBusiness, currentTaskId, stockPrices, myStocks, myInventory };
     for (let k in data) localStorage[k] = JSON.stringify(data[k]);
 };
 
-// State
+// משתנים
 let money = load('money', 1500), bank = load('bank', 0), xp = load('xp', 0), level = load('level', 1);
 let rep = load('rep', 0), passive = load('passive', 0), totalWorkDone = load('totalWorkDone', 0);
 let debt = load('debt', 0), theme = load('theme', 'dark'), currentTaskId = load('currentTaskId', 0);
 let myProperties = load('myProperties', []), mySkills = load('mySkills', []), myBusiness = load('myBusiness', []);
-let myStocks = load('myStocks', { tech: 0, reit: 0, crypto: 0 });
+let myInventory = load('myInventory', []), myStocks = load('myStocks', { tech: 0, reit: 0, crypto: 0 });
 let stockPrices = load('stockPrices', { tech: 100, reit: 250, crypto: 50 });
 
-// Data: Works
+// נתונים
 const worksData = [
-    { id: "c", n: "שוטף כלים", p: 130, t: 4, x: 15, r: 1, req: null },
-    { id: "t", n: "נהג מונית", p: 350, t: 6, x: 30, r: 3, req: "רישיון נהיגה" },
-    { id: "g", n: "מאבטח", p: 800, t: 10, x: 70, r: 5, req: "רישיון נשק" },
-    { id: "tc", n: "טכנאי רשתות", p: 1800, t: 15, x: 150, r: 10, req: "קורס טכנאי" },
-    { id: "m", n: "מנהל קמפיינים", p: 4200, t: 25, x: 300, r: 25, req: "שיווק שותפים" },
-    { id: "cy", n: "אנליסט סייבר", p: 9500, t: 45, x: 800, r: 60, req: "ניהול מערכות" }
+    { n: "שוטף כלים", p: 130, t: 4, x: 15, r: 1, req: null },
+    { n: "נהג מונית", p: 350, t: 6, x: 30, r: 3, req: "רישיון נהיגה" },
+    { n: "מאבטח", p: 850, t: 10, x: 70, r: 5, req: "רישיון נשק" },
+    { n: "שוטר סיור", p: 1600, t: 14, x: 130, r: 15, req: "כושר קרבי" },
+    { n: "טכנאי רשתות", p: 2500, t: 18, x: 200, r: 25, req: "קורס טכנאי" },
+    { n: "אנליסט סייבר", p: 12000, t: 50, x: 1000, r: 100, req: "ניהול מערכות" }
 ];
 
-// Data: Real Estate
+const marketData = [
+    { n: "אייפון 15", c: 4500, r: 10, i: "📱" },
+    { n: "שעון רולקס", c: 45000, r: 150, i: "⌚" },
+    { n: "מאזדה 3", c: 140000, r: 300, i: "🚗" },
+    { n: "מרצדס S-Class", c: 850000, r: 1500, i: "🚘" },
+    { n: "מטוס פרטי", c: 15000000, r: 10000, i: "🛩️" }
+];
+
 const estateData = [
     { n: "מחסן", c: 12000, p: 100, i: "📦" },
-    { n: "דירה", c: 180000, p: 1500, i: "🏠" },
-    { n: "בניין", c: 3000000, p: 35000, i: "🏙️" },
-    { n: "קניון", c: 12000000, p: 150000, i: "🏬" }
+    { n: "דירה", c: 250000, p: 2000, i: "🏠" },
+    { n: "בניין", c: 4000000, p: 45000, i: "🏙️" },
+    { n: "קניון", c: 18000000, p: 220000, i: "🏬" }
 ];
 
-// Data: Business
 const businessData = [
-    { n: "דוכן פלאפל", c: 5000, inc: 250, i: "🧆" },
-    { n: "מוסך", c: 60000, inc: 3500, i: "🔧" },
-    { n: "סטארטאפ", c: 500000, inc: 28000, i: "🚀" }
+    { n: "דוכן פלאפל", c: 6000, inc: 350, i: "🧆", t: 40 },
+    { n: "מוסך מרכזי", c: 85000, inc: 5000, i: "🔧", t: 150 },
+    { n: "חברת הייטק", c: 1200000, inc: 75000, i: "💻", t: 400 }
 ];
-
-// Data: 20 Tasks
-const tasksData = Array.from({length: 20}, (_, i) => ({
-    n: `משימה ${i+1}`, g: (i+1)*10, p: (i+1)*3000, d: `בצע ${(i+1)*10} עבודות לקידום הקריירה`
-}));
-
-function notify(t, c = '') {
-    const el = document.getElementById("msg-text");
-    if(el) { el.innerText = t; el.className = c; }
-}
 
 function updateUI() {
     document.getElementById("money").innerText = Math.floor(money).toLocaleString();
     document.getElementById("bank").innerText = Math.floor(bank).toLocaleString();
-    document.getElementById("rep-ui").innerText = Math.floor(rep);
     document.getElementById("debt-ui").innerText = Math.floor(debt).toLocaleString();
     document.getElementById("passive-ui").innerText = (passive/10).toFixed(1);
-    document.getElementById("xpfill").style.width = (xp % 100) + "%";
-    document.getElementById("level").innerText = level;
     document.body.className = theme + "-theme";
     save();
 }
 
-function toggleTheme() {
-    theme = (theme === 'dark' ? 'light' : 'dark');
-    updateUI();
-}
-
 function openTab(tab) {
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
-    const btnId = "btn" + tab.charAt(0).toUpperCase() + tab.slice(1);
-    document.getElementById(btnId)?.classList.add("active");
-    
-    const c = document.getElementById("content");
-    c.innerHTML = "";
+    document.getElementById("btn" + tab.charAt(0).toUpperCase() + tab.slice(1))?.classList.add("active");
+    const c = document.getElementById("content"); c.innerHTML = "";
 
     if (tab === 'home') {
-        c.innerHTML = `<div class="card"><h3>📊 נתונים אישיים</h3>
-        <p>מוניטין: <b>${rep}</b></p><p>עבודות שבוצעו: <b>${totalWorkDone}</b></p>
-        <p>נכסים בבעלות: <b>${myProperties.length}</b></p>
-        <p>עסקים פעילים: <b>${myBusiness.length}</b></p>
-        <hr><small>&copy; 2026 Alexey Zavodisker</small></div>`;
+        c.innerHTML = `
+        <div class="card home-grid">
+            <div class="stat-box">⭐ רמה: <b>${level}</b></div>
+            <div class="stat-box">🎭 מוניטין: <b>${rep}</b></div>
+        </div>
+        <div class="card">
+            <h4>🎒 התיק שלי:</h4>
+            <div class="inv-list">
+                ${mySkills.map(s => `<span class="tag">🎓 ${s}</span>`).join("")}
+                ${myInventory.map(i => `<span class="tag">${i.i} ${i.n}</span>`).join("")}
+                ${myProperties.map(p => `<span class="tag">${p.i} ${p.n}</span>`).join("")}
+            </div>
+            ${mySkills.length + myInventory.length + myProperties.length === 0 ? '<small>אין פריטים עדיין...</small>' : ''}
+        </div>
+        <div class="xp-section card">
+            <small>ניסיון לרמה הבאה: ${xp}%</small>
+            <div class="xpbar"><div id="xpfill" style="width:${xp}%"></div></div>
+        </div>`;
     } 
     else if (tab === 'work') {
-        c.innerHTML = `<h3>💼 עבודה וקריירה</h3><div class="xpbar"><div id="wb" style="width:0%; background:#22c55e; height:100%;"></div></div>`;
+        c.innerHTML = `<h3>💼 עבודה</h3><div class="xpbar"><div id="wb" style="width:0%; background:#22c55e; height:100%;"></div></div><div class="grid-2"></div>`;
         worksData.forEach(w => {
             const locked = w.req && !mySkills.includes(w.req);
-            c.innerHTML += `<div class="card"><b>${w.n}</b><br><small>שכר: ${w.p}₪ | מוניטין: +${w.r}</small>
-            <button class="action ${locked?'disabled':''}" onclick="runWork(${w.p},${w.t},${w.x},${w.r})">${locked?'🔒 '+w.req:'עבוד'}</button></div>`;
+            c.querySelector(".grid-2").innerHTML += `<div class="card small-card"><b>${w.n}</b><br><small>${w.p}₪</small><button class="action ${locked?'disabled':''}" onclick="runWork(${w.p},${w.t},${w.x},${w.r})">${locked?'🔒':'+'}</button></div>`;
+        });
+    }
+    else if (tab === 'market') {
+        c.innerHTML = `<div class="grid-2"></div>`;
+        marketData.forEach(m => {
+            const has = myInventory.find(x => x.n === m.n);
+            c.querySelector(".grid-2").innerHTML += `<div class="card small-card">${m.i} <b>${m.n}</b><br><small>${m.c}₪</small><button class="action ${has?'disabled':''}" onclick="buyMarket('${m.n}',${m.c},${m.r},'${m.i}')">${has?'✔️':'קנה'}</button></div>`;
         });
     }
     else if (tab === 'business') {
-        c.innerHTML = `<h3>🏢 ניהול עסקים</h3>`;
         businessData.forEach(b => {
             const owned = myBusiness.find(x => x.n === b.n);
             c.innerHTML += `<div class="card">${b.i} <b>${b.n}</b><br>
-            ${owned ? `<button class="action" style="background:#22c55e" onclick="manageBusiness('${b.n}',${b.inc})">אסוף רווח: ${b.inc}₪</button>` : 
-            `<button class="action" onclick="buyBusiness('${b.n}',${b.c},${b.inc},'${b.i}')">פתח ב-${b.c.toLocaleString()}₪</button>`}</div>`;
+            ${owned ? `<div class="cooldown-bar"><div id="cb-${b.n.replace(/\s/g,'')}" style="width:100%"></div></div><button id="bb-${b.n.replace(/\s/g,'')}" class="action" style="background:#22c55e" onclick="manageBusiness('${b.n}',${b.inc},${b.t})">אסוף רווח</button>` : 
+            `<button class="action" onclick="buyBusiness('${b.n}',${b.c},${b.inc},'${b.i}',${b.t})">פתח ב-${b.c.toLocaleString()}₪</button>`}</div>`;
         });
     }
     else if (tab === 'realestate') {
-        c.innerHTML = `<h3>🏘️ השקעות נדל"ן</h3>`;
+        c.innerHTML = `<div class="grid-2"></div>`;
         estateData.forEach(e => {
             const has = myProperties.find(p => p.n === e.n);
-            c.innerHTML += `<div class="card">${e.i} <b>${e.n}</b><br><small>הכנסה פסיבית: ${e.p}₪/ש'</small>
-            <button class="action ${has?'disabled':''}" onclick="buyProp('${e.n}',${e.c},${e.p},'${e.i}')">${has?'בבעלותך':'קנה ב-'+e.c.toLocaleString()+'₪'}</button></div>`;
+            c.querySelector(".grid-2").innerHTML += `<div class="card small-card">${e.i} <b>${e.n}</b><br><small>+${e.p}₪</small><button class="action ${has?'disabled':''}" onclick="buyProp('${e.n}',${e.c},${e.p},'${e.i}')">${has?'✔️':'קנה'}</button></div>`;
+        });
+    }
+    else if (tab === 'skills') {
+        c.innerHTML = `<div class="grid-2"></div>`;
+        const sks = [{n:"רישיון נהיגה", c:4500}, {n:"רישיון נשק", c:7500}, {n:"כושר קרבי", c:12000}, {n:"קורס טכנאי", c:18000}, {n:"שיווק שותפים", c:35000}, {n:"ניהול מערכות", c:65000}];
+        sks.forEach(s => {
+            const has = mySkills.includes(s.n);
+            c.querySelector(".grid-2").innerHTML += `<div class="card small-card"><b>${s.n}</b><br><small>${s.c}₪</small><button class="action ${has?'disabled':''}" onclick="buySkill('${s.n}',${s.c})">${has?'✔️':'למד'}</button></div>`;
         });
     }
     else if (tab === 'stock') {
-        c.innerHTML = `<h3>💹 מסחר בבורסה</h3>`;
+        c.innerHTML = `<h3>💹 בורסה</h3>`;
         ['tech', 'reit', 'crypto'].forEach(s => {
-            c.innerHTML += `<div class="card"><b>${s.toUpperCase()}</b>: <span id="s-${s}">${stockPrices[s]}</span>₪ (ברשותך: ${myStocks[s]})<br>
-            <button onclick="trade('${s}','buy')">קנה</button> <button onclick="trade('${s}','sell')">מכור</button></div>`;
+            c.innerHTML += `<div class="card"><b>${s.toUpperCase()}</b>: <span id="s-${s}">${stockPrices[s]}</span>₪ (שלך: ${myStocks[s]})<br><button onclick="trade('${s}','buy')">קנה</button> <button onclick="trade('${s}','sell')">מכור</button></div>`;
         });
     }
     else if (tab === 'bank') {
-        c.innerHTML = `<div class="card"><h3>🏦 שירותי בנק</h3>
-        <input id="bAmt" type="number" placeholder="הזן סכום">
-        <button class="action" onclick="bankOp('dep')">הפקדה</button>
-        <button class="action" style="background:#475569" onclick="bankOp('wit')">משיכה</button>
-        <hr><h3>💳 הלוואות אקספרס</h3>
-        <button class="action" style="background:#ef4444" onclick="loanOp('take')">קח הלוואה (50,000₪)</button>
-        <button class="action" style="background:#10b981" onclick="loanOp('pay')">החזר חוב (10,000₪)</button></div>`;
+        c.innerHTML = `<div class="card"><h3>🏦 בנק</h3><input id="bAmt" type="number" placeholder="סכום"><button class="action" onclick="bankOp('dep')">הפקדה</button><button class="action" style="background:#475569" onclick="bankOp('wit')">משיכה</button><hr><h3>💳 הלוואות</h3><button class="action" style="background:#ef4444" onclick="loanOp('take')">קח 50,000₪</button></div>`;
     }
     else if (tab === 'tasks') {
-        const t = tasksData[currentTaskId] || {n:"הכל הושלם!", g:0, p:0, d:"אין משימות נוספות"};
-        const can = totalWorkDone >= t.g;
-        c.innerHTML = `<div class="card"><h3>🎯 ${t.n}</h3><p>${t.d}</p>
-        <p>התקדמות: <b>${totalWorkDone}/${t.g}</b></p>
-        <button class="action ${!can?'disabled':''}" onclick="claimTask(${t.p})">קבל פרס ${t.p.toLocaleString()}₪</button></div>`;
+        const t = Array.from({length:20},(_,i)=>({g:(i+1)*10,p:(i+1)*3500}))[currentTaskId] || {g:0,p:0};
+        c.innerHTML = `<div class="card"><h3>🎯 משימה ${currentTaskId+1}</h3><p>בצע ${t.g} עבודות</p><p>התקדמות: ${totalWorkDone}/${t.g}</p><button class="action ${totalWorkDone<t.g?'disabled':''}" onclick="claimTask(${t.p})">קבל פרס</button></div>`;
     }
-    else if (tab === 'skills') {
-        c.innerHTML = `<h3>🎓 פיתוח כישורים</h3>`;
-        const sks = [{n:"רישיון נהיגה", c:4500}, {n:"רישיון נשק", c:6500}, {n:"קורס טכנאי", c:12000}, {n:"שיווק שותפים", c:25000}, {n:"ניהול מערכות", c:50000}];
-        sks.forEach(s => {
-            const has = mySkills.includes(s.n);
-            c.innerHTML += `<div class="card"><b>${s.n}</b><button class="action ${has?'disabled':''}" onclick="buySkill('${s.n}',${s.c})">${has?'נרכש':'למד ב-'+s.c.toLocaleString()}</button></div>`;
-        });
+    else if (tab === 'install') {
+        c.innerHTML = `<div class="card"><h3>📲 התקנה</h3><p>לחץ על "הוסף למסך הבית" בדפדפן כדי להשתמש באפליקציה כדף מלא.</p></div>`;
     }
 }
 
-// Actions
+// לוגיקה
 function runWork(p, t, x, r) {
     if (working) return; working = true;
     let s = 0; const bar = document.getElementById("wb");
-    let i = setInterval(() => {
-        s++; if(bar) bar.style.width = (s/t*100) + "%";
-        if(s >= t) { clearInterval(i); working = false; money += p; rep += r; totalWorkDone++; addXP(x); updateUI(); openTab('work'); }
-    }, 1000);
+    let i = setInterval(() => { s++; if(bar) bar.style.width = (s/t*100) + "%"; if(s>=t){ clearInterval(i); working=false; money+=p; rep+=r; totalWorkDone++; addXP(x); updateUI(); openTab('work'); }}, 1000);
 }
-
-function buyBusiness(n,c,inc,i) { if(money>=c){ money-=c; myBusiness.push({n,inc,icon:i}); updateUI(); openTab('business'); } }
-function manageBusiness(n, inc) { money += inc; rep += 2; notify(`אספת רווח מהעסק ${n}`, "gain"); updateUI(); }
-function buyProp(n, c, p, i) { if(money>=c){ money-=c; myProperties.push({n,i}); passive+=p; notify(`רכשת ${n}!`, "gain"); updateUI(); openTab('realestate'); } }
-function buySkill(n, c) { if(money>=c){ money-=c; mySkills.push(n); updateUI(); openTab('skills'); } }
-function trade(s, a) { 
-    let p=stockPrices[s]; 
-    if(a==='buy'&&money>=p){money-=p;myStocks[s]++;}
-    else if(a==='sell'&&myStocks[s]>0){money+=p;myStocks[s]--;} 
-    updateUI(); openTab('stock'); 
-}
-function bankOp(t) { 
-    let a = Number(document.getElementById("bAmt").value); 
-    if(t==='dep'&&money>=a){money-=a;bank+=a;}
-    else if(t==='wit'&&bank>=a){bank-=a;money+=a;} 
-    updateUI(); 
-}
-function loanOp(t) { 
-    if(t==='take'){debt+=50000;money+=50000;notify("הלוואה אושרה", "event");}
-    else if(debt>=10000&&money>=10000){debt-=10000;money-=10000;notify("חלק מהחוב הוחזר", "gain");} 
-    updateUI(); 
-}
-function addXP(v) { 
-    xp+=v; 
-    if(xp>=100){ xp-=100; level++; money+=level*1500; notify("LEVEL UP!", "event"); } 
-}
-function claimTask(p) { money+=p; currentTaskId++; notify("משימה הושלמה!", "gain"); updateUI(); openTab('tasks'); }
-
-// Global Intervals
-setInterval(() => { if(passive>0){ money+=(passive/10); updateUI(); } }, 1000);
-setInterval(() => { if(debt>0){ money-=(debt*0.01); updateUI(); } }, 60000);
-setInterval(() => {
-    stockPrices.tech = Math.max(10, stockPrices.tech + Math.floor(Math.random()*12-6));
-    stockPrices.crypto = Math.max(5, stockPrices.crypto + Math.floor(Math.random()*40-20));
+function buyMarket(n,c,r,i) { if(money>=c){ money-=c; rep+=r; myInventory.push({n,i}); updateUI(); openTab('market'); }}
+function buyBusiness(n,c,inc,i,t) { if(money>=c){ money-=c; myBusiness.push({n,inc,icon:i,t}); updateUI(); openTab('business'); }}
+function manageBusiness(name, inc, time) {
+    const id = name.replace(/\s/g,''), bar = document.getElementById(`cb-${id}`), btn = document.getElementById(`bb-${id}`);
+    if (btn.classList.contains('disabled')) return;
+    money+=inc; rep+=5; btn.classList.add('disabled'); let s=0;
+    let i = setInterval(() => { s++; bar.style.width=(s/time*100)+"%"; if(s>=time){ clearInterval(i); btn.classList.remove('disabled'); bar.style.width="100%"; }}, 1000);
     updateUI();
-}, 5000);
+}
+function buyProp(n,c,p,i) { if(money>=c){ money-=c; myProperties.push({n,i}); passive+=p; updateUI(); openTab('realestate'); }}
+function buySkill(n,c) { if(money>=c){ money-=c; mySkills.push(n); updateUI(); openTab('skills'); }}
+function addXP(v) { xp+=v; if(xp>=100){ xp-=100; level++; money+=level*2000; } updateUI(); }
+function claimTask(p) { money+=p; currentTaskId++; updateUI(); openTab('tasks'); }
+function bankOp(t) { let a=Number(document.getElementById("bAmt").value); if(t==='dep'&&money>=a){money-=a;bank+=a;}else if(t==='wit'&&bank>=a){bank-=a;money+=a;} updateUI(); }
+function loanOp(t) { if(t==='take'){debt+=50000;money+=50000;} updateUI(); }
+function trade(s, a) { let p=stockPrices[s]; if(a==='buy'&&money>=p){money-=p;myStocks[s]++;}else if(a==='sell'&&myStocks[s]>0){money+=p;myStocks[s]--;} updateUI(); openTab('stock'); }
 
+function toggleTheme() { theme = (theme==='dark'?'light':'dark'); updateUI(); }
+setInterval(() => { if(passive>0){ money+=(passive/10); updateUI(); }}, 1000);
+setInterval(() => { if(debt>0){ money-=(debt*0.01); updateUI(); }}, 60000);
+setInterval(() => { stockPrices.tech = Math.max(10, stockPrices.tech+Math.floor(Math.random()*12-6)); updateUI(); }, 5000);
 document.addEventListener("DOMContentLoaded", () => { updateUI(); openTab('home'); });
-const resetGame = () => { if(confirm("האם אתה בטוח שברצונך לאפס את כל ההתקדמות?")) { localStorage.clear(); location.reload(); } };
+const resetGame = () => { if(confirm("איפוס מלא?")) { localStorage.clear(); location.reload(); }};
 const checkUpdate = () => location.reload(true);
