@@ -3,45 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money AI v3.6</title>
+    <title>Smart Money AI v3.8</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-
-<header class="main-header">
+<body class="dark-theme"> <header class="main-header">
+    <button id="theme-toggle" onclick="toggleTheme()">🌓</button>
     <div class="logo-container">
         <img src="logo.png" alt="Smart Money AI" class="app-logo">
     </div>
 </header>
 
-<div id="status-bar"><span id="msg-text">ברוכים הבאים לגרסה 3.6 - השוק פתוח!</span></div>
+<div id="status-bar"><span id="msg-text">מערכת עסקים והלוואות פעילה</span></div>
 
 <div class="stats-container">
     <div class="stat-card">💵 מזומן: <span id="money">0</span></div>
     <div class="stat-card">🏦 בנק: <span id="bank">0</span></div>
-    <div class="stat-card">📈 פסיבי: <span id="passive-ui">0</span>/ש'</div>
-    <div class="stat-card">💹 מניות: <span id="stocks-ui">0</span></div>
+    <div class="stat-card">📈 פסיבי: <span id="passive-ui">0</span></div>
+    <div class="stat-card">💳 חוב: <span id="debt-ui" style="color:#ef4444">0</span></div>
 </div>
 
 <div class="xp-container">
     <div class="xpbar"><div id="xpfill"></div></div>
-    <div style="font-size: 10px; margin-top: 2px;">רמה: <span id="level">1</span></div>
+    <div class="xp-text">רמה: <span id="level">1</span> | מוניטין: <span id="rep-ui">0</span></div>
 </div>
 
 <nav class="topbar">
     <div class="nav-row">
         <button onclick="openTab('home')" id="btnHome">🏠 בית</button>
         <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
-        <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
+        <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
     </div>
     <div class="nav-row">
         <button onclick="openTab('realestate')" id="btnRealestate">🏘️ נדל"ן</button>
         <button onclick="openTab('stock')" id="btnStock">💹 בורסה</button>
-        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+        <button onclick="openTab('bank')" id="btnBank">🏦 בנק/הלוואה</button>
     </div>
     <div class="nav-row">
         <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
-        <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
+        <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
         <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
     </div>
     <div class="nav-row">
@@ -52,7 +51,7 @@
 
 <div id="content"></div>
 
-<footer>&copy; 2026 Alexey Zavodisker | v3.6 Preferred</footer>
+<footer>&copy; 2026 Alexey Zavodisker | v3.8 Tycoon Elite</footer>
 
 <script src="game.js"></script>
 </body>
