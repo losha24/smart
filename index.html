@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money AI v3.8</title>
+    <title>Smart Money AI v3.8.1</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-theme">
@@ -15,18 +15,13 @@
     </div>
 </header>
 
-<div id="status-bar"><span id="msg-text">ברוך הבא לגרסה 3.8 - הכל תקין</span></div>
+<div id="status-bar"><span id="msg-text">ברוך הבא, אלכסיי | v3.8.1</span></div>
 
 <div class="stats-container">
     <div class="stat-card">💵 מזומן: <span id="money">0</span></div>
     <div class="stat-card">🏦 בנק: <span id="bank">0</span></div>
     <div class="stat-card">📈 פסיבי: <span id="passive-ui">0</span></div>
     <div class="stat-card">💳 חוב: <span id="debt-ui" style="color:#ef4444">0</span></div>
-</div>
-
-<div class="xp-container">
-    <div class="xpbar"><div id="xpfill"></div></div>
-    <div class="xp-text">רמה: <span id="level">1</span> | מוניטין: <span id="rep-ui">0</span></div>
 </div>
 
 <nav class="topbar">
@@ -37,26 +32,24 @@
     </div>
     <div class="nav-row">
         <button onclick="openTab('realestate')" id="btnRealestate">🏘️ נדל"ן</button>
+        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
         <button onclick="openTab('stock')" id="btnStock">💹 בורסה</button>
-        <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
     </div>
     <div class="nav-row">
         <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
         <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
+        <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
+    </div>
+    <div class="nav-row">
         <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
+        <button onclick="checkUpdate()" id="btnUpdate" style="background:#334155">🔄 עדכון</button>
+        <button onclick="resetGame()" id="btnReset" style="background:#450a0a">🧹 איפוס</button>
     </div>
 </nav>
 
 <div id="content"></div>
 
-<div class="admin-tools">
-    <button onclick="checkUpdate()">🔄 רענון עדכון</button>
-    <button onclick="resetGame()" style="background:#450a0a">🧹 איפוס מלא</button>
-</div>
-
-<footer>
-    &copy; 2026 Alexey Zavodisker | Smart Money AI v3.8
-</footer>
+<footer>&copy; 2026 Alexey Zavodisker | Smart Money AI v3.8.1</footer>
 
 <script src="game.js"></script>
 </body>
