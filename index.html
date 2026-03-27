@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money AI v3.8.6</title>
+    <title>Smart Money AI v4.3</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-theme">
@@ -15,7 +15,7 @@
     </div>
 </header>
 
-<div id="status-bar"><span id="msg-text">Smart Money AI v3.8.6 | מוכן לפעולה</span></div>
+<div id="status-bar"><span id="msg-text">ברוך הבא Oleg Zavodisker | גרסה 4.3 מוכנה</span></div>
 
 <div class="stats-container">
     <div class="stat-card">💵 מזומן: <span id="money">0</span></div>
@@ -28,18 +28,28 @@
     <div class="nav-row">
         <button onclick="openTab('home')" id="btnHome">🏠 בית</button>
         <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
-        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+        <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
     </div>
     <div class="nav-row">
+        <button onclick="openTab('realestate')" id="btnRealestate">🏘️ נדל"ן</button>
+        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+        <button onclick="openTab('stock')" id="btnStock">💹 בורסה</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
+        <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
         <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
-        <button onclick="installApp()" id="btnInstall">📲 התקנה</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
+        <button onclick="checkUpdate()" id="btnUpdate" style="background:#334155">🔄 עדכון</button>
         <button onclick="resetGame()" id="btnReset" style="background:#450a0a">🧹 איפוס</button>
     </div>
 </nav>
 
-<div id="content" class="fade-in"></div>
+<div id="content"></div>
 
-<footer>&copy; 2026 Alexey Zavodisker | v3.8.6 Stable</footer>
+<footer>&copy; 2026 Alexey Zavodisker | v4.3 Stable</footer>
 
 <script src="game.js"></script>
 </body>
