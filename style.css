@@ -2,36 +2,20 @@
 .dark-theme { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
 .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; }
 
-body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); direction: rtl; margin: 0; overflow-x: hidden; padding-bottom: 20px; }
-
-.main-header { display: flex; justify-content: space-between; align-items: center; height: 85px; background: var(--card); padding: 0 15px; position: relative; border-bottom: 1px solid var(--border); }
-.app-logo { height: 70px; position: absolute; left: 50%; transform: translateX(-50%); }
-
-#theme-toggle { background: var(--border); border: none; color: var(--text); padding: 8px; border-radius: 50%; cursor: pointer; }
-
-#status-bar { min-height: 40px; text-align: center; font-weight: bold; padding: 5px; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
-.event-positive { background: var(--green); color: white; }
-.event-negative { background: var(--main); color: white; }
-
-.stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; }
-.stat-card { background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center; font-size: 11px; font-weight: bold; }
-
-.topbar { background: var(--card); padding: 5px; border-bottom: 1px solid var(--border); }
-.nav-row { display: flex; gap: 3px; margin-bottom: 3px; }
-.topbar button { flex: 1; padding: 10px 2px; background: var(--border); color: var(--text); border: none; border-radius: 5px; font-weight: bold; font-size: 10px; }
-.topbar button.active { background: var(--blue); color: white; }
-
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
-.card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin: 10px; text-align: center; }
-
-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); text-align: center; font-size: 16px; box-sizing: border-box; }
-button.action { width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 13px; margin-top: 5px; cursor: pointer; }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.xpbar { width: 100%; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; margin: 10px 0; }
-#wb { height: 100%; background: #f59e0b; width: 0%; transition: width 0.1s linear; }
-
-.main-footer { text-align: center; padding: 20px; font-size: 11px; opacity: 0.6; border-top: 1px solid var(--border); margin-top: 20px; }
-
-.fade-in { animation: fadeIn 0.3s ease-in; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+body { font-family: system-ui; background: var(--bg); color: var(--text); direction: rtl; margin: 0; padding-bottom: 50px; transition: 0.3s; }
+.main-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--card); border-bottom: 1px solid var(--border); }
+.app-logo { height: 45px; }
+.stats-bar-top { display: flex; justify-content: space-around; padding: 12px; background: var(--card); font-size: 14px; font-weight: bold; border-bottom: 2px solid var(--blue); }
+.topbar { padding: 8px; background: var(--card); }
+.nav-row { display: flex; gap: 5px; margin-bottom: 5px; }
+.topbar button { flex: 1; padding: 10px 2px; border-radius: 8px; border: none; background: var(--border); color: white; font-size: 11px; font-weight: bold; }
+.topbar button.active { background: var(--blue); }
+.card { background: var(--card); padding: 15px; border-radius: 12px; margin: 10px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+button.action { width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 8px; margin-top: 8px; font-weight: bold; cursor: pointer; }
+button.action:disabled { opacity: 0.5; cursor: not-allowed; }
+.item-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.item-list span { background: var(--blue); color: white; padding: 3px 10px; border-radius: 15px; font-size: 11px; }
+.xpbar { width: 100%; height: 12px; background: #334155; border-radius: 6px; overflow: hidden; }
+#wb { height: 100%; background: var(--green); width: 0%; transition: width 0.1s linear; }
+.main-footer { text-align: center; font-size: 11px; opacity: 0.6; padding: 20px; }
