@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Smart Money AI v4.4.5</title>
+    <title>Smart Money AI v4.5.0</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
@@ -42,20 +42,15 @@
     </div>
     <div class="nav-row">
         <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
-        <button onclick="location.reload()" style="background:#1e293b">🔄 עדכון</button>
+        <button onclick="location.reload()" style="background:var(--blue); color:white;">🔄 עדכון</button>
         <button onclick="resetGame()" id="btnReset" style="background:#450a0a">🧹 איפוס</button>
     </div>
 </nav>
 
 <div id="content" class="fade-in"></div>
 
-<footer class="main-footer">© 2026 Alexey Zavodisker | v4.4.5</footer>
+<footer class="main-footer">© 2026 Alexey Zavodisker | Smart Money AI v4.5.0</footer>
 
 <script src="game.js"></script>
-<script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
-    }
-</script>
 </body>
 </html>
