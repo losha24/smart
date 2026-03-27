@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money AI v4.2</title>
+    <title>Smart Money AI v4.4</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-theme">
@@ -15,7 +15,7 @@
     </div>
 </header>
 
-<div id="status-bar"><span id="msg-text">ברוך הבא לגרסה 4.2 | המתן לאירועים...</span></div>
+<div id="status-bar"><span id="msg-text">Smart Money AI v4.4 | ברוך הבא</span></div>
 
 <div class="stats-container">
     <div class="stat-card">💵 מזומן: <span id="money">0</span></div>
@@ -35,21 +35,11 @@
         <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
         <button onclick="openTab('stock')" id="btnStock">💹 בורסה</button>
     </div>
-    <div class="nav-row">
-        <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
-        <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
-        <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
-    </div>
-    <div class="nav-row">
-        <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
-        <button onclick="checkUpdate()" id="btnUpdate" style="background:#334155">🔄 עדכון</button>
-        <button onclick="resetGame()" id="btnReset" style="background:#450a0a">🧹 איפוס</button>
-    </div>
 </nav>
 
-<div id="content"></div>
+<div id="content" class="fade-in"></div>
 
-<footer>&copy; 2026 Alexey Zavodisker | Smart Money AI v4.2</footer>
+<footer>&copy; 2026 Alexey Zavodisker | v4.4 Animated</footer>
 
 <script src="game.js"></script>
 </body>
