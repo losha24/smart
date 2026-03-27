@@ -1,40 +1,18 @@
-const VERSION = "3.2";
-
-// טעינת נתונים
-if (localStorage.appVersion !== VERSION) {
-    localStorage.appVersion = VERSION;
-}
+const VERSION = "3.2.1";
 
 let money = Number(localStorage.money) || 100;
 let bank = Number(localStorage.bank) || 0;
 let xp = Number(localStorage.xp) || 0;
 let level = Number(localStorage.level) || 1;
 let stocks = Number(localStorage.stocks) || 0;
-let totalEarned = Number(localStorage.totalEarned) || 0;
-let totalSpent = Number(localStorage.totalSpent) || 0;
 let stockPrice = 100;
-let myItems = JSON.parse(localStorage.myItems || "[]");
-let working = false;
+let workCount = Number(localStorage.workCount) || 0;
+let currentTask = JSON.parse(localStorage.currentTask || 'null');
 
-// רשימות נתונים מורחבות
-const worksList = [
-    { n: "אבטחת מתקנים", p: 180, t: 7, x: 20 },
-    { n: "שליחויות אקספרס", p: 250, t: 10, x: 35 },
-    { n: "בדיקת תוכנה", p: 450, t: 15, x: 60 },
-    { n: "פיתוח אפליקציות", p: 900, t: 30, x: 120 },
-    { n: "ניהול שרתים", p: 1500, t: 50, x: 250 }
-];
-
-const investments = [
-    { n: "קרן השתלמות", cost: 2000, daily: 50 },
-    { n: "נדל\"ן מסחרי", cost: 10000, daily: 300 },
-    { n: "סטארטאפ טכנולוגי", cost: 50000, daily: 2000 }
-];
-
-const marketItems = [
-    { id: 1, n: "סמארטפון חדש", price: 1200, desc: "בונוס 10% ל-XP", type: 'xp' },
-    { id: 2, n: "רכב עבודה", price: 15000, desc: "מקצר זמן עבודה ב-20%", type: 'speed' },
-    { id: 3, n: "משרד פרטי", price: 30000, desc: "הכנסה פסיבית קבועה", type: 'passive', val: 500 }
+const tasksList = [
+    { id: 1, desc: "עבוד 3 פעמים", goal: 3, type: "work", reward: 300, xp: 40 },
+    { id: 2, desc: "הרווח 1000₪ בעבודה", goal: 1000, type: "earn", reward: 500, xp: 60 },
+    { id: 3, desc: "בצע הפקדה לבנק", goal: 1, type: "bank", reward: 200, xp: 30 }
 ];
 
 function save() {
@@ -43,10 +21,14 @@ function save() {
     localStorage.xp = xp;
     localStorage.level = level;
     localStorage.stocks = stocks;
-    localStorage.totalEarned = totalEarned;
-    localStorage.totalSpent = totalSpent;
-    localStorage.myItems = JSON.stringify(myItems);
+    localStorage.workCount = workCount;
+    localStorage.currentTask = JSON.stringify(currentTask);
     localStorage.appVersion = VERSION;
+}
+
+function message(t, cls = '') {
+    const m = document.getElementById("message");
+    m.innerText = t; m.className = cls;
 }
 
 function updateUI() {
@@ -58,143 +40,120 @@ function updateUI() {
     save();
 }
 
-function message(t, cls = '') {
-    const m = document.getElementById("message");
-    if (m) { m.innerText = t; m.className = cls; }
-}
-
-function openTab(tabName) {
+function openTab(tab) {
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
-    const btn = document.getElementById("btn" + tabName.charAt(0).toUpperCase() + tabName.slice(1));
-    if (btn) btn.classList.add("active");
+    const b = document.getElementById("btn" + tab.charAt(0).toUpperCase() + tab.slice(1));
+    if (b) b.classList.add("active");
 
-    const container = document.getElementById("content");
-    container.innerHTML = "";
+    const c = document.getElementById("content");
+    c.innerHTML = "";
 
-    if (tabName === 'home') {
-        container.innerHTML = `
+    if (tab === 'tasks') {
+        if (!currentTask) currentTask = tasksList[Math.floor(Math.random() * tasksList.length)];
+        c.innerHTML = `
             <div class="card">
-                <h3>🏠 דף בית</h3>
-                <p>💰 כסף בבנק: <b>${bank}₪</b></p>
-                <p>📈 סה"כ הרווחתי: <span class="gain">${totalEarned}₪</span></p>
-                <p>📉 סה"כ בזבזתי: <span class="loss">${totalSpent}₪</span></p>
-                <p>⭐ רמה נוכחית: ${level}</p>
+                <h3>🎯 משימה נוכחית</h3>
+                <p>${currentTask.desc}</p>
+                <button class="action" onclick="checkTaskManual()">בדוק סטטוס משימה</button>
             </div>`;
-    } 
-    else if (tabName === 'work') {
-        let h = `<h3>💼 עבודות זמינות</h3><div class="xpbar"><div id="workbar" style="width:0%; height:100%; background:#22c55e;"></div></div>`;
-        worksList.forEach(w => {
-            h += `<button class="action" onclick="runWork('${w.n}', ${w.p}, ${w.t}, ${w.x})">${w.n} (${w.p}₪)</button>`;
-        });
-        container.innerHTML = h;
     }
-    else if (tabName === 'stock') {
-        let change = (Math.random() * 50 - 25);
-        stockPrice = Math.max(10, Math.floor(stockPrice + change));
-        container.innerHTML = `
+    else if (tab === 'stock') {
+        let vol = Math.floor(Math.random() * 40 - 20);
+        stockPrice = Math.max(10, stockPrice + vol);
+        c.innerHTML = `
             <div class="card">
                 <h3>💹 בורסה</h3>
-                <div style="font-size:30px; color:${change >=0 ? '#4ade80' : '#f87171'}">₪${stockPrice}</div>
-                <p>מניות בתיק: ${stocks}</p>
-                <button class="action" onclick="buyStock()">קנה</button>
-                <button class="action" style="background:#475569" onclick="sellStock()">מכור</button>
+                <h2 style="color:${vol >= 0 ? '#4ade80' : '#f87171'}">₪${stockPrice}</h2>
+                <p>מניות: ${stocks}</p>
+                <button class="action" onclick="buyStock()">קנה מניה</button>
+                <button class="action" style="background:#475569" onclick="sellStock()">מכור מניה</button>
             </div>`;
     }
-    else if (tabName === 'invest') {
-        let h = `<h3>📈 השקעות ארוכות טווח</h3>`;
-        investments.forEach(i => {
-            h += `<div class="card"><b>${i.n}</b><br>עלות: ${i.cost}₪ | רווח יומי: ${i.daily}₪<br><button class="action" onclick="buyInvest(${i.cost}, ${i.daily})">השקע</button></div>`;
-        });
-        container.innerHTML = h;
-    }
-    else if (tabName === 'market') {
-        let h = `<h3>🛒 חנות פריטים</h3>`;
-        marketItems.forEach(item => {
-            const owned = myItems.some(i => i.id === item.id);
-            h += `<div class="card"><b>${item.n}</b> - ${item.price}₪<br><small>${item.desc}</small><br><button class="action ${owned ? 'disabled' : ''}" onclick="buyItem(${item.id})">${owned ? 'בבעלותך' : 'קנה'}</button></div>`;
-        });
-        container.innerHTML = h;
-    }
-    else if (tabName === 'bank') {
-        container.innerHTML = `
+    else if (tab === 'bank') {
+        c.innerHTML = `
             <div class="card">
                 <h3>🏦 בנק</h3>
-                <input id="bankAmt" type="number" placeholder="סכום" style="width:80%; padding:10px;">
-                <button class="action" onclick="bankOp('dep')">הפקדה</button>
-                <button class="action" style="background:#475569" onclick="bankOp('wit')">משיכה</button>
+                <input id="bAmt" type="number" placeholder="סכום..." style="width:80%; padding:10px; margin-bottom:10px;">
+                <button class="action" onclick="doBank('dep')">הפקדה</button>
+                <button class="action" style="background:#475569" onclick="doBank('wit')">משיכה</button>
             </div>`;
+    }
+    else if (tab === 'install') {
+        c.innerHTML = `
+            <div class="card" style="text-align:right;">
+                <h3>📲 הוראות התקנה</h3>
+                <p><b>אייפון:</b> לחץ על סמל השיתוף (מרובע עם חץ) ובחר "הוסף למסך הבית".</p>
+                <p><b>אנדרואיד:</b> לחץ על 3 הנקודות ובחר "התקן אפליקציה".</p>
+            </div>`;
+    }
+    else if (tab === 'work') {
+        c.innerHTML = `<h3>💼 עבודה</h3><button class="action" onclick="work()">עבוד (5 שניות)</button><div class="xpbar"><div id="wb" style="width:0%; height:100%; background:#22c55e;"></div></div>`;
     }
 }
 
-function runWork(name, pay, time, xpGain) {
-    if (working) return;
-    working = true;
-    let s = 0;
-    let finalTime = myItems.some(i => i.id === 2) ? time * 0.8 : time;
-    const bar = document.getElementById("workbar");
-    message(`עובד ב${name}...`, "event");
-    
+function work() {
+    let t = 0;
     let inter = setInterval(() => {
-        s += 0.1;
-        if (bar) bar.style.width = (s / finalTime * 100) + "%";
-        if (s >= finalTime) {
+        t++; document.getElementById("wb").style.width = (t/5*100) + "%";
+        if (t >= 5) {
             clearInterval(inter);
-            working = false;
-            money += pay;
-            totalEarned += pay;
-            addXP(myItems.some(i => i.id === 1) ? xpGain * 1.1 : xpGain);
-            updateUI();
-            if (bar) bar.style.width = "0%";
-            message(`סיימת! הרווחת ${pay}₪`, "gain");
+            money += 200; workCount++;
+            if (currentTask && currentTask.type === "work") {
+                currentTask.goal--;
+                if (currentTask.goal <= 0) finishTask();
+            }
+            addXP(25); message("הרווחת 200₪", "gain"); updateUI();
         }
-    }, 100);
+    }, 1000);
 }
 
 function addXP(v) {
     xp += v;
     if (xp >= 100) {
-        xp -= 100;
-        level++;
-        money += 1000;
-        message(`עלית לרמה ${level}! קיבלת בונוס 1000₪`, "event");
+        xp -= 100; level++;
+        let bonus = Math.floor(Math.random() * (2500 - 500 + 1)) + 500;
+        money += bonus;
+        message(`עלית לרמה ${level}! זוכת ב-${bonus}₪`, "event");
     }
     updateUI();
 }
 
-function buyItem(id) {
-    const item = marketItems.find(i => i.id === id);
-    if (money >= item.price && !myItems.some(i => i.id === id)) {
-        money -= item.price;
-        totalSpent += item.price;
-        myItems.push(item);
-        message("תתחדש!", "gain");
-        updateUI();
-        openTab('market');
-    }
-}
-
-function bankOp(type) {
-    let a = Math.floor(Number(document.getElementById("bankAmt").value));
+function doBank(type) {
+    let a = Math.floor(Number(document.getElementById("bAmt").value));
     if (a <= 0) return;
-    if (type === 'dep' && money >= a) { money -= a; bank += a; }
-    else if (type === 'wit' && bank >= a) { bank -= a; money += a; }
-    updateUI();
-}
-
-async function checkUpdate() {
-    message("מנקה זיכרון ומעדכן...", "event");
-    if ('caches' in window) {
-        const keys = await caches.keys();
-        for (const key of keys) await caches.delete(key);
+    if (type === 'dep') {
+        if (money < a) return message("אין לך מספיק מזומן להפקדה", "loss");
+        money -= a; bank += a;
+        if (currentTask && currentTask.type === "bank") finishTask();
+    } else {
+        if (bank < a) return message("אין לך מספיק כסף בבנק למשיכה", "loss");
+        bank -= a; money += a;
     }
-    setTimeout(() => { window.location.reload(true); }, 1000);
+    updateUI(); message("הפעולה בוצעה", "gain");
 }
 
-function resetGame() {
-    if(confirm("לאפס הכל?")) { localStorage.clear(); location.reload(); }
+function buyStock() {
+    if (money < stockPrice) return message("אין לך מספיק כסף למניה", "loss");
+    money -= stockPrice; stocks++; updateUI(); openTab('stock');
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    updateUI();
-    openTab('home');
-});
+function sellStock() {
+    if (stocks <= 0) return message("אין לך מניות למכור", "loss");
+    money += stockPrice; stocks--; updateUI(); openTab('stock');
+}
+
+function finishTask() {
+    money += currentTask.reward;
+    addXP(currentTask.xp);
+    message(`משימה הושלמה! קיבלת ${currentTask.reward}₪`, "gain");
+    currentTask = tasksList[Math.floor(Math.random() * tasksList.length)];
+    save();
+}
+
+function checkUpdate() {
+    message("מעדכן...", "event");
+    caches.keys().then(names => { for (let n of names) caches.delete(n); });
+    setTimeout(() => location.reload(true), 1000);
+}
+
+document.addEventListener("DOMContentLoaded", () => { updateUI(); openTab('home'); });
