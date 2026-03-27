@@ -2,18 +2,29 @@
 .dark-theme { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
 .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; }
 
-body { font-family: system-ui; background: var(--bg); color: var(--text); direction: rtl; margin: 0; padding-bottom: 50px; transition: 0.3s; }
-.main-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--card); border-bottom: 1px solid var(--border); }
-.app-logo { height: 45px; }
-.stats-bar-top { display: flex; justify-content: space-around; padding: 12px; background: var(--card); font-size: 14px; font-weight: bold; border-bottom: 2px solid var(--blue); }
-.topbar { padding: 8px; background: var(--card); }
-.nav-row { display: flex; gap: 5px; margin-bottom: 5px; }
-.topbar button { flex: 1; padding: 10px 2px; border-radius: 8px; border: none; background: var(--border); color: white; font-size: 11px; font-weight: bold; }
+body { font-family: system-ui; background: var(--bg); color: var(--text); direction: rtl; margin: 0; padding-bottom: 50px; }
+.main-header { display: flex; justify-content: space-between; padding: 10px; background: var(--card); border-bottom: 1px solid var(--border); }
+.app-logo { height: 40px; }
+
+/* סטייל לבר הודעות */
+#status-bar { 
+    display: none; position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+    padding: 10px 20px; border-radius: 20px; font-weight: bold; z-index: 1000; font-size: 14px;
+}
+#status-bar.show { display: block; animation: slideDown 0.3s; }
+.pos { background: var(--green); color: white; }
+.neg { background: var(--main); color: white; }
+
+@keyframes slideDown { from { top: 30px; opacity: 0; } to { top: 60px; opacity: 1; } }
+
+.stats-bar-top { display: flex; justify-content: space-around; padding: 15px; background: var(--card); border-bottom: 2px solid var(--blue); }
+.topbar { padding: 5px; background: var(--card); }
+.nav-row { display: flex; gap: 4px; margin-bottom: 4px; }
+.topbar button { flex: 1; padding: 10px 2px; border-radius: 8px; border: none; background: var(--border); color: white; font-size: 11px; }
 .topbar button.active { background: var(--blue); }
 .card { background: var(--card); padding: 15px; border-radius: 12px; margin: 10px; border: 1px solid var(--border); }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-button.action { width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 8px; margin-top: 8px; font-weight: bold; }
-.item-list { display: flex; flex-wrap: wrap; gap: 5px; }
-.item-list span { background: var(--blue); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-.xpbar { width: 100%; height: 10px; background: #334155; border-radius: 5px; overflow: hidden; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+button.action { padding: 10px; background: var(--blue); color: white; border: none; border-radius: 6px; margin-top: 5px; font-weight: bold; }
+.item-list span { background: var(--blue); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; margin: 2px; display: inline-block; }
+.xpbar { width: 100%; height: 8px; background: #334155; border-radius: 4px; overflow: hidden; }
 #wb { height: 100%; background: var(--green); width: 0%; }
