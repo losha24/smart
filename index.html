@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money AI v3.9.0</title>
+    <title>Smart Money AI v4.1.0 | Alexey Zavodisker</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        html, body { overflow-x: hidden; width: 100%; margin: 0; padding: 0; touch-action: manipulation; }
-        * { box-sizing: border-box; }
-    </style>
 </head>
 <body class="dark-theme">
 
@@ -24,31 +20,41 @@
     <div class="stat-card">💵 מזומן: <span id="money">0</span></div>
     <div class="stat-card">🏦 בנק: <span id="bank">0</span></div>
     <div class="stat-card">📈 פסיבי: <span id="passive-ui">0</span></div>
-    <div class="stat-card">🎭 מוניטין: <span id="rep-ui">0</span></div>
+    <div class="stat-card">🎭 רמה: <span id="level-ui">1</span></div>
 </div>
 
 <nav class="topbar">
     <div class="nav-row">
-        <button onclick="openTab('home')" id="btnHome">🏠 בית</button>
+        <button onclick="openTab('home')" id="btnHome">🏠 מצב</button>
         <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
-        <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
     </div>
     <div class="nav-row">
+        <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
         <button onclick="openTab('realestate')" id="btnRealestate">🏘️ נדל"ן</button>
-        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-        <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="openTab('stock')" id="btnStock">📈 בורסה</button>
+        <button onclick="openTab('crypto')" id="btnCrypto">₿ קריפטו</button>
     </div>
     <div class="nav-row">
         <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
-        <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
-        <button onclick="checkUpdate()" id="btnUpdate" style="background:#334155">🔄 עדכון</button>
+        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
     </div>
     <div class="nav-row">
-        <button onclick="resetGame()" id="btnReset" style="background:#450a0a; width: 100%;">🧹 איפוס מלא</button>
+        <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
+        <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="resetGame()" id="btnReset" style="background:#450a0a; width:100%">🧹 איפוס מערכת</button>
     </div>
 </nav>
 
 <div id="content" class="fade-in"></div>
+
+<footer class="main-footer">
+    <p>© 2026 Alexey Zavodisker | Smart Money AI v4.1.0</p>
+    <p>כל הזכויות שמורות</p>
+</footer>
 
 <script src="game.js"></script>
 </body>
