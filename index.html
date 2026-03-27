@@ -6,14 +6,16 @@
     <title>Smart Money AI v3.8</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark-theme"> <header class="main-header">
+<body class="dark-theme">
+
+<header class="main-header">
     <button id="theme-toggle" onclick="toggleTheme()">🌓</button>
     <div class="logo-container">
         <img src="logo.png" alt="Smart Money AI" class="app-logo">
     </div>
 </header>
 
-<div id="status-bar"><span id="msg-text">מערכת עסקים והלוואות פעילה</span></div>
+<div id="status-bar"><span id="msg-text">ברוך הבא לגרסה 3.8 - הכל תקין</span></div>
 
 <div class="stats-container">
     <div class="stat-card">💵 מזומן: <span id="money">0</span></div>
@@ -36,22 +38,25 @@
     <div class="nav-row">
         <button onclick="openTab('realestate')" id="btnRealestate">🏘️ נדל"ן</button>
         <button onclick="openTab('stock')" id="btnStock">💹 בורסה</button>
-        <button onclick="openTab('bank')" id="btnBank">🏦 בנק/הלוואה</button>
+        <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
     </div>
     <div class="nav-row">
         <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
         <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
         <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
     </div>
-    <div class="nav-row">
-        <button onclick="checkUpdate()" id="btnUpdate">🔄 עדכון</button>
-        <button onclick="resetGame()" style="background:#450a0a">🧹 איפוס</button>
-    </div>
 </nav>
 
 <div id="content"></div>
 
-<footer>&copy; 2026 Alexey Zavodisker | v3.8 Tycoon Elite</footer>
+<div class="admin-tools">
+    <button onclick="checkUpdate()">🔄 רענון עדכון</button>
+    <button onclick="resetGame()" style="background:#450a0a">🧹 איפוס מלא</button>
+</div>
+
+<footer>
+    &copy; 2026 Alexey Zavodisker | Smart Money AI v3.8
+</footer>
 
 <script src="game.js"></script>
 </body>
