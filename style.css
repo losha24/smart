@@ -2,13 +2,49 @@
 .dark-theme { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
 .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; }
 
-body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); direction: rtl; }
+body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); direction: rtl; }
 
-.main-header { display: flex; justify-content: space-between; align-items: center; height: 85px; background: var(--card); padding: 0 15px; border-bottom: 2px solid var(--main); }
-.app-logo { height: 65px; position: absolute; left: 50%; transform: translateX(-50%); }
-#theme-toggle { background: var(--border); border: none; color: var(--text); padding: 8px; border-radius: 50%; z-index: 10; }
+/* Header מעודכן - לוגו ממורכז ללא טקסט */
+.main-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    height: 90px; /* גובה מותאם ללוגו */
+    background: var(--card); 
+    padding: 0 15px;
+    border-bottom: 3px solid var(--main); /* פס אדום מיתוגי */
+    position: relative;
+}
 
-#status-bar { background: var(--card); padding: 12px; text-align: center; font-weight: 800; border-bottom: 1px solid var(--border); min-height: 45px; }
+.app-logo { 
+    height: 75px; /* גודל הלוגו */
+    width: auto;
+    position: absolute; 
+    left: 50%; 
+    transform: translateX(-50%); /* מירכוז מדויק */
+    object-fit: contain;
+    filter: drop-shadow(0 0 5px rgba(0,0,0,0.3)); /* צל עדין */
+}
+
+#theme-toggle { 
+    background: var(--border); 
+    border: none; 
+    color: var(--text); 
+    padding: 8px; 
+    border-radius: 50%; 
+    z-index: 10; 
+    cursor: pointer;
+}
+
+/* שורת סטטוס הודעות */
+#status-bar { 
+    background: var(--card); 
+    padding: 12px; 
+    text-align: center; 
+    font-weight: 800; 
+    border-bottom: 1px solid var(--border);
+    min-height: 45px;
+}
 .event-positive { background: var(--green) !important; color: white; }
 .event-negative { background: var(--main) !important; color: white; }
 
@@ -16,16 +52,13 @@ body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--t
 .stat-card { background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center; font-size: 11px; font-weight: bold; }
 
 .topbar { background: var(--card); padding: 5px; border-bottom: 1px solid var(--border); }
-.nav-row { display: flex; gap: 2px; margin-bottom: 2px; }
-.topbar button { flex: 1; padding: 14px 2px; background: var(--border); color: var(--text); border: none; border-radius: 4px; font-weight: bold; font-size: 11px; }
+.nav-row { display: flex; gap: 3px; margin-bottom: 3px; }
+.topbar button { flex: 1; padding: 14px 2px; background: var(--border); color: var(--text); border: none; border-radius: 5px; font-weight: bold; font-size: 11px; }
 .topbar button.active { background: var(--main); color: white; }
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
 .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin: 10px; }
-.small-card { text-align: center; padding: 10px; margin: 0; }
+button.action { width: 100%; padding: 15px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 5px; }
 
-button.action { width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 5px; }
-.xpbar { width: 100%; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; margin: 10px 0; }
-#wb { height: 100%; background: #f59e0b; width: 0%; transition: width 0.1s linear; }
-
-.install-step { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; border-right: 4px solid var(--blue); }
+/* אנימציית הופעה חלקה */
+.fade-in { animation: fadeIn 0.3s ease-in; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
