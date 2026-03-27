@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money AI v3.8.9</title>
+    <title>Smart Money AI v3.9.0</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* מניעת גלילה לצדדים ואופטימיזציה למובייל */
         html, body { overflow-x: hidden; width: 100%; margin: 0; padding: 0; touch-action: manipulation; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; }
     </style>
 </head>
 <body class="dark-theme">
@@ -16,9 +15,10 @@
 <header class="main-header">
     <button id="theme-toggle" onclick="toggleTheme()">🌓</button>
     <img src="logo.png" alt="Smart Money AI" class="app-logo">
-    <div style="width: 40px;"></div> </header>
+    <div style="width: 40px;"></div>
+</header>
 
-<div id="status-bar"><span id="msg-text">Smart Money AI v3.8.9 | מוכן</span></div>
+<div id="status-bar"><span id="msg-text"></span></div>
 
 <div class="stats-container">
     <div class="stat-card">💵 מזומן: <span id="money">0</span></div>
@@ -36,7 +36,15 @@
     <div class="nav-row">
         <button onclick="openTab('realestate')" id="btnRealestate">🏘️ נדל"ן</button>
         <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+        <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
         <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
+        <button onclick="checkUpdate()" id="btnUpdate" style="background:#334155">🔄 עדכון</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="resetGame()" id="btnReset" style="background:#450a0a; width: 100%;">🧹 איפוס מלא</button>
     </div>
 </nav>
 
