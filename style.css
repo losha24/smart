@@ -1,37 +1,20 @@
-:root { --main: #ef4444; }
-.dark-theme { --bg: #0f172a; --card: #1e293b; --text: #ffffff; --border: #334155; }
-.light-theme { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --border: #cbd5e1; }
+/* הוסף את זה ל-style.css הקיים */
+#status-bar {
+    background: #1e293b;
+    color: #94a3b8;
+    text-align: center;
+    padding: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    border-bottom: 1px solid var(--border);
+    transition: 0.5s;
+}
+.event-positive { background: #065f46 !important; color: #fff !important; }
+.event-negative { background: #7f1d1d !important; color: #fff !important; }
 
-body { font-family: sans-serif; background: var(--bg); color: var(--text); direction: rtl; margin: 0; }
-.main-header { display: flex; justify-content: center; padding: 10px; background: var(--card); border-bottom: 2px solid var(--main); height: 50px; }
-.app-logo { max-height: 40px; }
-#theme-toggle { position: absolute; left: 10px; top: 10px; background: none; border: 1px solid var(--border); color: var(--text); padding: 5px; border-radius: 50%; }
-
-.stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; }
-.stat-card { background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 11px; text-align: center; font-weight: bold; }
-
-.topbar { background: var(--card); padding: 5px; position: sticky; top: 0; z-index: 100; }
-.nav-row { display: flex; gap: 2px; margin-bottom: 2px; }
-.topbar button { flex: 1; padding: 10px 2px; font-size: 10px; background: var(--border); color: var(--text); border: none; border-radius: 4px; }
-.topbar button.active { background: var(--main); color: white; }
-
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
-.card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin: 10px; }
-.small-card { margin: 0 !important; text-align: center; }
-
-.home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stat-box { background: var(--bg); padding: 10px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
-.inv-list { display: flex; flex-wrap: wrap; gap: 5px; }
-.tag { background: #3b82f6; padding: 3px 8px; border-radius: 4px; font-size: 10px; }
-
-.xpbar { width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-top: 5px; }
-#xpfill, #wb { height: 100%; background: #fbbf24; transition: 0.3s; }
-
-.cooldown-bar { width: 100%; height: 4px; background: var(--border); margin: 10px 0; }
-.cooldown-bar div { height: 100%; background: #22c55e; }
-
-button.action { width: 100%; padding: 12px; margin-top: 5px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; }
-.disabled { opacity: 0.3; pointer-events: none; }
-
-input { width: 90%; padding: 12px; margin-bottom: 10px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; text-align: center; }
-footer { text-align: center; padding: 20px; font-size: 10px; opacity: 0.5; }
+/* שדרוג כפתור שדרוג נדל"ן */
+.upgrade-btn {
+    background: #7c3aed !important;
+    font-size: 11px !important;
+    margin-top: 8px !important;
+}
