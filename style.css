@@ -2,31 +2,36 @@
 .dark-theme { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
 .light-theme { --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; }
 
-body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); direction: rtl; }
+body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); direction: rtl; margin: 0; overflow-x: hidden; padding-bottom: 20px; }
 
-.main-header { display: flex; justify-content: space-between; align-items: center; height: 90px; background: var(--card); padding: 0 15px; border-bottom: 3px solid var(--main); position: relative; }
-.app-logo { height: 75px; position: absolute; left: 50%; transform: translateX(-50%); }
+.main-header { display: flex; justify-content: space-between; align-items: center; height: 85px; background: var(--card); padding: 0 15px; position: relative; border-bottom: 1px solid var(--border); }
+.app-logo { height: 70px; position: absolute; left: 50%; transform: translateX(-50%); }
 
-#status-bar { min-height: 45px; display: flex; align-items: center; justify-content: center; font-weight: 800; border-bottom: 1px solid var(--border); transition: 0.3s; background: transparent; }
-.active-msg { background: var(--card) !important; }
-.event-positive { background: var(--green) !important; color: white; }
-.event-negative { background: var(--main) !important; color: white; }
+#theme-toggle { background: var(--border); border: none; color: var(--text); padding: 8px; border-radius: 50%; cursor: pointer; }
 
-.stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px; }
-.stat-card { background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center; font-size: 11px; }
+#status-bar { min-height: 40px; text-align: center; font-weight: bold; padding: 5px; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+.event-positive { background: var(--green); color: white; }
+.event-negative { background: var(--main); color: white; }
 
-.topbar { background: var(--card); padding: 5px; }
+.stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; }
+.stat-card { background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center; font-size: 11px; font-weight: bold; }
+
+.topbar { background: var(--card); padding: 5px; border-bottom: 1px solid var(--border); }
 .nav-row { display: flex; gap: 3px; margin-bottom: 3px; }
-.topbar button { flex: 1; padding: 12px 2px; background: var(--border); color: var(--text); border: none; border-radius: 5px; font-weight: bold; font-size: 11px; }
-.topbar button.active { background: var(--main); color: white; }
+.topbar button { flex: 1; padding: 10px 2px; background: var(--border); color: var(--text); border: none; border-radius: 5px; font-weight: bold; font-size: 10px; }
+.topbar button.active { background: var(--blue); color: white; }
 
-/* גריד של 2 בשורה */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
-.card { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+.card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin: 10px; text-align: center; }
 
-/* מד עבודה */
+input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); text-align: center; font-size: 16px; box-sizing: border-box; }
+button.action { width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 13px; margin-top: 5px; cursor: pointer; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .xpbar { width: 100%; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; margin: 10px 0; }
 #wb { height: 100%; background: #f59e0b; width: 0%; transition: width 0.1s linear; }
 
-button.action { width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 6px; font-weight: bold; margin-top: 5px; font-size: 12px; }
-button:disabled { opacity: 0.5; }
+.main-footer { text-align: center; padding: 20px; font-size: 11px; opacity: 0.6; border-top: 1px solid var(--border); margin-top: 20px; }
+
+.fade-in { animation: fadeIn 0.3s ease-in; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
