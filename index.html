@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money AI v3.8.8</title>
+    <title>Smart Money AI v3.8.9</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        html, body { overflow-x: hidden; width: 100%; margin: 0; padding: 0; }
+        /* מניעת גלילה לצדדים ואופטימיזציה למובייל */
+        html, body { overflow-x: hidden; width: 100%; margin: 0; padding: 0; touch-action: manipulation; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
@@ -15,10 +16,9 @@
 <header class="main-header">
     <button id="theme-toggle" onclick="toggleTheme()">🌓</button>
     <img src="logo.png" alt="Smart Money AI" class="app-logo">
-    <div style="width: 40px;"></div>
-</header>
+    <div style="width: 40px;"></div> </header>
 
-<div id="status-bar"><span id="msg-text">Smart Money AI v3.8.8 | מוכן</span></div>
+<div id="status-bar"><span id="msg-text">Smart Money AI v3.8.9 | מוכן</span></div>
 
 <div class="stats-container">
     <div class="stat-card">💵 מזומן: <span id="money">0</span></div>
