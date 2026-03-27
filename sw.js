@@ -1,4 +1,4 @@
-const CACHE_NAME = "smartmoney-v3.3";
+const CACHE_NAME = "smartmoney-v3.4.6";
 const urlsToCache = ["./", "./index.html", "./style.css", "./game.js", "./manifest.json", "./logo.png"];
 
 self.addEventListener("install", (e) => {
