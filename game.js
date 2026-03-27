@@ -7,39 +7,15 @@ let lastGift = load('lastGift', 0), theme = load('theme', 'dark'), working = fal
 let skills = load('skills', []), inventory = load('inventory', []);
 let activeTasks = load('activeTasks', []), totalEarned = load('totalEarned', 5000), totalSpent = load('totalSpent', 0);
 
-// בורסה דינמית
+// בורסה
 let stocks = load('stocks', [
-    {id:'AAPL', n:'Apple', p:180, change:0},
-    {id:'TSLA', n:'Tesla', p:240, change:0},
-    {id:'NVDA', n:'Nvidia', p:120, change:0},
-    {id:'BTC', n:'Bitcoin', p:65000, change:0},
-    {id:'ETH', n:'Ethereum', p:3500, change:0},
-    {id:'GOLD', n:'זהב', p:2300, change:0}
+    {id:'AAPL', n:'Apple', p:180, change:0}, {id:'TSLA', n:'Tesla', p:240, change:0},
+    {id:'NVDA', n:'Nvidia', p:120, change:0}, {id:'BTC', n:'Bitcoin', p:65000, change:0},
+    {id:'ETH', n:'Ethereum', p:3500, change:0}, {id:'GOLD', n:'זהב', p:2300, change:0}
 ]);
 let invOwned = load('invOwned', { AAPL:0, TSLA:0, NVDA:0, BTC:0, ETH:0, GOLD:0 });
 
-// עדכון מחירי בורסה כל 5 שניות
-setInterval(() => {
-    stocks.forEach(s => {
-        let vol = s.p * 0.02; 
-        let diff = (Math.random() * (vol * 2) - vol);
-        s.p = Math.max(1, s.p + diff);
-        s.change = diff;
-    });
-    save();
-}, 5000);
-
-// מערכת משימות מתחלפת
-function checkTasks() {
-    if(activeTasks.length === 0) {
-        activeTasks = [
-            {id: 1, n: "לעבוד 5 פעמים", goal: 5, cur: 0, r: 10000, type: 'reg'},
-            {id: 2, n: "להרוויח 50,000₪ סה\"כ", goal: 50000, cur: totalEarned, r: 25000, type: 'reg'},
-            {id: 3, n: "משימת זהב: נכס ב-1M₪", goal: 1000000, cur: totalSpent, r: 250000, type: 'gold'}
-        ];
-    }
-}
-
+// --- פונקציות עזר ---
 function save() {
     const data = { money, bank, passive, level, xp, loan, lastGift, theme, invOwned, skills, inventory, activeTasks, totalEarned, totalSpent, stocks };
     Object.keys(data).forEach(k => localStorage.setItem(k, JSON.stringify(data[k])));
@@ -54,40 +30,52 @@ function updateUI() {
 
 function showMsg(txt, type) {
     const b = document.getElementById("status-bar");
+    if(!b) return;
     b.innerText = txt;
     b.className = (type === "pos" ? "pos show" : "neg show");
     setTimeout(() => { b.className = ""; }, 3000);
 }
 
+// --- ניהול טאבים (לוודא שכל כפתור ב-NAV עובד) ---
 function openTab(tab) {
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
-    document.getElementById("btn" + tab.charAt(0).toUpperCase() + tab.slice(1))?.classList.add("active");
-    const c = document.getElementById("content"); c.innerHTML = "";
+    const activeBtn = document.getElementById("btn" + tab.charAt(0).toUpperCase() + tab.slice(1));
+    if(activeBtn) activeBtn.classList.add("active");
+
+    const c = document.getElementById("content");
+    if(!c) return;
+    c.innerHTML = "";
 
     if (tab === 'home') {
         const nextGift = 14400000 - (Date.now() - lastGift);
         let stockValue = 0;
         stocks.forEach(s => stockValue += (invOwned[s.id] || 0) * s.p * 4);
-
-        c.innerHTML = `<div class="card fade-in">
+        c.innerHTML = `<div class="card">
             <h3>📊 סיכום חשבון</h3>
-            <p>💰 סה"כ הכנסות: <span class="pos-text">${totalEarned.toLocaleString()}₪</span></p>
-            <p>💸 סה"כ הוצאות: <span class="neg-text">${totalSpent.toLocaleString()}₪</span></p>
-            <p>📈 שווי תיק השקעות: <b>${Math.floor(stockValue).toLocaleString()}₪</b></p>
-            <p>🏦 חוב לבנק: <span class="neg-text">${loan.toLocaleString()}₪</span></p>
+            <p>💰 הכנסות: <span class="pos-text">${totalEarned.toLocaleString()}₪</span></p>
+            <p>💸 הוצאות: <span class="neg-text">${totalSpent.toLocaleString()}₪</span></p>
+            <p>📈 שווי בורסה: <b>${Math.floor(stockValue).toLocaleString()}₪</b></p>
             <hr>
-            <button class="action gift-btn" onclick="claimGift()" ${nextGift>0?'disabled':''}>
-                ${nextGift > 0 ? '🎁 זמין בעוד ' + Math.ceil(nextGift/3600000) + ' שעות' : '🎁 קבל מתנה'}
-            </button>
+            <button class="action gift-btn" onclick="claimGift()" ${nextGift>0?'disabled':''}>🎁 מתנה</button>
         </div>`;
     }
+    else if (tab === 'work') {
+        const jobs = [
+            {n:"שליח", p:400, t:4, s:null}, {n:"מאבטח", p:1200, t:10, s:"רישיון לנשק"}, 
+            {n:"נהג", p:1800, t:12, s:"רישיון נהיגה"}, {n:"מתכנת", p:15000, t:40, s:"תכנות JS"}
+        ];
+        c.innerHTML = `<div class="card"><div class="xpbar"><div id="wb"></div></div></div><div class="grid-2"></div>`;
+        jobs.forEach(j => {
+            const has = !j.s || skills.includes(j.s);
+            c.querySelector(".grid-2").innerHTML += `<div class="card" style="opacity:${has?1:0.5}">
+                <b>${j.n}</b><br><button class="action" onclick="startWork(${j.p},${j.t})" ${!has||working?'disabled':''}>${has?j.p+'₪':'חסר '+j.s}</button>
+            </div>`;
+        });
+    }
     else if (tab === 'invest') {
-        c.innerHTML = `<h3>📊 בורסה ומטבעות (Real-time)</h3>`;
         stocks.forEach(s => {
-            const color = s.change >= 0 ? 'green' : 'red';
             c.innerHTML += `<div class="card">
-                <b>${s.n}</b> <span style="color:${color}">${s.change >= 0 ? '▲' : '▼'} ${s.p.toFixed(2)}$</span><br>
-                <small>בבעלותך: ${invOwned[s.id] || 0}</small>
+                <b>${s.n}</b>: ${s.p.toFixed(2)}$ <small>(${invOwned[s.id]||0})</small>
                 <div class="nav-row">
                     <button class="action" onclick="buyStock('${s.id}',${s.p})">קנה</button>
                     <button class="action" style="background:var(--main)" onclick="sellStock('${s.id}',${s.p})">מכור</button>
@@ -97,59 +85,58 @@ function openTab(tab) {
     }
     else if (tab === 'bank') {
         c.innerHTML = `<div class="card">
-            <h3>🏦 ניהול בנק</h3>
-            <p>יתרה: ${bank.toLocaleString()}₪ | הלוואה: ${loan.toLocaleString()}₪</p>
+            <h3>🏦 בנק</h3>
             <input type="number" id="bankAmt" placeholder="סכום...">
             <div class="nav-row">
                 <button class="action" onclick="bankOp('dep')">הפקדה</button>
                 <button class="action" onclick="bankOp('wit')">משיכה</button>
             </div>
-            <hr>
-            <button class="action" onclick="bankOp('loan')" style="background:var(--main)">קח 5,000₪ הלוואה</button>
-            <button class="action" onclick="bankOp('pay')" style="background:var(--green); margin-top:5px;">החזר 5,000₪ מהחוב</button>
+            <button class="action" onclick="bankOp('loan')" style="background:var(--main)">הלוואה</button>
+            <button class="action" onclick="bankOp('pay')" style="background:var(--green)">החזר חוב</button>
         </div>`;
     }
     else if (tab === 'tasks') {
-        checkTasks();
-        c.innerHTML = `<h3>🎯 משימות</h3>`;
-        activeTasks.forEach((t, i) => {
-            const isGold = t.type === 'gold';
-            c.innerHTML += `<div class="card ${isGold ? 'gold-task' : ''}">
-                <b>${isGold ? '👑 ' : ''}${t.n}</b><br>
-                התקדמות: ${Math.floor(t.cur)} / ${t.goal}<br>
-                <small>פרס: ${t.r.toLocaleString()}₪</small>
-            </div>`;
+        if(activeTasks.length === 0) {
+            activeTasks = [{id:1, n:"עבודה", goal:5, cur:0, r:10000}, {id:3, n:"זהב", goal:1000000, cur:totalSpent, r:250000}];
+        }
+        activeTasks.forEach(t => {
+            c.innerHTML += `<div class="card"><b>${t.n}</b>: ${Math.floor(t.cur)}/${t.goal}</div>`;
         });
     }
-    // ... שאר הטאבים (work, business, וכו') נשארים מהגרסה הקודמת
+}
+
+// --- לוגיקה של כפתורים ---
+function startWork(p, t) {
+    if(working) return; working = true;
+    let s = 0; const bar = document.getElementById("wb");
+    let i = setInterval(() => {
+        s += 0.1; if(bar) bar.style.width = (s/t*100) + "%";
+        if(s >= t) {
+            clearInterval(i); working = false; money += p; totalEarned += p; updateUI(); openTab('work');
+        }
+    }, 100);
 }
 
 function bankOp(type) {
     const a = parseInt(document.getElementById("bankAmt")?.value) || 0;
-    if(type==='dep' && money>=a && a>0) { money-=a; bank+=a; showMsg("הופקד", "pos"); }
-    else if(type==='wit' && bank>=a && a>0) { bank-=a; money+=a; showMsg("נמשך", "pos"); }
-    else if(type==='loan') { loan+=5000; money+=5000; showMsg("הלוואה התקבלה", "neg"); }
-    else if(type==='pay' && money>=5000 && loan>=5000) { money-=5000; loan-=5000; showMsg("החזרת חלק מהחוב", "pos"); }
-    else { showMsg("פעולה נכשלה", "neg"); }
+    if(type==='dep' && money>=a) { money-=a; bank+=a; showMsg("הופקד", "pos"); }
+    else if(type==='wit' && bank>=a) { bank-=a; money+=a; showMsg("נמשך", "pos"); }
+    else if(type==='loan') { loan+=5000; money+=5000; }
+    else if(type==='pay' && money>=5000) { money-=5000; loan-=5000; }
     updateUI(); openTab('bank');
 }
 
-function buyStock(id, p) {
-    let cost = p * 4;
-    if(money >= cost) { money -= cost; invOwned[id]++; showMsg("נקנה", "pos"); updateUI(); openTab('invest'); }
-}
-
-function sellStock(id, p) {
-    if(invOwned[id] > 0) { invOwned[id]--; money += (p * 4); showMsg("נמכר", "pos"); updateUI(); openTab('invest'); }
-}
+function buyStock(id, p) { if(money >= p*4) { money -= p*4; invOwned[id]++; updateUI(); openTab('invest'); } }
+function sellStock(id, p) { if(invOwned[id] > 0) { invOwned[id]--; money += p*4; updateUI(); openTab('invest'); } }
 
 function claimGift() {
     if(Date.now() - lastGift >= 14400000) {
-        let g = 5000 + (level * 1000);
-        money += g; totalEarned += g; lastGift = Date.now();
-        showMsg("קיבלת מתנה!", "pos"); updateUI(); openTab('home');
+        money += 5000; lastGift = Date.now(); showMsg("קיבלת מתנה", "pos"); updateUI(); openTab('home');
     }
 }
 
-setInterval(() => { if(passive>0) { money += (passive/10); updateUI(); } }, 1000);
+function toggleTheme() { theme = (theme === 'dark' ? 'light' : 'dark'); updateUI(); }
+function resetGame() { if(confirm("איפוס?")) { localStorage.clear(); location.reload(); } }
+
+setInterval(() => { if(passive > 0) { money += (passive/10); updateUI(); } }, 1000);
 document.addEventListener("DOMContentLoaded", () => { updateUI(); openTab('home'); });
