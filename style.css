@@ -1,38 +1,164 @@
-body { font-family: system-ui, sans-serif; background: #0f172a; color: white; margin: 0; direction: rtl; text-align: center; }
+/* הגדרות כלליות */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: #0f172a; 
+    color: white; 
+    margin: 0; 
+    direction: rtl; 
+    text-align: center; 
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
 
-/* כותרת מאוחדת ומרכזית */
-.main-header { padding: 20px; background: #1e293b; border-bottom: 2px solid #ef4444; }
-.main-header h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: 2px; }
-.main-header span { color: #ef4444; }
+/* עיצוב הלוגו המרכזי */
+.main-header {
+    padding: 20px 10px;
+    background: #1e293b;
+    display: flex;
+    justify-content: center; /* מרכוז אופקי */
+    align-items: center;     /* מרכוז אנכי */
+    border-bottom: 2px solid #ef4444;
+}
 
-/* שורת סטטוס */
-#status-bar { background: #1e293b; padding: 10px; font-size: 13px; min-height: 20px; border-top: 1px solid #334155; }
+.logo-container {
+    max-width: 220px; /* ניתן לשנות בהתאם לגודל הלוגו שלך */
+}
+
+.app-logo {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+}
+
+/* שורת סטטוס הודעות */
+#status-bar {
+    background: #0f172a;
+    padding: 8px;
+    font-size: 13px;
+    min-height: 20px;
+    color: #94a3b8;
+    border-bottom: 1px solid #334155;
+}
+
 .gain { color: #4ade80 !important; font-weight: bold; }
 .loss { color: #ef4444 !important; font-weight: bold; }
 .event { color: #fbbf24 !important; font-weight: bold; }
 
-/* סטטיסטיקה */
-.stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 10px; background: #1e293b; }
-.stat-card { background: #0f172a; padding: 10px; border-radius: 6px; font-size: 11px; border: 1px solid #334155; }
-.xp-container { padding: 5px 20px; }
-.xpbar { width: 100%; height: 10px; background: #334155; border-radius: 5px; overflow: hidden; }
-#xpfill { height: 100%; width: 0%; background: #fbbf24; transition: 0.5s; }
+/* סטטיסטיקה ו-XP */
+.stats-container { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 4px; 
+    padding: 10px; 
+    background: #1e293b; 
+}
 
-/* ניווט */
-.topbar { background: #1e293b; padding: 5px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
+.stat-card { 
+    background: #0f172a; 
+    padding: 10px; 
+    border-radius: 6px; 
+    font-size: 12px; 
+    border: 1px solid #334155; 
+}
+
+.xp-container { padding: 5px 15px; background: #1e293b; }
+.xpbar { 
+    width: 100%; 
+    height: 10px; 
+    background: #334155; 
+    border-radius: 5px; 
+    overflow: hidden; 
+}
+#xpfill { height: 100%; width: 0%; background: #fbbf24; transition: 0.4s ease; }
+
+/* תפריט ניווט עליון */
+.topbar { 
+    background: #1e293b; 
+    padding: 5px; 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000; 
+    border-bottom: 1px solid #334155; 
+}
+
 .nav-row { display: flex; gap: 3px; margin-bottom: 3px; }
-.topbar button { flex: 1; background: #334155; color: white; border: none; padding: 12px 2px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; }
+
+.topbar button { 
+    flex: 1; 
+    background: #334155; 
+    color: white; 
+    border: none; 
+    padding: 12px 2px; 
+    border-radius: 4px; 
+    font-size: 11px; 
+    font-weight: bold; 
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
 .topbar button.active { background: #ef4444; }
 
-/* תוכן */
-.card { background: #1e293b; margin: 8px; padding: 15px; border-radius: 12px; border: 1px solid #334155; }
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; margin: 10px 0; text-align: right; }
-.inventory-section { text-align: right; border-top: 1px solid #334155; margin-top: 15px; padding-top: 10px; }
-.inv-items { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
-.inv-items span { background: #0f172a; padding: 4px 8px; border-radius: 4px; font-size: 11px; border: 1px solid #334155; }
+/* תוכן קלפים */
+.card { 
+    background: #1e293b; 
+    margin: 10px; 
+    padding: 15px; 
+    border-radius: 12px; 
+    border: 1px solid #334155; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
 
-/* כפתורים וקלט */
-button.action { width: 100%; padding: 14px; margin: 6px 0; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.stats-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 8px; 
+    font-size: 12px; 
+    margin: 10px 0; 
+    text-align: right; 
+}
+
+.inventory-section { 
+    text-align: right; 
+    border-top: 1px solid #334155; 
+    margin-top: 15px; 
+    padding-top: 10px; 
+}
+
+.inv-items { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.inv-items span { 
+    background: #0f172a; 
+    padding: 4px 8px; 
+    border-radius: 4px; 
+    font-size: 11px; 
+    border: 1px solid #334155; 
+}
+
+/* כפתורי פעולה וקלט */
+button.action { 
+    width: 100%; 
+    padding: 14px; 
+    margin: 6px 0; 
+    background: #2563eb; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    font-size: 14px;
+}
+
 .disabled { opacity: 0.4; pointer-events: none; background: #475569 !important; }
-input { width: 85%; padding: 12px; margin: 10px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 6px; font-size: 16px; }
+
+input { 
+    width: 85%; 
+    padding: 12px; 
+    margin: 10px; 
+    background: #0f172a; 
+    color: white; 
+    border: 1px solid #334155; 
+    border-radius: 6px; 
+    font-size: 16px; 
+    text-align: center;
+}
+
 footer { padding: 20px; font-size: 10px; color: #64748b; }
