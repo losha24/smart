@@ -4,19 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Smart Money AI v4.3.5</title>
+    <title>Smart Money AI v4.4.5</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SmartMoney">
 </head>
 <body class="dark-theme">
 
 <header class="main-header">
     <button id="theme-toggle" onclick="toggleTheme()">🌓</button>
     <img src="logo.png" alt="Smart Money AI" class="app-logo">
-    <button class="update-btn" onclick="location.reload()">🔄</button>
+    <div style="width: 40px;"></div>
 </header>
 
 <div id="status-bar"><span id="msg-text"></span></div>
@@ -31,33 +28,33 @@
     <div class="nav-row">
         <button onclick="openTab('home')" id="btnHome">🏠 בית</button>
         <button onclick="openTab('work')" id="btnWork">💼 עבודה</button>
-        <button onclick="openTab('invest')" id="btnInvest">📊 השקעות</button>
+        <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
     </div>
     <div class="nav-row">
         <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
         <button onclick="openTab('realestate')" id="btnRealestate">🏘️ נדל"ן</button>
-        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+        <button onclick="openTab('invest')" id="btnInvest">📊 השקעות</button>
     </div>
     <div class="nav-row">
         <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
+        <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
         <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
-        <button onclick="resetGame()" id="btnReset" style="background:#450a0a">🧹</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="openTab('install')" id="btnInstall">📲 התקנה</button>
+        <button onclick="location.reload()" style="background:#1e293b">🔄 עדכון</button>
+        <button onclick="resetGame()" id="btnReset" style="background:#450a0a">🧹 איפוס</button>
     </div>
 </nav>
 
 <div id="content" class="fade-in"></div>
 
-<footer class="main-footer">
-    <p>© 2026 Alexey Zavodisker | Smart Money AI v4.3.5</p>
-</footer>
+<footer class="main-footer">© 2026 Alexey Zavodisker | v4.4.5</footer>
 
 <script src="game.js"></script>
 <script>
-    // רישום Service Worker בסיסי בשביל PWA
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').catch(() => {});
-        });
+        navigator.serviceWorker.register('sw.js').catch(() => {});
     }
 </script>
 </body>
