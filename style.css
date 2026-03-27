@@ -1,51 +1,37 @@
-:root { --main: #ef4444; --blue: #3b82f6; }
+:root { --main: #ef4444; }
 .dark-theme { --bg: #0f172a; --card: #1e293b; --text: #ffffff; --border: #334155; }
 .light-theme { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --border: #cbd5e1; }
 
-body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); direction: rtl; margin: 0; transition: 0.3s; overflow-x: hidden; }
+body { font-family: sans-serif; background: var(--bg); color: var(--text); direction: rtl; margin: 0; }
+.main-header { display: flex; justify-content: center; padding: 10px; background: var(--card); border-bottom: 2px solid var(--main); height: 50px; }
+.app-logo { max-height: 40px; }
+#theme-toggle { position: absolute; left: 10px; top: 10px; background: none; border: 1px solid var(--border); color: var(--text); padding: 5px; border-radius: 50%; }
 
-/* Header & Logo Control */
-.main-header { 
-    display: flex; justify-content: center; align-items: center; 
-    padding: 10px; background: var(--card); border-bottom: 2px solid var(--main);
-    height: 60px; position: relative; 
-}
-.logo-container { height: 100%; display: flex; align-items: center; }
-.app-logo { max-height: 45px; width: auto; object-fit: contain; }
-#theme-toggle { position: absolute; left: 10px; background: none; border: 1px solid var(--border); color: var(--text); padding: 5px; border-radius: 50%; cursor: pointer; }
-
-/* Stats Bar */
 .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; }
-.stat-card { background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 11px; font-weight: bold; text-align: center; }
+.stat-card { background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 11px; text-align: center; font-weight: bold; }
 
-/* Navigation */
-.topbar { background: var(--card); padding: 5px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.topbar { background: var(--card); padding: 5px; position: sticky; top: 0; z-index: 100; }
 .nav-row { display: flex; gap: 2px; margin-bottom: 2px; }
-.topbar button { flex: 1; padding: 10px 2px; font-size: 10px; background: var(--border); color: var(--text); border: none; border-radius: 4px; font-weight: bold; }
+.topbar button { flex: 1; padding: 10px 2px; font-size: 10px; background: var(--border); color: var(--text); border: none; border-radius: 4px; }
 .topbar button.active { background: var(--main); color: white; }
 
-/* Layouts */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
 .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin: 10px; }
-.small-card { margin: 0 !important; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+.small-card { margin: 0 !important; text-align: center; }
 
-/* Home & Inventory */
-.home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0; }
+.home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .stat-box { background: var(--bg); padding: 10px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
-.inv-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
-.tag { background: var(--blue); color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+.inv-list { display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { background: #3b82f6; padding: 3px 8px; border-radius: 4px; font-size: 10px; }
 
-/* UI Elements */
-.xpbar { width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 8px 0; }
-#xpfill { height: 100%; background: #fbbf24; transition: 0.5s; }
-#wb { height: 100%; background: #22c55e; transition: linear; }
+.xpbar { width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-top: 5px; }
+#xpfill, #wb { height: 100%; background: #fbbf24; transition: 0.3s; }
 
-.cooldown-bar { width: 100%; height: 4px; background: var(--border); margin: 8px 0; border-radius: 2px; overflow: hidden; }
-.cooldown-bar div { height: 100%; background: #22c55e; transition: linear; }
+.cooldown-bar { width: 100%; height: 4px; background: var(--border); margin: 10px 0; }
+.cooldown-bar div { height: 100%; background: #22c55e; }
 
-button.action { width: 100%; padding: 12px; margin-top: 8px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-button.action.disabled { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
+button.action { width: 100%; padding: 12px; margin-top: 5px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; }
+.disabled { opacity: 0.3; pointer-events: none; }
 
 input { width: 90%; padding: 12px; margin-bottom: 10px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; text-align: center; }
-#status-bar { text-align: center; font-size: 11px; padding: 5px; color: #94a3b8; }
-footer { text-align: center; padding: 25px; font-size: 10px; opacity: 0.5; }
+footer { text-align: center; padding: 20px; font-size: 10px; opacity: 0.5; }
