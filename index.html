@@ -2,26 +2,29 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Smart Money Pro</title>
+    
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
 </head>
 <body class="dark-theme" id="app-body">
     <header class="main-header">
         <div class="header-top">
-            <button onclick="toggleTheme()" id="theme-btn" style="font-size:20px; background:none; border:none; cursor:pointer;">☀️/🌙</button>
-            <h2 style="margin:0; color:var(--blue);">Smart Money</h2>
-            <button onclick="resetGame()" style="color:gray; font-size:10px; background:none; border:none; cursor:pointer;">R</button>
+            <button onclick="toggleTheme()" id="theme-btn" class="icon-btn">☀️/🌙</button>
+            <h2 class="app-title">Smart Money</h2>
+            <button onclick="resetGame()" class="icon-btn-small">R</button>
         </div>
     </header>
 
     <div class="stats-bar-top">
-        <div>💰 <span id="money">0</span>₪</div>
-        <div>🏦 <span id="bank">0</span>₪</div>
-        <div>📈 <span id="passive-ui">0</span>/s</div>
+        <div class="stat-item">💰 <span id="money">0</span>₪</div>
+        <div class="stat-item">🏦 <span id="bank">0</span>₪</div>
+        <div class="stat-item">📈 <span id="passive-ui">0</span>/s</div>
     </div>
 
     <nav class="topbar">
@@ -45,8 +48,8 @@
 
     <main id="content" class="fade-in"></main>
 
-    <footer style="text-align:center; padding:15px; font-size:10px; opacity:0.6; color:gray;">
-        © 2026 Alexey Zavodisker | Smart Money v5.1.0
+    <footer class="main-footer">
+        © 2026 Alexey Zavodisker | Smart Money v5.2.0
     </footer>
 
     <script src="js/core.js"></script>
