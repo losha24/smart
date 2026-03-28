@@ -6,10 +6,7 @@ let skills = load('skills', []), inventory = load('inventory', []);
 let totalEarned = load('totalEarned', 5000), totalSpent = load('totalSpent', 0);
 let invOwned = load('invOwned', { AAPL:0, TSLA:0, NVDA:0, BTC:0 });
 
-const stocks = [
-    {id:'AAPL', n:'Apple', p:180}, {id:'TSLA', n:'Tesla', p:240},
-    {id:'NVDA', n:'Nvidia', p:120}, {id:'BTC', n:'Bitcoin', p:65000}
-];
+const stocks = [{id:'AAPL', n:'Apple', p:180}, {id:'TSLA', n:'Tesla', p:240}, {id:'NVDA', n:'Nvidia', p:120}, {id:'BTC', n:'Bitcoin', p:65000}];
 
 function save() {
     const data = { money, bank, passive, loan, lastGift, theme, skills, inventory, totalEarned, totalSpent, invOwned, activeTasks };
@@ -28,7 +25,9 @@ function toggleTheme() { theme = (theme === 'dark' ? 'light' : 'dark'); updateUI
 function resetGame() { if(confirm("לאפס הכל?")) { localStorage.clear(); location.reload(); } }
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').then(() => console.log("Smart Money SW Active"));
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+        reg.onupdatefound = () => { location.reload(); }; // רענון אוטומטי כשנמצא עדכון
+    });
 }
 
 setInterval(() => { if(passive > 0) { money += (passive/10); updateUI(); } }, 1000);
