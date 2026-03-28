@@ -13,6 +13,7 @@ function save() {
 
 function showMsg(txt, color = "var(--blue)") {
     const sb = document.getElementById("status-bar");
+    if(!sb) return;
     sb.innerText = txt; sb.style.color = color;
     setTimeout(() => { sb.innerText = ""; }, 3000);
 }
@@ -23,7 +24,6 @@ function updateUI() {
     document.getElementById("passive-ui").innerText = passive.toFixed(1);
     document.getElementById("app-body").className = theme + "-theme";
 
-    // עדכון סטטיסטיקה בטאב הבית במידה והוא פתוח
     const statsDiv = document.getElementById("live-stats");
     if(statsDiv) {
         statsDiv.innerHTML = `
@@ -37,6 +37,6 @@ function updateUI() {
 
 function forceUpdate() { location.reload(true); }
 function toggleTheme() { theme = (theme === 'dark' ? 'light' : 'dark'); updateUI(); }
-function resetGame() { if(confirm("למחוק הכל ולהתחיל מחדש?")) { localStorage.clear(); location.reload(); } }
+function resetGame() { if(confirm("לאפס את כל ההתקדמות?")) { localStorage.clear(); location.reload(); } }
 
 setInterval(() => { if(passive > 0) { money += (passive/10); updateUI(); } }, 100);
