@@ -1,194 +1,190 @@
-/* משתנים גלובליים */
 :root {
-    --main: #ef4444;    /* אדום - שלילי */
-    --blue: #3b82f6;    /* כחול - ראשי */
-    --green: #10b981;   /* ירוק - חיובי */
-    --gold: #fbbf24;    /* זהב - משימות מיוחדות */
-    --border: #334155;
-}
-
-.dark-theme {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --text: #f8fafc;
+    /* צבעי בסיס - Dark Mode */
+    --bg: #0f172a; 
+    --card: #1e293b; 
+    --text: #f1f5f9;
+    --blue: #38bdf8; 
+    --green: #22c55e; 
+    --red: #ef4444; 
+    --gold: #fbbf24;
+    --border: rgba(255, 255, 255, 0.1);
 }
 
 .light-theme {
-    --bg: #f1f5f9;
-    --card: #ffffff;
-    --text: #0f172a;
+    /* צבעי בסיס - Light Mode */
+    --bg: #f8fafc; 
+    --card: #ffffff; 
+    --text: #1e293b;
+    --blue: #0284c7; 
+    --border: rgba(0, 0, 0, 0.1);
 }
 
-/* הגדרות בסיסיות */
+* { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+    outline: none; 
+}
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--bg);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); 
     color: var(--text);
-    direction: rtl;
-    margin: 0;
-    padding-bottom: 80px;
-    transition: background 0.3s;
+    margin: 0; 
+    padding: 0; 
+    transition: background 0.3s, color 0.3s; 
+    user-select: none;
+    display: flex; 
+    flex-direction: column; 
+    min-height: 100vh;
 }
 
-/* לוגו גדול באמצע */
-.main-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
+/* Header & Stats */
+.main-header { 
+    background: var(--card); 
+    padding: 12px; 
+    border-bottom: 1px solid var(--border); 
 }
 
-.app-logo-centered {
-    height: 80px; /* הוגדל לבקשתך */
-    max-width: 220px;
-    object-fit: contain;
-    display: block;
-    margin: 0 auto;
+.header-top { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    max-width: 600px; 
+    margin: 0 auto; 
 }
 
-/* בר הודעות (Toast) */
-#status-bar {
-    display: none;
-    position: fixed;
-    top: 85px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 12px 25px;
-    border-radius: 30px;
-    font-weight: bold;
-    z-index: 10000;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    font-size: 14px;
-}
-#status-bar.show { display: block; animation: slideDown 0.3s ease; }
-.pos { background: var(--green); color: white; }
-.neg { background: var(--main); color: white; }
-
-@keyframes slideDown { from { top: 50px; opacity: 0; } to { top: 85px; opacity: 1; } }
-
-/* סטטיסטיקה עליונה */
 .stats-bar-top {
-    display: flex;
+    display: flex; 
     justify-content: space-around;
-    padding: 15px;
-    background: var(--card);
-    border-bottom: 2px solid var(--blue);
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-/* תפריט ניווט */
-.topbar { padding: 8px; background: var(--card); }
-.nav-row { display: flex; gap: 5px; margin-bottom: 5px; }
-.topbar button {
-    flex: 1;
-    padding: 12px 2px;
-    border-radius: 8px;
-    border: none;
-    background: var(--border);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.topbar button.active { background: var(--blue); box-shadow: 0 0 10px var(--blue); }
-
-/* כרטיסיות ותוכן */
-.card {
-    background: var(--card);
-    padding: 18px;
-    border-radius: 15px;
-    margin: 12px;
-    border: 1px solid var(--border);
+    background: var(--blue); 
+    color: white; 
+    padding: 12px;
+    font-weight: bold; 
+    position: sticky; 
+    top: 0; 
+    z-index: 100;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-/* כפתורים */
-button.action {
-    width: 100%;
-    padding: 12px;
-    background: var(--blue);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    margin-top: 8px;
-    font-weight: bold;
-    cursor: pointer;
+/* Navigation */
+.topbar { 
+    padding: 8px; 
+    background: var(--card); 
+    border-bottom: 1px solid var(--border); 
 }
 
-/* כפתור מתנה (Gift) - הופך לאפור כשלא זמין */
-.gift-btn:disabled {
-    background: #475569 !important;
-    color: #94a3b8 !important;
-    cursor: not-allowed;
-    opacity: 0.7;
+.nav-row { 
+    display: flex; 
+    gap: 5px; 
+    margin-bottom: 5px; 
+    justify-content: center; 
 }
 
-/* משימת זהב */
-.gold-task {
-    border: 2px solid var(--gold) !important;
-    background: linear-gradient(145deg, #1e293b, #451a03) !important;
-    position: relative;
-    overflow: hidden;
-}
-.gold-task::after {
-    content: "GOLD";
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    font-size: 10px;
-    color: var(--gold);
-    font-weight: bold;
-}
-
-/* טקסטים בבית */
-.pos-text { color: var(--green); font-weight: bold; }
-.neg-text { color: var(--main); font-weight: bold; }
-
-/* שדה קלט בנק */
-#bankAmt {
-    width: 95%;
-    padding: 12px;
-    margin: 10px 0;
+.topbar button {
+    flex: 1; 
+    padding: 10px 2px; 
+    border: none; 
     border-radius: 8px;
+    background: rgba(128,128,128,0.1); 
+    color: var(--text); 
+    font-size: 11px; 
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.topbar button.active { 
+    background: var(--blue); 
+    color: white; 
+    font-weight: bold; 
+}
+
+/* Content & Cards */
+main { 
+    padding: 15px; 
+    max-width: 600px; 
+    margin: 0 auto; 
+    flex: 1; 
+    width: 100%; 
+}
+
+.card {
+    background: var(--card); 
+    border-radius: 12px; 
+    padding: 16px;
+    margin-bottom: 15px; 
     border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.grid-2 { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 12px; 
+}
+
+/* UI Elements */
+.action {
+    width: 100%; 
+    padding: 14px; 
+    border: none; 
+    border-radius: 10px;
+    background: var(--green); 
+    color: white; 
+    font-weight: bold; 
+    margin-top: 8px; 
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.action:disabled { 
+    opacity: 0.5; 
+    background: #64748b; 
+    cursor: not-allowed; 
+}
+
+.xpbar { 
+    width: 100%; 
+    height: 10px; 
+    background: rgba(128,128,128,0.2); 
+    border-radius: 5px; 
+    overflow: hidden; 
+    margin: 12px 0; 
+}
+
+#wb { 
+    height: 100%; 
+    background: var(--blue); 
+    width: 0%; 
+    transition: width 0.1s linear; 
+}
+
+.gold-task { 
+    border: 2px solid var(--gold); 
+    background: linear-gradient(45deg, var(--card), rgba(251, 191, 36, 0.05)); 
+}
+
+.neg-text { 
+    color: var(--red); 
+    font-weight: bold; 
+}
+
+input[type="number"] {
+    width: 100%; 
+    padding: 12px; 
+    border-radius: 8px; 
+    border: 1px solid var(--blue);
+    background: var(--bg); 
+    color: var(--text); 
+    margin-bottom: 12px; 
     text-align: center;
-    font-size: 16px;
 }
 
-/* בורסה */
-.stock-up { color: var(--green); }
-.stock-down { color: var(--main); }
-
-/* פוטר */
-.main-footer {
-    text-align: center;
-    padding: 20px;
-    font-size: 12px;
-    opacity: 0.5;
+/* Animations */
+.fade-in { 
+    animation: fadeIn 0.4s ease-out; 
 }
 
-/* פס התקדמות עבודה */
-.xpbar { width: 100%; height: 12px; background: #334155; border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
-#wb { height: 100%; background: var(--green); width: 0%; transition: width 0.1s linear; }
-
-.item-list span {
-    background: var(--blue);
-    color: white;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    margin: 3px;
-    display: inline-block;
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
 }
-
-/* אנימציה חלקה למעבר טאבים */
-.fade-in { animation: fadeIn 0.4s ease-in; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; 
