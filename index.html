@@ -3,24 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <meta name="theme-color" content="#38bdf8">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SmartMoney">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-
     <title>Smart Money Pro | v5.7.6</title>
-    
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body class="dark-theme" id="app-body">
-
     <header class="main-header">
         <div class="header-center">
-            <img src="logo.png" alt="Logo" class="header-logo-big">
+            <img src="logo.png" alt="Logo" class="header-logo-big" onerror="this.style.display='none'">
         </div>
     </header>
 
@@ -58,9 +52,7 @@
 
     <main id="content" class="fade-in"></main>
 
-    <footer class="main-footer">
-        © 2026 Smart Money Pro v5.7.6
-    </footer>
+    <footer class="main-footer">© 2026 Smart Money Pro v5.7.6</footer>
 
     <script src="js/core.js"></script>
     <script src="js/ui.js"></script>
@@ -71,28 +63,19 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('Smart Money SW נרשם בהצלחה');
-                    
-                    // זיהוי עדכון חדש והחלה שלו
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // אם ה-SW החדש מוכן, נרענן את הדף אוטומטית
                                 window.location.reload();
                             }
                         };
                     };
                 });
             });
-
-            // האזנה לשינוי בקונטרולר כדי לרענן את האפליקציה מיד כשה-SW מתחלף
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) {
-                    window.location.reload();
-                    refreshing = true;
-                }
+                if (!refreshing) { window.location.reload(); refreshing = true; }
             });
         }
     </script>
