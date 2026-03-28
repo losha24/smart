@@ -7,50 +7,65 @@ const load = (k, d) => {
     } catch(e) { return d; } 
 };
 
-// משתנים
-let money = load('money', 5000), bank = load('bank', 0), passive = load('passive', 0);
-let loan = load('loan', 0), lastGift = load('lastGift', 0), theme = load('theme', 'dark');
-let skills = load('skills', []), cars = load('cars', []), lifeXP = load('lifeXP', 0);
-let totalEarned = load('totalEarned', 5000), totalSpent = load('totalSpent', 0), carSpeed = load('carSpeed', 1);
-let invOwned = load('invOwned', { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, META:0, ELAL:0 });
+// משתנים גלובליים
+window.money = load('money', 5000);
+window.bank = load('bank', 0);
+window.passive = load('passive', 0);
+window.loan = load('loan', 0);
+window.lastGift = load('lastGift', 0);
+window.theme = load('theme', 'dark');
+window.skills = load('skills', []);
+window.cars = load('cars', []);
+window.lifeXP = load('lifeXP', 0);
+window.totalEarned = load('totalEarned', 5000);
+window.totalSpent = load('totalSpent', 0);
+window.carSpeed = load('carSpeed', 1);
+window.invOwned = load('invOwned', { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, META:0, ELAL:0 });
 
-function save() {
-    const data = { money, bank, passive, loan, lastGift, theme, skills, cars, lifeXP, totalEarned, totalSpent, invOwned, carSpeed };
+window.save = function() {
+    const data = { 
+        money, bank, passive, loan, lastGift, theme, 
+        skills, cars, lifeXP, totalEarned, totalSpent, 
+        invOwned, carSpeed 
+    };
     Object.keys(data).forEach(key => localStorage.setItem(key, JSON.stringify(data[key])));
-}
+};
 
-function updateUI() {
+window.updateUI = function() {
     const level = Math.floor(lifeXP / 5000) + 1;
     if(document.getElementById("money")) document.getElementById("money").innerText = Math.floor(money).toLocaleString();
     if(document.getElementById("bank")) document.getElementById("bank").innerText = Math.floor(bank).toLocaleString();
     if(document.getElementById("life-level-ui")) document.getElementById("life-level-ui").innerText = level;
     document.getElementById("app-body").className = theme + "-theme";
-    save();
-}
+    window.save();
+};
 
-function showMsg(t, c = "var(--blue)") {
+window.showMsg = function(t, c = "var(--blue)") {
     const b = document.getElementById("status-bar");
-    if(b) { b.innerText = t; b.style.color = c; b.style.opacity = "1"; setTimeout(() => b.style.opacity = "0", 3000); }
-}
-
-// תיקון כפתורי המערכת
-window.resetGame = function() {
-    if(confirm("לאפס הכל? כל הכסף והרמות יימחקו!")) {
-        localStorage.clear();
-        window.location.href = window.location.pathname + "?" + Date.now();
+    if(b) { 
+        b.innerText = t; 
+        b.style.color = c; 
+        b.style.opacity = "1"; 
+        setTimeout(() => b.style.opacity = "0", 3000); 
     }
 };
 
-window.forceUpdate = function() {
-    if(confirm("לרענן ולעדכן גרסה?")) {
+// פונקציות מערכת לכפתורים
+window.resetGame = function() {
+    if(confirm("לאפס את כל המשחק?")) {
+        localStorage.clear();
         window.location.reload(true);
     }
 };
 
-window.toggleTheme = function() {
-    theme = (theme === 'dark' ? 'light' : 'dark');
-    updateUI();
+window.forceUpdate = function() {
+    window.location.reload(true);
 };
 
-setInterval(() => { if(passive > 0) { money += (passive / 10); updateUI(); } }, 100);
-document.addEventListener("DOMContentLoaded", updateUI);
+window.toggleTheme = function() {
+    theme = (theme === 'dark' ? 'light' : 'dark');
+    window.updateUI();
+};
+
+setInterval(() => { if(passive > 0) { money += (passive / 10); window.updateUI(); } }, 100);
+document.addEventListener("DOMContentLoaded", window.updateUI);
