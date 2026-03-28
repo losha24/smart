@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Smart Money Pro | Alexey Zavodisker</title>
+    
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
 </head>
 <body class="dark-theme" id="app-body">
     <header class="main-header">
         <div class="header-top">
             <button onclick="toggleTheme()" class="icon-btn">☀️/🌙</button>
-            <img src="logo.png" alt="Smart Money" class="header-logo">
+            <img src="logo.png" alt="Smart Money Logo" class="header-logo">
             <div class="header-actions">
                 <button onclick="forceUpdate()" class="update-btn" title="עדכון גרסה">🔄</button>
-                <button onclick="resetGame()" class="reset-btn">R</button>
+                <button onclick="resetGame()" class="reset-btn" title="איפוס משחק">R</button>
             </div>
         </div>
     </header>
@@ -24,7 +29,8 @@
         <div class="stat-item">🏦 <span id="bank">0</span>₪</div>
         <div class="stat-item">📈 <span id="passive-ui">0</span>/s</div>
     </div>
-    <div id="status-bar" class="status-msg">מערכת מוכנה</div>
+
+    <div id="status-bar" class="status-msg">טוען נתונים...</div>
 
     <nav class="topbar">
         <div class="nav-row">
@@ -48,7 +54,7 @@
     <main id="content" class="fade-in"></main>
 
     <footer class="main-footer">
-        © 2026 Alexey Zavodisker | Smart Money v5.4.0
+        © 2026 Alexey Zavodisker | Smart Money Pro v5.4.0
     </footer>
 
     <script src="js/core.js"></script>
