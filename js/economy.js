@@ -1,32 +1,54 @@
-const bzPool = [{n:"דוכן קפה", c:15000, p:120}, {n:"קיוסק", c:35000, p:350}, {n:"מכבסה", c:85000, p:900}, {n:"הייטק", c:25000000, p:400000}];
-const rePool = [{n:"חניה", c:85000, p:650}, {n:"מחסן", c:160000, p:1300}, {n:"דירה", c:680000, p:5800}];
-const mkPool = [{n:"אייפון 15", c:4500}, {n:"רכב ספורט", c:450000}];
+const bzPool = [
+    {n:"דוכן קפה", c:15000, p:12}, {n:"קיוסק", c:45000, p:40}, {n:"מכבסה", c:120000, p:110}, 
+    {n:"פיצריה", c:350000, p:320}, {n:"מוסך", c:850000, p:850}, {n:"סופרמרקט", c:2200000, p:2400},
+    {n:"אולם אירועים", c:5000000, p:6000}, {n:"מפעל", c:12000000, p:15000}, {n:"קניון", c:50000000, p:70000}, {n:"הייטק", c:150000000, p:250000}
+];
+
+const rePool = [
+    {n:"חניה", c:85000, p:40}, {n:"מחסן", c:180000, p:90}, {n:"סטודיו", c:750000, p:400}, 
+    {n:"דירת 3 חד'", c:1600000, p:1000}, {n:"פנטהאוז", c:4500000, p:3500}, {n:"וילה", c:8000000, p:7500},
+    {n:"בנין משרדים", c:25000000, p:28000}, {n:"מלון בוטיק", c:60000000, p:75000}, {n:"מרכז לוגיסטי", c:120000000, p:160000}, {n:"גורד שחקים", c:500000000, p:800000}
+];
+
+const carPool = [
+    {n:"קורקינט חשמלי", c:2500, s:1.1}, {n:"אופנוע 125", c:15000, s:1.3}, {n:"רכב משומש", c:45000, s:1.6},
+    {n:"משפחתית חדשה", c:140000, s:2.0}, {n:"ג'יפ יוקרה", c:450000, s:2.5}, {n:"רכב ספורט", c:950000, s:3.5},
+    {n:"פורשה 911", c:1800000, s:5.0}, {n:"פרארי", c:3500000, s:8.0}, {n:"למבורגיני", c:6000000, s:12.0}, {n:"בוגאטי", c:15000000, s:20.0}
+];
 
 function drawInvest(c) {
+    c.innerHTML = `<div class="grid-2"></div>`;
     stocks.forEach(s => {
-        c.innerHTML += `<div class="card"><b>${s.n}</b>: ${s.p.toFixed(2)}$ <small>(${invOwned[s.id]||0})</small><div class="nav-row"><button class="action" onclick="buyStock('${s.id}',${s.p})">קנה</button><button class="action" style="background:var(--red)" onclick="sellStock('${s.id}',${s.p})">מכור</button></div></div>`;
+        c.querySelector(".grid-2").innerHTML += `
+        <div class="card stock-card">
+            <b>${s.n}</b><br>${s.p.toLocaleString()}₪
+            <div class="nav-row" style="margin-top:10px">
+                <button class="buy-btn" onclick="buyStock('${s.id}',${s.p})">קנה</button>
+                <button class="sell-btn" onclick="sellStock('${s.id}',${s.p})">מכור</button>
+            </div>
+            <small>בבעלותך: ${invOwned[s.id]||0}</small>
+        </div>`;
     });
 }
-function buyStock(id, p) { if(money>=p*4) { money-=p*4; invOwned[id]++; updateUI(); openTab('invest'); } }
-function sellStock(id, p) { if(invOwned[id]>0) { invOwned[id]--; money+=p*4; updateUI(); openTab('invest'); } }
 
-function drawBank(c) {
-    c.innerHTML = `<div class="card"><h3>🏦 בנק</h3><input type="number" id="bankAmt" placeholder="סכום..."><div class="nav-row"><button class="action" onclick="bankOp('dep')">הפקדה</button><button class="action" onclick="bankOp('wit')">משיכה</button></div><button class="action" onclick="bankOp('loan')" style="background:orange">הלוואה</button></div>`;
-}
-function bankOp(t) {
-    const a = parseInt(document.getElementById("bankAmt")?.value) || 0;
-    if(t==='dep' && money>=a) { money-=a; bank+=a; triggerTask('bank', a); }
-    else if(t==='wit' && bank>=a) { bank-=a; money+=a; }
-    else if(t==='loan') { loan+=5000; money+=5000; }
-    updateUI(); openTab('bank');
-}
-function drawMarket(c, t) {
-    let list = (t==='business')?bzPool : (t==='realestate')?rePool : (t==='market')?mkPool : skPool;
+function buyStock(id, p) { if(money>=p) { money-=p; invOwned[id]++; passive += (p*0.0001); showMsg(`קנית מניית ${id}`); updateUI(); openTab('invest'); } }
+function sellStock(id, p) { if(invOwned[id]>0) { invOwned[id]--; money+=p; passive -= (p*0.0001); showMsg(`מכרת מניית ${id}`); updateUI(); openTab('invest'); } }
+
+function drawMarket(c, tab) {
+    let list = (tab==='business')?bzPool : (tab==='realestate')?rePool : (tab==='cars')?carPool : (tab==='market')?mkPool : skPool;
     c.innerHTML = `<div class="grid-2"></div>`;
     list.forEach(i => {
-        const has = t==='skills' && skills.includes(i.n);
-        c.querySelector(".grid-2").innerHTML += `<div class="card"><b>${i.n}</b><br>${i.c.toLocaleString()}₪<button class="action" onclick="${t==='skills'?'learn':'buyProp'}('${i.n}',${i.c},${i.p||0})" ${has?'disabled':''}>${has?'נלמד':'קנה'}</button></div>`;
+        const has = (tab==='skills' && skills.includes(i.n)) || (tab==='cars' && cars.includes(i.n));
+        c.querySelector(".grid-2").innerHTML += `<div class="card"><b>${i.n}</b><br>${i.c.toLocaleString()}₪
+        <button class="action" onclick="${tab==='skills'?'learn':tab==='cars'?'buyCar':'buyProp'}('${i.n}',${i.c},${i.p||i.s||0})" ${has?'disabled':''}>${has?'בבעלותך':'קנה'}</button></div>`;
     });
 }
-function buyProp(n, c, p) { if(money>=c) { money-=c; totalSpent+=c; passive+=p; triggerTask('buy', 1); updateUI(); } }
-function learn(n, c) { if(money>=c && !skills.includes(n)) { money-=c; totalSpent+=c; skills.push(n); updateUI(); openTab('skills'); } }
+
+function buyCar(n, c, s) { 
+    if(money >= c && !cars.includes(n)) { 
+        money -= c; cars.push(n); 
+        if(s > carSpeed) carSpeed = s; // הרכב הכי מהיר קובע
+        showMsg(`תתחדש! קנית ${n}`); updateUI(); openTab('cars'); 
+    } 
+}
+function buyProp(n, c, p) { if(money>=c) { money-=c; totalSpent+=c; passive+=p; inventory.push(n); showMsg(`קנית ${n}`); updateUI(); } }
