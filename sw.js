@@ -1,19 +1,12 @@
 const cacheName = 'smart-money-v5.7.6';
 const assets = [
-  './',
-  './index.html',
-  './style.css',
-  './logo.png',
-  './manifest.json',
-  './js/core.js',
-  './js/ui.js',
-  './js/economy.js',
-  './js/activities.js'
+  './', './index.html', './style.css', './logo.png', './manifest.json',
+  './js/core.js', './js/ui.js', './js/economy.js', './js/activities.js'
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(cacheName).then(cache => cache.addAll(assets)));
-  self.skipWaiting(); // גורם לגרסה החדשה להיכנס לתוקף מיד
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
