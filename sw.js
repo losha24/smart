@@ -1,4 +1,4 @@
-const cacheName = 'smart-money-v5.7.1';
+const cacheName = 'smart-money-v5.7.3';
 const assets = [
   './',
   './index.html',
