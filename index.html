@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v5.6.0</title>
+    <title>Smart Money Pro | v5.6.1</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-theme" id="app-body">
@@ -25,27 +25,29 @@
             <button onclick="openTab('home')" id="btnHome" class="active">🏠 בית</button>
             <button onclick="openTab('work')" id="btnWork">⚒️ עבודה</button>
             <button onclick="openTab('tasks')" id="btnTasks">🎯 משימות</button>
-            <button onclick="openTab('invest')" id="btnInvest">📈 בורסה</button>
         </div>
         <div class="nav-row">
+            <button onclick="openTab('invest')" id="btnInvest">📈 בורסה</button>
             <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
             <button onclick="openTab('realestate')" id="btnRealestate">🏠 נדל"ן</button>
-            <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
-            <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
         </div>
         <div class="nav-row">
+            <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
+            <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
             <button onclick="openTab('cars')" id="btnCars">🚗 רכבים</button>
+        </div>
+        <div class="nav-row">
             <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-            <button onclick="toggleTheme()" class="sys-btn" title="שינוי עיצוב">🌓</button>
-            <button onclick="forceUpdate()" class="sys-btn" title="עדכון גרסה">🔄</button>
-            <button onclick="resetGame()" class="sys-btn reset-red" title="איפוס משחק">⚠️</button>
+            <button onclick="forceUpdate()" class="sys-btn">🔄 עדכון</button>
+            <button onclick="resetGame()" class="sys-btn reset-red">⚠️ איפוס</button>
+            <button onclick="toggleTheme()" class="sys-btn">🌓</button>
         </div>
     </nav>
 
     <main id="content" class="fade-in"></main>
 
     <footer class="main-footer">
-        © 2026 Alexey Zavodisker | Smart Money Pro v5.6.0
+        © 2026 Alexey Zavodisker | Smart Money Pro v5.6.1
     </footer>
 
     <script src="js/core.js"></script>
