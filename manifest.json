@@ -1,7 +1,7 @@
 {
   "name": "Smart Money Pro",
   "short_name": "SmartMoney",
-  "description": "סימולטור כלכלי וניהול תקציב חכם v5.7.3",
+  "description": "סימולטור כלכלי וניהול תקציב חכם v5.7.6",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#0f172a",
@@ -9,6 +9,7 @@
   "orientation": "portrait",
   "dir": "rtl",
   "lang": "he-IL",
+  "categories": ["finance", "games", "productivity"],
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -21,6 +22,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icons/screenshot.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "מסך הבית של Smart Money Pro"
     }
   ]
 }
