@@ -5,12 +5,14 @@ const skPool = [
 
 const jobs = [
     {n:"שליח", p:450, t:4, s:null}, {n:"מאבטח", p:1400, t:10, s:"נשק"}, {n:"חובש", p:2200, t:12, s:"חובש"},
-    {n:"מנהל משמרת", p:4000, t:15, s:"ניהול"}, {n:"מתכנת", p:12000, t:30, s:"JS"}, {n:"אנליסט", p:25000, t:40, s:"כלכלה"},
-    {n:"איש סייבר", p:45000, t:50, s:"סייבר"}, {n:"סוחר נדלן", p:80000, t:60, s:"נדלן"}, {n:"טייס", p:150000, t:90, s:"טיס"}, {n:"יזם", p:500000, t:120, s:"ניהול"}
+    {n:"מנהל", p:4000, t:15, s:"ניהול"}, {n:"מתכנת", p:12000, t:30, s:"JS"}, {n:"אנליסט", p:25000, t:40, s:"כלכלה"},
+    {n:"סייבר", p:45000, t:50, s:"סייבר"}, {n:"נדלן", p:80000, t:60, s:"נדלן"}, {n:"טייס", p:150000, t:90, s:"טיס"}, {n:"יזם", p:500000, t:120, s:"ניהול"}
 ];
 
+let working = false;
+
 function drawWork(c) {
-    c.innerHTML = `<div class="card"><div class="xpbar"><div id="wb"></div></div><small>מהירות נסיעה: x${carSpeed.toFixed(1)}</small></div><div class="grid-2"></div>`;
+    c.innerHTML = `<div class="card fade-in"><div class="xpbar"><div id="wb"></div></div><small>בונוס מהירות רכב: x${carSpeed.toFixed(1)}</small></div><div class="grid-2"></div>`;
     jobs.forEach(j => {
         const has = !j.s || skills.includes(j.s);
         c.querySelector(".grid-2").innerHTML += `<div class="card" style="opacity:${has?1:0.6}"><b>${j.n}</b><br>
@@ -21,12 +23,12 @@ function drawWork(c) {
 function startWork(p, t) {
     if(working) return; working = true;
     let s = 0; const bar = document.getElementById("wb");
-    const actualTime = t / carSpeed; // הזמן מתקצר לפי מהירות הרכב
+    const actualTime = t / carSpeed;
     let i = setInterval(() => {
         s += 0.1; if(bar) bar.style.width = (s/actualTime*100) + "%";
         if(s >= actualTime) {
             clearInterval(i); working = false; money += p; totalEarned += p; passive += (p*0.0005);
-            showMsg(`הרווחת ${p}₪!`); updateUI(); openTab('work');
+            showMsg(`הרווחת ${p}₪`); updateUI(); openTab('work');
         }
     }, 100);
 }
