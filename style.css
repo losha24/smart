@@ -1,35 +1,223 @@
-/* Smart Money Pro - v5.7.6 */
-:root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --blue: #38bdf8; --green: #22c55e; --red: #ef4444; --border: rgba(255, 255, 255, 0.08); }
-.light-theme { --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --border: rgba(0, 0, 0, 0.05); }
+/* Smart Money Pro - style.css - v5.7.6 */
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); direction: rtl; margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+:root {
+    --bg: #0f172a; 
+    --card: #1e293b; 
+    --text: #f1f5f9;
+    --blue: #38bdf8; 
+    --green: #22c55e; 
+    --red: #ef4444; 
+    --purple: #a855f7;
+    --border: rgba(255, 255, 255, 0.08);
+}
 
-.header-center { text-align: center; padding: 10px; background: var(--card); border-bottom: 1px solid var(--border); }
-.header-logo-big { height: 60px; }
+.light-theme {
+    --bg: #f8fafc; 
+    --card: #ffffff; 
+    --text: #1e293b;
+    --border: rgba(0, 0, 0, 0.05);
+}
 
-.stats-bar-top { display: flex; justify-content: space-around; background: var(--blue); color: white; padding: 12px; font-weight: bold; position: sticky; top: 0; z-index: 100; }
-.status-msg { text-align: center; font-size: 14px; height: 35px; line-height: 35px; font-weight: 600; opacity: 0; transition: 0.3s; }
+* { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+    user-select: none;
+}
 
-.topbar { padding: 5px; background: var(--card); }
-.nav-row { display: flex; gap: 4px; margin-bottom: 4px; }
-.topbar button { flex: 1; padding: 10px 2px; border: none; border-radius: 6px; background: rgba(128, 128, 128, 0.1); color: var(--text); font-size: 11px; cursor: pointer; }
-.topbar button.active { background: var(--blue); color: white; }
-.reset-red { color: var(--red) !important; border: 1px solid var(--red) !important; }
+body { 
+    font-family: system-ui, -apple-system, sans-serif; 
+    background: var(--bg); 
+    color: var(--text); 
+    direction: rtl; 
+    margin: 0; 
+    min-height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    overflow-x: hidden;
+}
 
-main { padding: 15px; flex: 1; width: 100%; max-width: 600px; margin: 0 auto; }
-.card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid var(--border); }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Header & Logo */
+.header-center { 
+    text-align: center; 
+    padding: 20px 0; 
+    background: var(--card); 
+    border-bottom: 1px solid var(--border); 
+}
 
-input[type="number"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.1); color: var(--text); text-align: center; font-size: 18px; margin: 10px 0; }
-.action { width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--green); color: white; font-weight: bold; cursor: pointer; margin-top: 5px; }
-.action.no-money { background: var(--red) !important; }
-.action:disabled { opacity: 0.5; filter: grayscale(1); }
+.header-logo-big { 
+    height: 60px; 
+    max-width: 80%; 
+    object-fit: contain; 
+}
 
-.progress-container { width: 100%; background: rgba(128, 128, 128, 0.2); border-radius: 10px; height: 15px; margin: 10px 0; overflow: hidden; }
-.progress-bar { width: 0%; height: 100%; background: var(--blue); transition: 0.1s linear; }
-.xp-bar { background: #a855f7 !important; }
+/* Top Stats Bar */
+.stats-bar-top { 
+    display: flex; 
+    justify-content: space-around; 
+    background: var(--blue); 
+    color: white; 
+    padding: 12px; 
+    font-weight: bold; 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
 
+.stat-item { font-size: 14px; }
+
+/* Status Messages */
+.status-msg { 
+    text-align: center; 
+    font-size: 14px; 
+    height: 35px; 
+    line-height: 35px; 
+    opacity: 0; 
+    transition: 0.3s; 
+    font-weight: bold;
+}
+
+/* Navigation */
+.topbar { 
+    padding: 10px; 
+    background: var(--card); 
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-row { 
+    display: flex; 
+    gap: 6px; 
+    margin-bottom: 6px; 
+}
+
+.topbar button { 
+    flex: 1; 
+    padding: 10px 2px; 
+    border: 1px solid var(--border); 
+    border-radius: 10px; 
+    background: rgba(128, 128, 128, 0.05); 
+    color: var(--text); 
+    font-size: 13px; 
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.topbar button.active { 
+    background: var(--blue); 
+    color: white; 
+    border-color: var(--blue);
+    font-weight: bold;
+}
+
+.sys-btn { 
+    background: rgba(128, 128, 128, 0.2) !important; 
+    font-size: 16px !important;
+}
+
+.reset-red { 
+    color: var(--red) !important; 
+}
+
+/* Content Area */
+main { 
+    padding: 15px; 
+    flex: 1; 
+    width: 100%; 
+    max-width: 500px; 
+    margin: 0 auto; 
+}
+
+.card { 
+    background: var(--card); 
+    border-radius: 16px; 
+    padding: 18px; 
+    margin-bottom: 15px; 
+    border: 1px solid var(--border); 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+}
+
+.grid-2 { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 12px; 
+}
+
+/* Actions & Forms */
+input[type="number"] { 
+    width: 100%; 
+    padding: 14px; 
+    margin: 10px 0; 
+    border-radius: 12px; 
+    border: 1px solid var(--border); 
+    background: rgba(0,0,0,0.2); 
+    color: var(--text); 
+    font-size: 18px; 
+    text-align: center; 
+}
+
+.action { 
+    width: 100%; 
+    padding: 14px 10px; 
+    border: none; 
+    border-radius: 12px; 
+    background: var(--green); 
+    color: white; 
+    font-weight: bold; 
+    cursor: pointer; 
+    font-size: 15px;
+}
+
+.action:active { transform: scale(0.97); }
+
+.action.no-money { 
+    background: #64748b !important; 
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.action.disabled {
+    background: #475569 !important;
+}
+
+/* Progress Bars */
+.progress-container { 
+    width: 100%; 
+    background: rgba(128, 128, 128, 0.1); 
+    border-radius: 20px; 
+    height: 18px; 
+    overflow: hidden; 
+    margin: 10px 0;
+}
+
+.progress-bar { 
+    width: 0%; 
+    height: 100%; 
+    background: var(--blue); 
+    transition: width 0.3s ease; 
+}
+
+/* Footer */
+.main-footer { 
+    text-align: center; 
+    padding: 20px; 
+    font-size: 11px; 
+    opacity: 0.5; 
+}
+
+/* Animations */
 .fade-in { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-.main-footer { text-align: center; padding: 15px; font-size: 10px; opacity: 0.6; }
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* Specific UI Tweaks */
+#gift-container button {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
