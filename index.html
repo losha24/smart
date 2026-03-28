@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Money Pro | v5.7.6</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme" id="app-body">
+    <header class="main-header">
+        <div class="header-center"><img src="logo.png" alt="Logo" class="header-logo-big"></div>
+    </header>
+
+    <div class="stats-bar-top">
+        <div class="stat-item">💰 <span id="money">0</span>₪</div>
+        <div class="stat-item">🏦 <span id="bank">0</span>₪</div>
+        <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
+    </div>
+
+    <div id="status-bar" class="status-msg"></div>
+
+    <nav class="topbar">
+        <div class="nav-row">
+            <button onclick="openTab('home')" id="btnHome" class="active">🏠 בית</button>
+            <button onclick="openTab('work')" id="btnWork">⚒️ עבודה</button>
+            <button onclick="openTab('tasks')" id="btnTasks">🎰 קזינו</button>
+        </div>
+        <div class="nav-row">
+            <button onclick="openTab('invest')" id="btnInvest">📈 בורסה</button>
+            <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
+            <button onclick="openTab('realestate')" id="btnRealestate">🏠 נדל"ן</button>
+        </div>
+        <div class="nav-row">
+            <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
+            <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
+            <button onclick="openTab('cars')" id="btnCars">🚗 רכבים</button>
+        </div>
+        <div class="nav-row">
+            <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
+            <button onclick="forceUpdate()" class="sys-btn">🔄</button>
+            <button onclick="resetGame()" class="sys-btn reset-red">⚠️ איפוס</button>
+            <button onclick="toggleTheme()" class="sys-btn">🌓</button>
+        </div>
+    </nav>
+
+    <main id="content" class="fade-in"></main>
+
+    <footer class="main-footer">© 2026 Smart Money Pro v5.7.6</footer>
+
+    <script src="js/core.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/economy.js"></script>
+    <script src="js/activities.js"></script>
+</body>
+</html>
