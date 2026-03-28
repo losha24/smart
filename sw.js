@@ -1,38 +1,14 @@
-const CACHE_NAME = 'smart-money-v4.3.5';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/game.js',
-  '/manifest.json',
-  '/logo.png'
-];
+const cacheName = 'smart-money-v5.1.0';
+const assets = ['./', './index.html', './style.css', './logo.png', './manifest.json', './js/core.js', './js/ui.js', './js/economy.js', './js/activities.js'];
 
-// התקנה ושמירת קבצים במטמון
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(cacheName).then(cache => cache.addAll(assets)));
 });
 
-// הפעלה וניקוי מטמון ישן
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    })
-  );
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== cacheName).map(k => caches.delete(k)))));
 });
 
-// שליפת קבצים מהמטמון כשאין אינטרנט
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((res) => {
-      return res || fetch(e.request);
-    })
-  );
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
 });
