@@ -7,31 +7,18 @@ function openTab(tab) {
     c.innerHTML = "";
 
     if (tab === 'home') {
-        let stockVal = 0;
-        stocks.forEach(s => stockVal += (invOwned[s.id] || 0) * s.p);
         c.innerHTML = `
             <div class="card fade-in">
-                <h3>📊 נכסים וכישורים</h3>
-                <p><b>כישורים:</b> ${skills.length > 0 ? skills.join(", ") : "טרם נרכשו"}</p>
-                <p><b>רכוש:</b> ${inventory.length > 0 ? inventory.join(", ") : "טרם נרכש"}</p>
-                <p><b>רכבים:</b> ${cars.length > 0 ? cars.join(", ") : "אין רכב"}</p>
-                <hr>
-                <p>📈 שווי מניות: <b>${Math.floor(stockVal).toLocaleString()}₪</b></p>
-                <p>💳 חוב בנק: <span class="neg-text">${loan.toLocaleString()}₪</span></p>
+                <h3>🏠 מרכז שליטה</h3>
+                <div id="live-stats"></div> <hr>
+                <p><b>כישורים:</b> ${skills.length > 0 ? skills.join(", ") : "אין"}</p>
+                <p><b>רכבים:</b> ${cars.length > 0 ? cars.join(", ") : "אין"}</p>
                 <button class="action" onclick="claimGift()">🎁 מתנה יומית</button>
             </div>`;
+        updateUI(); // לעדכון מיידי של הסטטיסטיקה בבית
     }
     else if (tab === 'work') drawWork(c);
-    else if (tab === 'invest') drawInvest(c);
     else if (tab === 'bank') drawBank(c);
-    else if (['business', 'realestate', 'market', 'skills', 'cars'].includes(tab)) drawMarket(c, tab);
+    else if (tab === 'invest') drawInvest(c);
+    else drawMarket(c, tab);
 }
-
-function claimGift() {
-    if(Date.now() - lastGift >= 14400000) {
-        money += 5000; lastGift = Date.now();
-        showMsg("קיבלת 5,000₪ מתנה!"); updateUI(); openTab('home');
-    } else { showMsg("המתנה תהיה זמינה עוד מעט", "var(--red)"); }
-}
-
-document.addEventListener("DOMContentLoaded", () => { updateUI(); openTab('home'); });
