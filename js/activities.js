@@ -1,163 +1,187 @@
-/* Smart Money Pro - js/activities.js - v6.0.3 - Jobs, Market & Casino */
+/* Smart Money Pro - js/activities.js - v6.0.3 - Full Content Update */
 
-// --- נתוני העבודות ---
+// --- מאגר נתונים מורחב ---
+
 const jobs = [
-    { id: 'cleaner', name: 'מנקה רחובות', pay: 40, xp: 10, time: 5, icon: '🧹' },
-    { id: 'delivery', name: 'שליח פיצה', pay: 65, xp: 25, time: 8, icon: '🍕' },
-    { id: 'security', name: 'מאבטח', pay: 90, xp: 40, time: 12, icon: '🛡️' },
-    { id: 'driver', name: 'נהג מונית', pay: 150, xp: 60, time: 15, icon: '🚕', reqCar: true },
-    { id: 'coder', name: 'מתכנת ג'וניור', pay: 350, xp: 120, time: 20, icon: '💻', reqSkill: 'תכנות' }
+    { id: 'cleaner', name: 'מנקה רחובות', pay: 45, xp: 15, time: 5, icon: '🧹' },
+    { id: 'delivery', name: 'שליח פיצה', pay: 75, xp: 30, time: 7, icon: '🍕' },
+    { id: 'security_basic', name: 'שומר קניון', pay: 100, xp: 50, time: 10, icon: '🏢' },
+    { id: 'security_armed', name: 'מאבטח חמוש', pay: 180, xp: 90, time: 12, icon: '🔫', reqSkill: 'רישיון נשק' },
+    { id: 'driver', name: 'נהג מונית', pay: 220, xp: 70, time: 15, icon: '🚕', reqCar: true },
+    { id: 'prison_guard', name: 'סוהר', pay: 250, xp: 120, time: 15, icon: '👮', reqSkill: 'קורס פיקודי' },
+    { id: 'junior_dev', name: 'מפתח PWA', pay: 450, xp: 200, time: 20, icon: '💻', reqSkill: 'תכנות' },
+    { id: 'senior_dev', name: 'ארכיטקט תוכנה', pay: 950, xp: 500, time: 25, icon: '🚀', reqSkill: 'ניהול טכנולוגי' }
 ];
 
-// --- נתוני השוק ---
-const marketItems = [
-    { id: 'coffee', name: 'קפה משובח', price: 50, xp: 20, icon: '☕' },
-    { id: 'pizza_box', name: 'מגש פיצה משפחתי', price: 90, xp: 35, icon: '🍕' },
-    { id: 'watch', name: 'שעון יד אלגנט', price: 2500, xp: 800, icon: '⌚' },
-    { id: 'smartphone', name: 'סמארטפון דור 5', price: 4500, xp: 1500, icon: '📱' },
-    { id: 'laptop', name: 'מחשב נייד חזק', price: 7500, xp: 2500, icon: '💻' },
-    { id: 'gold_chain', name: 'שרשרת זהב', price: 12000, xp: 5000, icon: '⛓️' }
+const availableSkills = [
+    { name: 'רישיון נשק', price: 3500, icon: '🔫' },
+    { name: 'תכנות', price: 8000, icon: '📜' },
+    { name: 'קורס פיקודי', price: 10000, icon: '🎖️' },
+    { name: 'ניהול טכנולוגי', price: 25000, icon: '🧠' },
+    { name: 'תיווך נדל"ן', price: 15000, icon: '🏠' }
 ];
 
-// --- פונקציות עבודה ---
+const availableCars = [
+    { name: 'קורקינט חשמלי', price: 2500, speed: 1.1, icon: '🛴' },
+    { name: 'אופנוע 125 סמ"ק', price: 12000, speed: 1.5, icon: '🛵' },
+    { name: 'סקודה אוקטביה', price: 65000, speed: 2.2, icon: '🚗' },
+    { name: 'מרצדס S-Class', price: 450000, speed: 4, icon: 'Luxury' },
+    { name: 'פרארי SF90', price: 2500000, speed: 10, icon: '🏎️' }
+];
+
+const realEstateOptions = [
+    { name: 'יחידת דיור בקרית ים', price: 500000, income: 2500, icon: '🏘️' },
+    { name: 'דירת 4 חדרים', price: 1800000, income: 6500, icon: '🏢' },
+    { name: 'וילה עם בריכה', price: 5500000, income: 15000, icon: '🏡' },
+    { name: 'בניין משרדים', price: 25000000, income: 95000, icon: '🏙️' }
+];
+
+// --- פונקציות תצוגה (Drawing) ---
+
 function drawWork(c) {
-    c.innerHTML = `<h3>⚒️ מרכז תעסוקה</h3>`;
+    c.innerHTML = `<h3>⚒️ אפשרויות תעסוקה</h3>`;
     jobs.forEach(j => {
-        const canWork = (!j.reqCar || cars.length > 0) && (!j.reqSkill || skills.includes(j.reqSkill));
+        const hasSkill = !j.reqSkill || skills.includes(j.reqSkill);
+        const hasCar = !j.reqCar || cars.length > 0;
+        const canWork = hasSkill && hasCar;
+
         c.innerHTML += `
-            <div class="card fade-in" style="opacity: ${canWork ? 1 : 0.6}">
+            <div class="card fade-in" style="opacity: ${canWork ? 1 : 0.6}; border-right: 4px solid ${canWork ? 'var(--green)' : 'var(--red)'}">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <b>${j.icon} ${j.name}</b><br>
-                        <small style="color:var(--green)">${j.pay}₪</small> | <small style="color:var(--blue)">+${j.xp} XP</small>
+                        <small style="color:var(--green)">${j.pay}₪ למשמרת</small>
+                        ${j.reqSkill ? `<br><small style="color:var(--yellow)">דרוש: ${j.reqSkill}</small>` : ''}
+                        ${j.reqCar ? `<br><small style="color:var(--blue)">דרוש רכב</small>` : ''}
                     </div>
                     <button class="sys-btn" onclick="startWork('${j.id}')" ${canWork ? '' : 'disabled'}>
-                        ${canWork ? 'עבוד' : 'נעול'}
+                        ${canWork ? 'התחל' : 'נעול'}
                     </button>
                 </div>
-            </div>
-        `;
+            </div>`;
     });
 }
+
+function drawSkills(c) {
+    c.innerHTML = `<h3>🎓 הכשרה וכישורים</h3>`;
+    availableSkills.forEach(s => {
+        const isOwned = skills.includes(s.name);
+        c.innerHTML += `
+            <div class="card fade-in">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>${s.icon} <b>${s.name}</b></span>
+                    <button class="sys-btn" onclick="buySkill('${s.name}', ${s.price})" ${isOwned ? 'disabled' : ''}>
+                        ${isOwned ? 'נלמד' : s.price.toLocaleString() + '₪'}
+                    </button>
+                </div>
+            </div>`;
+    });
+}
+
+function drawCars(c) {
+    c.innerHTML = `<h3>🏎️ אולם תצוגה</h3>`;
+    availableCars.forEach(car => {
+        const isOwned = cars.includes(car.name);
+        c.innerHTML += `
+            <div class="card fade-in">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <b>${car.icon} ${car.name}</b><br>
+                        <small>מהירות: x${car.speed}</small>
+                    </div>
+                    <button class="sys-btn" onclick="buyCar('${car.name}', ${car.price}, ${car.speed})" ${isOwned ? 'disabled' : ''}>
+                        ${isOwned ? 'במוסך' : car.price.toLocaleString() + '₪'}
+                    </button>
+                </div>
+            </div>`;
+    });
+}
+
+function drawRealestate(c) {
+    c.innerHTML = `<h3>🏘️ השקעות נדל"ן</h3>`;
+    realEstateOptions.forEach(prop => {
+        c.innerHTML += `
+            <div class="card fade-in">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <b>${prop.icon} ${prop.name}</b><br>
+                        <small style="color:var(--green)">תשואה: ${prop.income.toLocaleString()}₪/שעה</small>
+                    </div>
+                    <button class="sys-btn" onclick="buyProperty('${prop.name}', ${prop.price}, ${prop.income})">
+                        ${prop.price.toLocaleString()}₪
+                    </button>
+                </div>
+            </div>`;
+    });
+}
+
+// --- לוגיקה עסקית ---
 
 function startWork(id) {
     const j = jobs.find(x => x.id === id);
-    showMsg(`עובד בתור ${j.name}...`, "var(--blue)");
+    if (!j) return;
     
-    // כאן אפשר להוסיף פס התקדמות אם תרצה בעתיד
+    showMsg(`בביצוע: ${j.name}...`, "var(--blue)");
+    // זמן העבודה מושפע ממהירות הרכב אם יש כזה
+    const workTime = (j.time * 100) / carSpeed; 
+
     setTimeout(() => {
         money += j.pay;
         lifeXP += j.xp;
-        showMsg(`סיימת משמרת! הרווחת ${j.pay}₪`, "var(--green)");
+        showMsg(`הרווחת ${j.pay}₪ ו-${j.xp} XP!`, "var(--green)");
         updateUI();
         saveGame();
-        if (document.getElementById('btnHome').classList.contains('active')) drawHome(document.getElementById('content'));
-    }, j.time * 100); 
+    }, workTime);
 }
 
-// --- פונקציות שוק (Market) ---
-function drawMarket(c) {
-    c.innerHTML = `
-        <div class="fade-in">
-            <h3>🛒 שוק מוצרי צריכה</h3>
-            <p style="font-size:12px; opacity:0.7;">קניית מוצרים מעלה את רמת החיים (XP) לצמיתות.</p>
-            <div id="market-grid"></div>
-        </div>
-    `;
-    const grid = document.getElementById('market-grid');
-    marketItems.forEach(item => {
-        grid.innerHTML += `
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:24px;">${item.icon}</span>
-                    <div>
-                        <b>${item.name}</b><br>
-                        <small style="color:var(--green)">${item.price.toLocaleString()}₪</small> | 
-                        <small style="color:var(--purple)">+${item.xp} XP</small>
-                    </div>
-                </div>
-                <button class="sys-btn" onclick="buyMarketItem('${item.id}')" style="padding:10px 15px;">קנה</button>
-            </div>
-        `;
-    });
-}
-
-function buyMarketItem(id) {
-    const item = marketItems.find(x => x.id === id);
-    if (money >= item.price) {
-        money -= item.price;
-        lifeXP += item.xp;
-        
-        // הוספה למלאי (Inventory)
-        inventory.push({ id: item.id, icon: item.icon, name: item.name });
-        
-        showMsg(`תתחדש! קנית ${item.name}`, "var(--green)");
-        saveGame();
-        updateUI();
-        drawMarket(document.getElementById('content')); // רענון השוק
+function buySkill(name, price) {
+    if (money >= price) {
+        money -= price;
+        skills.push(name);
+        showMsg(`מזל טוב! רכשת את הכישור: ${name}`, "var(--green)");
+        saveGame(); updateUI(); openTab('skills');
     } else {
-        showMsg("אין לך מספיק כסף מזומן!", "var(--red)");
+        showMsg("אין לך מספיק כסף ללימודים!", "var(--red)");
     }
 }
 
-// --- קזינו (Tasks/Casino) ---
-function drawCasino(c) {
-    c.innerHTML = `
-        <div class="card fade-in" style="text-align:center; border:1px solid var(--yellow);">
-            <h3 style="color:var(--yellow)">🎰 קזינו מזל</h3>
-            <p>נסה את מזלך - הכפל את הכסף או הפסד הכל!</p>
-            <input type="number" id="betAmount" placeholder="סכום הימור" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:white; margin-bottom:10px; text-align:center;">
-            <div class="grid-2">
-                <button class="action" onclick="playCasino(2)" style="background:var(--yellow); color:black;">פי 2 (50%)</button>
-                <button class="action" onclick="playCasino(5)" style="background:var(--purple);">פי 5 (15%)</button>
-            </div>
-        </div>
-    `;
-}
-
-function playCasino(mult) {
-    const amt = parseInt(document.getElementById('betAmount').value);
-    if (!amt || amt <= 0 || amt > money) {
-        showMsg("סכום הימור לא תקין!", "var(--red)");
-        return;
+function buyCar(name, price, speed) {
+    if (money >= price) {
+        money -= price;
+        cars.push(name);
+        carSpeed = speed; // הרכב האחרון שנקנה קובע את המהירות
+        showMsg(`תתחדש! ה${name} מחכה לך בחניה`, "var(--green)");
+        saveGame(); updateUI(); openTab('cars');
+    } else {
+        showMsg("חסר לך כסף לרכב הזה!", "var(--red)");
     }
-
-    money -= amt;
-    updateUI();
-    
-    const chance = mult === 2 ? 0.48 : 0.15; // סיכויי זכייה (קצת פחות מ-50% לבית)
-    
-    showMsg("מסובב את הרולטה...", "var(--yellow)");
-    
-    setTimeout(() => {
-        if (Math.random() < chance) {
-            const win = amt * mult;
-            money += win;
-            showMsg(`זכית ב-${win.toLocaleString()}₪! 🎉`, "var(--green)");
-        } else {
-            showMsg("הפסדת את ההימור. נסה שוב!", "var(--red)");
-        }
-        saveGame();
-        updateUI();
-    }, 1000);
 }
 
-// --- מתנה יומית ---
+function buyProperty(name, price, income) {
+    if (money >= price) {
+        money -= price;
+        passive += income;
+        inventory.push({ id: 'prop', name: name, icon: '🏠' });
+        showMsg(`נכס חדש בבעלותך! ההכנסה הפסיבית גדלה.`, "var(--green)");
+        saveGame(); updateUI();
+    } else {
+        showMsg("הבנק לא מאשר משכנתא - חסר הון עצמי!", "var(--red)");
+    }
+}
+
+// פונקציית מתנה יומית (בדיקה מול lastGift ב-core.js)
 function getDailyGift() {
     const now = Date.now();
-    const cooldown = 24 * 60 * 60 * 1000; // 24 שעות
-
-    if (now - lastGift > cooldown) {
-        const gift = 500 + Math.floor(Math.random() * 1000);
+    const day = 24 * 60 * 60 * 1000;
+    if (now - lastGift > day) {
+        const gift = Math.floor(Math.random() * 2000) + 1000;
         money += gift;
         lastGift = now;
-        showMsg(`קיבלת מתנה יומית: ${gift}₪!`, "var(--yellow)");
-        saveGame();
-        updateUI();
-        if (document.getElementById('btnHome').classList.contains('active')) drawHome(document.getElementById('content'));
+        showMsg(`קיבלת שי לחג: ${gift}₪!`, "var(--yellow)");
+        saveGame(); updateUI();
+        if (typeof drawHome === 'function') drawHome(document.getElementById('content'));
     } else {
-        const remain = cooldown - (now - lastGift);
-        const hours = Math.floor(remain / (60 * 60 * 1000));
-        showMsg(`המתנה הבאה בעוד ${hours} שעות`, "var(--white)");
+        const next = new Date(lastGift + day);
+        showMsg(`המתנה הבאה תהיה זמינה ב-${next.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`, "var(--white)");
     }
 }
