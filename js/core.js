@@ -1,6 +1,6 @@
-/* Smart Money Pro - js/core.js - v6.0.7 - Fixed Buttons & Fast Passive */
+/* Smart Money Pro - js/core.js - v6.0.8 - Final Production Build */
 
-const VERSION = "6.0.7";
+const VERSION = "6.0.8";
 const SAVE_KEY = "smartMoneySave_v6_main";
 
 // --- משתנים גלובליים ---
@@ -40,7 +40,9 @@ function loadGame() {
         }
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.body.className = savedTheme + '-theme';
-    } catch (e) { console.error("שגיאה בטעינה:", e); }
+    } catch (e) { 
+        console.error("שגיאה בטעינת נתונים:", e); 
+    }
 }
 
 function saveGame() {
@@ -48,7 +50,7 @@ function saveGame() {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
 
-// --- מערכת הודעות ---
+// --- מערכת הודעות וסטטוס ---
 function showMsg(txt, color = "var(--blue)") {
     const bar = document.getElementById('status-bar');
     if (!bar) return;
@@ -65,8 +67,38 @@ function showMsg(txt, color = "var(--blue)") {
     }, 3500);
 }
 
-// --- פונקציות מערכת (אלו הכפתורים שלא עבדו לך) ---
+// --- פונקציות מערכת ותצוגה ---
+function updateUI() {
+    const mEl = document.getElementById('money');
+    const bEl = document.getElementById('bank');
+    const lEl = document.getElementById('life-level-ui');
 
+    // עדכון ערכים בבר העליון
+    if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
+    if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
+    
+    // חישוב רמה (כל 5000 XP עולים רמה)
+    const currentLevel = Math.floor(lifeXP / 5000) + 1;
+    if(lEl) lEl.innerText = currentLevel;
+
+    // קריאה לפונקציית הרינדור ב-UI אם קיימת (לשוניות וכד')
+    if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate();
+    
+    // בדיקת עליית רמה
+    checkLevelUp();
+}
+
+function checkLevelUp() {
+    const currentLevel = Math.floor(lifeXP / 5000) + 1;
+    const displayedLevel = parseInt(document.getElementById('life-level-ui')?.innerText || "1");
+    if (currentLevel > displayedLevel) {
+        showMsg(`🎊 מזל טוב! עלית לרמה ${currentLevel}! 🎊`, "var(--purple)");
+        money += currentLevel * 500; // בונוס כספי על עליית רמה
+        updateUI();
+    }
+}
+
+// --- שליטה בהגדרות ---
 function toggleTheme() {
     const isLight = document.body.classList.contains('light-theme');
     const next = isLight ? 'dark' : 'light';
@@ -82,50 +114,33 @@ function forceUpdate() {
 }
 
 function resetGame() {
-    if (confirm("⚠️ אזהרה: כל ההתקדמות תימחק. לאפס?")) {
+    if (confirm("⚠️ אזהרה: כל ההתקדמות תימחק לצמיתות. האם אתה בטוח?")) {
         localStorage.removeItem(SAVE_KEY);
         location.reload();
     }
 }
 
-function checkLevelUp() {
-    const currentLevel = Math.floor(lifeXP / 5000) + 1;
-    const displayedLevel = parseInt(document.getElementById('life-level-ui')?.innerText || "1");
-    if (currentLevel > displayedLevel) {
-        showMsg(`🎊 מזל טוב! עלית לרמה ${currentLevel}! 🎊`, "var(--purple)");
-        money += currentLevel * 500;
-        updateUI();
-    }
-}
+// --- מנועי זמן (Loops) ---
 
-function updateUI() {
-    if (typeof window.updateUI === 'function') {
-        window.updateUI();
-    } else {
-        const mEl = document.getElementById('money');
-        if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
-    }
-}
-
-// --- מנועי זמן ---
-
-// מנוע הכנסה פסיבית - מעדכן את המסך 10 פעמים בשנייה
+// מנוע הכנסה פסיבית - רץ 10 פעמים בשנייה לעדכון חלק
 setInterval(() => {
     if (passive > 0) {
         const tickIncome = passive / 36000; 
         money += tickIncome;
         totalEarned += tickIncome;
         
+        // עדכון ויזואלי מהיר של הכסף בלבד (ביצועים)
         const mEl = document.getElementById('money');
         if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
     }
 }, 100);
 
-// שמירה אוטומטית
+// שמירה אוטומטית כל 15 שניות
 setInterval(saveGame, 15000);
 
-// אתחול
+// --- אתחול המערכת ---
 document.addEventListener("DOMContentLoaded", () => {
     loadGame();
-    console.log(`Smart Money Pro v${VERSION} מנוע פועל.`);
+    updateUI();
+    console.log(`Smart Money Pro v${VERSION} Engine Loaded.`);
 });
