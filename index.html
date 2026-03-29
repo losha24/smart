@@ -4,17 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Smart Money Pro | v6.0.3</title>
+    
     <link rel="manifest" href="manifest.json?v=6.0.3">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
+    
     <link rel="stylesheet" href="style.css?v=6.0.3">
 </head>
-<body class="dark-theme" id="app-body">
+<body class="dark-theme">
     
     <header class="main-header">
-        <img src="logo.png" alt="Logo" class="header-logo-big" onclick="openTab('home')" style="cursor:pointer;">
+        <img src="logo.png" alt="Smart Money Pro" class="header-logo-big" onclick="openTab('home')" style="cursor:pointer;">
     </header>
 
     <div class="stats-bar-top">
@@ -34,7 +36,7 @@
         <div class="nav-row">
             <button onclick="openTab('invest')" id="btnInvest">📈 בורסה</button>
             <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
-            <button onclick="openTab('realestate')" id="btnRealestate">🏠 נדל"ן</button>
+            <button onclick="openTab('estate')" id="btnEstate">🏠 נדל"ן</button>
         </div>
         <div class="nav-row">
             <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
@@ -59,7 +61,7 @@
             <div id="ios-instr" style="display:none;">
                 <p>לחץ על <b>שתף</b> ואז על <b>"הוסף למסך הבית"</b>.</p>
             </div>
-            <button class="action" onclick="closeInstallGuide()" style="background:var(--red); margin-top:15px;">סגור</button>
+            <button class="action" onclick="closeInstallGuide()" style="background:var(--red); margin-top:15px; color:#fff;">סגור</button>
         </div>
     </div>
 
@@ -67,18 +69,17 @@
         © 2026 Smart Money Pro v6.0.3 | Alexey Zavodisker
     </footer>
 
-    <script src="js/core.js?v=6.0.3"></script>
-    <script src="js/ui.js?v=6.0.3"></script>
-    <script src="js/economy.js?v=6.0.3"></script>
-    <script src="js/activities.js?v=6.0.3"></script>
+    <script src="js/core.js?v=6.0.3" defer></script>
+    <script src="js/activities.js?v=6.0.3" defer></script>
+    <script src="js/economy.js?v=6.0.3" defer></script>
+    <script src="js/ui.js?v=6.0.3" defer></script>
 
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=6.0.3').then(reg => reg.update());
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js?v=6.0.3').then(reg => reg.update()).catch(err => console.log('SW Reg Failed', err));
+            });
         }
-        document.addEventListener("DOMContentLoaded", () => {
-            setTimeout(() => { if(typeof openTab === 'function') openTab('home'); }, 150);
-        });
     </script>
 </body>
 </html>
