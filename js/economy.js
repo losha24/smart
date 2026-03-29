@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/economy.js - v5.7.7 */
+/* Smart Money Pro - js/economy.js - v6.0.0 - Full Passive Update */
 
 // מאגרים מעודכנים
 const bzPool = [{n:"דוכן קפה", c:15000, p:20}, {n:"קיוסק", c:45000, p:60}, {n:"פיצריה", c:250000, p:350}, {n:"מספרה", c:80000, p:110}, {n:"חנות בגדים", c:550000, p:800}, {n:"מוסך", c:1200000, p:1800}, {n:"מסעדה", c:3000000, p:4500}, {n:"סופרמרקט", c:8000000, p:12000}, {n:"קניון", c:25000000, p:40000}, {n:"מפעל", c:60000000, p:100000}];
@@ -63,18 +63,29 @@ function drawMarket(c, t) {
 
 function executeBuy(t, n, c, v) {
     if(money >= c) {
-        money -= c; totalSpent += c; lifeXP += (c * 0.05);
-        if(t==='skills') skills.push(n);
-        else if(t==='cars') { cars.push(n); carSpeed = v; }
+        money -= c; 
+        totalSpent += c; 
+        lifeXP += (c * 0.05);
+
+        if(t==='skills') {
+            skills.push(n);
+            passive += v; // בגרסה 6: כישורים מוסיפים הכנסה פסיבית קבועה
+        }
+        else if(t==='cars') { 
+            cars.push(n); 
+            carSpeed = v; 
+            passive += (c * 0.001); // בונוס פסיבי קטן על רכבים (יוקרה/סטטוס)
+        }
         else if(t==='business' || t==='realestate' || t==='market') {
             if(t==='market') inventory.push(n); 
-            passive += v;
+            passive += v; // נדל"ן ועסקים מוסיפים את הרווח שלהם להכנסה השעתית
         }
         
-        showMsg(`נקנה בהצלחה: ${n}`, "var(--green)");
+        showMsg(`נקנה בהצלחה: ${n} | פסיבי עלה ב-${v.toFixed(1)}₪`, "var(--green)");
         setTimeout(() => showMsg(""), 3000);
         
-        updateUI(); openTab(t);
+        updateUI(); 
+        openTab(t);
     } else {
         showMsg("חסר כסף!", "var(--red)");
         setTimeout(() => showMsg(""), 3000);
@@ -92,24 +103,26 @@ function drawInvest(c) {
 
 function buyStk(i, p) { 
     if(money>=p){
-        money-=p; invOwned[i]++; 
+        money-=p; 
+        invOwned[i]++; 
         showMsg(`קנית מניה: ${i}`, "var(--green)");
-        setTimeout(() => showMsg(""), 3000);
-        updateUI(); openTab('invest');
+        updateUI(); 
+        openTab('invest');
     } else {
         showMsg("אין מספיק כסף למניה", "var(--red)");
-        setTimeout(() => showMsg(""), 3000);
     }
+    setTimeout(() => showMsg(""), 2000);
 }
 
 function sellStk(i, p) { 
     if(invOwned[i]>0){
-        money+=p; invOwned[i]--; 
+        money+=p; 
+        invOwned[i]--; 
         showMsg(`מכרת מניה: ${i}`, "var(--blue)");
-        setTimeout(() => showMsg(""), 3000);
-        updateUI(); openTab('invest');
+        updateUI(); 
+        openTab('invest');
     } else {
         showMsg("אין לך מניות כאלה", "var(--red)");
-        setTimeout(() => showMsg(""), 3000);
     }
+    setTimeout(() => showMsg(""), 2000);
 }
