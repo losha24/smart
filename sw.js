@@ -1,6 +1,6 @@
 /* Smart Money Pro - sw.js - v6.0.3 - Final Production */
 
-const CACHE_NAME = 'smart-money-v6.0.4';
+const CACHE_NAME = 'smart-money-v6.0.5';
 const ASSETS = [
   './',
   './index.html',
