@@ -1,4 +1,4 @@
-/* Smart Money Pro - v6.0.1 - Optimized & Layout Fixed */
+/* Smart Money Pro - v6.0.2 - Full Sync & Mobile Optimized */
 :root { 
     --bg: #0f172a; 
     --card: #1e293b; 
@@ -8,6 +8,7 @@
     --red: #ef4444; 
     --border: rgba(255, 255, 255, 0.08); 
     --yellow: #f59e0b;
+    --purple: #a855f7;
 }
 
 .light-theme { 
@@ -17,10 +18,14 @@
     --border: rgba(0, 0, 0, 0.05); 
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+* { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+    outline: none; 
+}
 
 body { 
-    font-family: system-ui, -apple-system, sans-serif; 
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
     background: var(--bg); 
     color: var(--text); 
     direction: rtl; 
@@ -32,31 +37,33 @@ body {
     overflow-x: hidden;
 }
 
-/* --- תיקון לוגו ו-Header --- */
+/* --- Header & Fixed Logo --- */
 .main-header {
     background: var(--card);
     border-bottom: 1px solid var(--border);
-    height: 60px; /* גובה קבוע לבר הלוגו */
+    height: 65px;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1001;
+    position: relative;
 }
 
 .header-logo-big { 
-    max-height: 35px; /* הגבלה קשיחה למניעת שבירת עיצוב */
+    max-height: 40px; 
     width: auto;
     object-fit: contain;
-    transition: transform 0.2s;
+    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.2));
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.header-logo-big:active { transform: scale(0.95); }
+.header-logo-big:active { transform: scale(0.9); }
 
-/* בר סטטיסטיקה עליון */
+/* בר סטטיסטיקה עליון - תמיד למעלה */
 .stats-bar-top { 
     display: flex; 
     justify-content: space-around; 
-    background: #1e293b; 
+    background: var(--card); 
     border-bottom: 2px solid var(--blue);
     color: white; 
     padding: 12px 5px; 
@@ -67,67 +74,66 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
+.stat-item { font-size: 14px; }
 .stat-item span { color: var(--blue); font-variant-numeric: tabular-nums; }
 
-/* שורת סטטוס עם אנימציה */
+/* שורת סטטוס חלקה */
 .status-msg { 
     text-align: center; 
     font-size: 13px; 
-    min-height: 30px; 
-    line-height: 30px; 
+    min-height: 34px; 
+    line-height: 34px; 
     font-weight: 600; 
     opacity: 0; 
-    transition: all 0.3s ease; 
-    background: rgba(56, 189, 248, 0.1);
-    margin: 8px 15px;
-    border-radius: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    background: rgba(56, 189, 248, 0.08);
+    margin: 10px 15px;
+    border-radius: 12px;
     border: 1px solid transparent;
+    pointer-events: none;
 }
 
-/* אנימציית דופק כששורת הסטטוס פעילה */
-.status-msg:not(:empty) { opacity: 1; border-color: var(--blue); animation: pulse 2s infinite; }
+.status-msg:not(:empty) { opacity: 1; border-color: rgba(56, 189, 248, 0.2); }
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.01); }
-    100% { transform: scale(1); }
-}
-
-/* תפריט ניווט - מסודר בשורות */
+/* תפריט ניווט - Mobile Optimized */
 .topbar { padding: 10px; background: var(--card); border-bottom: 1px solid var(--border); }
 .nav-row { display: flex; gap: 6px; margin-bottom: 6px; }
 .nav-row:last-child { margin-bottom: 0; }
 
 .topbar button { 
     flex: 1; 
-    padding: 12px 2px; 
+    padding: 14px 2px; 
     border: 1px solid var(--border); 
     border-radius: 12px; 
-    background: rgba(128, 128, 128, 0.05); 
+    background: rgba(255, 255, 255, 0.03); 
     color: var(--text); 
     font-size: 11px; 
     font-weight: 700;
     cursor: pointer; 
-    transition: 0.2s;
+    transition: all 0.2s;
 }
 
 .topbar button.active { 
     background: var(--blue); 
-    color: white; 
+    color: #0f172a; 
     border-color: var(--blue); 
-    box-shadow: 0 4px 10px rgba(56, 189, 248, 0.2); 
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3); 
 }
 
-.sys-btn { background: rgba(56, 189, 248, 0.1) !important; color: var(--blue) !important; font-size: 14px !important; }
+.sys-btn { 
+    background: rgba(255, 255, 255, 0.05) !important; 
+    color: var(--blue) !important; 
+    max-width: 50px;
+}
 
-/* כרטיסים ותוכן */
+/* תוכן ראשי */
 main.container { 
     padding: 15px; 
     flex: 1; 
     width: 100%; 
     max-width: 500px; 
     margin: 0 auto; 
-    padding-bottom: 60px; 
+    padding-bottom: env(safe-area-inset-bottom, 20px); 
 }
 
 .card { 
@@ -136,35 +142,34 @@ main.container {
     padding: 20px; 
     margin-bottom: 15px; 
     border: 1px solid var(--border); 
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
 }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-/* כפתורי פעולה */
+/* כפתורי פעולה משופרים */
 .action { 
     width: 100%; 
     padding: 16px; 
     border: none; 
     border-radius: 14px; 
-    background: var(--green); 
-    color: white; 
+    background: var(--blue); 
+    color: #0f172a; 
     font-weight: 800; 
     font-size: 15px;
     cursor: pointer; 
     transition: 0.2s;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.1);
 }
 
-.action:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
-.action:disabled { opacity: 0.3; filter: grayscale(1); box-shadow: none; cursor: not-allowed; }
+.action:active { transform: scale(0.97); }
+.action:disabled { opacity: 0.2; filter: grayscale(1); cursor: not-allowed; }
 
 /* פסי התקדמות */
 .progress-container { 
     width: 100%; 
-    background: rgba(0, 0, 0, 0.2); 
+    background: rgba(0, 0, 0, 0.3); 
     border-radius: 20px; 
-    height: 12px; 
+    height: 10px; 
     margin: 10px 0; 
     overflow: hidden; 
     border: 1px solid var(--border); 
@@ -177,33 +182,52 @@ main.container {
     transition: width 0.1s linear; 
 }
 
-.xp-bar { background: linear-gradient(90deg, #818cf8, #c084fc) !important; }
+/* XP Bar צבעוני ויוקרתי */
+.xp-bar { 
+    background: linear-gradient(90deg, var(--blue), var(--purple)) !important; 
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+}
 
-/* מודלים (Modals) */
+/* מודלים */
 .modal-overlay { 
     position: fixed; 
     inset: 0; 
-    background: rgba(0,0,0,0.8); 
+    background: rgba(0,0,0,0.85); 
     display: flex; 
     align-items: center; 
     justify-content: center; 
     z-index: 2000;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
 }
 
 .modal-card { 
     background: var(--card); 
     padding: 30px; 
-    border-radius: 25px; 
-    width: 85%; 
-    max-width: 400px; 
+    border-radius: 28px; 
+    width: 90%; 
+    max-width: 380px; 
     text-align: center; 
-    border: 1px solid var(--border);
+    border: 1px solid var(--blue);
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.15);
 }
 
 /* פוטר */
-.main-footer { text-align: center; padding: 25px; font-size: 11px; opacity: 0.4; letter-spacing: 0.5px; }
+.main-footer { 
+    text-align: center; 
+    padding: 20px; 
+    font-size: 10px; 
+    opacity: 0.3; 
+}
 
 /* אנימציות */
-.fade-in { animation: fadeIn 0.4s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.4s ease-out forwards; }
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(8px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* התאמה למסכים קטנים מאוד */
+@media (max-width: 360px) {
+    .topbar button { font-size: 10px; padding: 10px 1px; }
+    .stat-item { font-size: 12px; }
+}
