@@ -3,23 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.0.2</title>
-    
-    <link rel="manifest" href="manifest.json?v=6.0.2">
+    <title>Smart Money Pro | v6.0.3</title>
+    <link rel="manifest" href="manifest.json?v=6.0.3">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    
     <link rel="apple-touch-icon" href="logo.png">
-    <link rel="stylesheet" href="style.css?v=6.0.2">
+    <link rel="stylesheet" href="style.css?v=6.0.3">
 </head>
 <body class="dark-theme" id="app-body">
     
     <header class="main-header">
-        <div class="header-center">
-            <img src="logo.png" alt="Logo" class="header-logo-big" onclick="toggleTheme()" style="cursor:pointer;">
-        </div>
+        <img src="logo.png" alt="Logo" class="header-logo-big" onclick="openTab('home')" style="cursor:pointer;">
     </header>
 
     <div class="stats-bar-top">
@@ -48,8 +43,8 @@
         </div>
         <div class="nav-row">
             <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-            <button onclick="forceUpdate()" class="sys-btn" title="רענון גרסה">🔄</button>
-            <button onclick="toggleTheme()" class="sys-btn" title="מצב יום/לילה">🌓</button>
+            <button onclick="forceUpdate()" class="sys-btn" title="רענון גרסה">🔄 עדכון</button>
+            <button onclick="toggleTheme()" class="sys-btn" title="מצב יום/לילה">🌓 מצב</button>
         </div>
     </nav>
 
@@ -57,57 +52,32 @@
 
     <div id="installModal" class="modal-overlay" style="display:none;" onclick="closeInstallGuide()">
         <div class="modal-card" onclick="event.stopPropagation()">
-            <h3 style="color:var(--blue); margin-top:0;">📲 התקנת האפליקציה</h3>
-            <div id="android-instr" class="instr">
-                <p>לחץ על <b>3 הנקודות</b> בתפריט הדפדפן ובחר באפשרות:<br><b>"התקן אפליקציה"</b></p>
+            <h3>📲 התקנת האפליקציה</h3>
+            <div id="android-instr">
+                <p>לחץ על 3 הנקודות בתפריט ובחר <b>"התקן אפליקציה"</b>.</p>
             </div>
-            <div id="ios-instr" class="instr" style="display:none;">
-                <p>1. לחץ על כפתור <b>השיתוף</b> (ריבוע עם חץ למעלה).</p>
-                <p>2. גלול מטה ובחר ב-<b>"הוסף למסך הבית"</b> (➕).</p>
+            <div id="ios-instr" style="display:none;">
+                <p>לחץ על <b>שתף</b> ואז על <b>"הוסף למסך הבית"</b>.</p>
             </div>
-            <button class="action" onclick="closeInstallGuide()" style="margin-top:20px; background:var(--red); color:white; border-radius:10px; padding:10px;">סגור</button>
+            <button class="action" onclick="closeInstallGuide()" style="background:var(--red); margin-top:15px;">סגור</button>
         </div>
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.0.2 | Alexey Zavodisker
+        © 2026 Smart Money Pro v6.0.3 | Alexey Zavodisker
     </footer>
 
-    <script src="js/core.js?v=6.0.2"></script>
-    <script src="js/ui.js?v=6.0.2"></script>
-    <script src="js/economy.js?v=6.0.2"></script>
-    <script src="js/activities.js?v=6.0.2"></script>
+    <script src="js/core.js?v=6.0.3"></script>
+    <script src="js/ui.js?v=6.0.3"></script>
+    <script src="js/economy.js?v=6.0.3"></script>
+    <script src="js/activities.js?v=6.0.3"></script>
 
     <script>
-        // ניהול Service Worker ועדכונים
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=6.0.2')
-            .then(reg => {
-                console.log("v6.0.2 SW Registered");
-                // בדיקת עדכונים בכל טעינה
-                reg.update();
-            })
-            .catch(err => console.error("SW Failed:", err));
+            navigator.serviceWorker.register('sw.js?v=6.0.3').then(reg => reg.update());
         }
-
-        // פונקציית רענון כפוי
-        function forceUpdate() {
-            if(confirm("לרענן לגרסה האחרונה?")) {
-                localStorage.clear(); // אופציונלי: רק אם אתה רוצה לאפס הכל בעדכון
-                location.reload(true);
-            }
-        }
-
-        // הפעלה ראשונית
         document.addEventListener("DOMContentLoaded", () => {
-            // מוודא שכל הפונקציות נטענו לפני הפתיחה
-            const checkReady = setInterval(() => {
-                if (typeof openTab === 'function' && typeof loadGame === 'function') {
-                    clearInterval(checkReady);
-                    loadGame();
-                    openTab('home');
-                }
-            }, 50);
+            setTimeout(() => { if(typeof openTab === 'function') openTab('home'); }, 150);
         });
     </script>
 </body>
