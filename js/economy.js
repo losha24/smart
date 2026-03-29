@@ -197,3 +197,89 @@ function executeStockOp(type, id, price) {
     // אבל לשם הפשטות - נרענן את כל הטאב.
     openTab('invest'); 
 }
+
+
+// --- תצוגת עסקים (Business Tab) ---
+function drawBusiness(c) {
+    const bzPool = [
+        {n:"דוכן קפה", c:15000, p:20, i:"☕"}, 
+        {n:"קיוסק", c:45000, p:60, i:"🏪"}, 
+        {n:"פיצריה", c:250000, p:350, i:"🍕"}, 
+        {n:"מספרה", c:80000, p:110, i:"✂️"}, 
+        {n:"חנות בגדים", c:550000, p:800, i:"👕"}, 
+        {n:"מוסך", c:1200000, p:1800, i:"🔧"}, 
+        {n:"מסעדה", c:3000000, p:4500, i:"🍽️"}, 
+        {n:"סופרמרקט", c:8000000, p:12000, i:"🛒"}, 
+        {n:"קניון", c:25000000, p:40000, i:"🏢"}, 
+        {n:"מפעל", c:60000000, p:100000, i:"🏭"}
+    ];
+
+    let html = `<h3>🏢 השקעה בעסקים</h3><div class="grid-2">`;
+    bzPool.forEach(item => {
+        html += `
+        <div class="card fade-in" style="text-align:center; padding:15px;">
+            <div style="font-size:30px; margin-bottom:5px;">${item.i}</div>
+            <b style="display:block; font-size:14px; min-height:35px;">${item.n}</b>
+            <div style="color:var(--green); font-size:12px; margin-bottom:10px;">+${item.p.toLocaleString()}₪/שעה</div>
+            <button class="sys-btn" style="width:100%;" onclick="executeBuy('business','${item.n}',${item.c},${item.p},'${item.i}')">
+                ${item.c.toLocaleString()}₪
+            </button>
+        </div>`;
+    });
+    c.innerHTML = html + `</div>`;
+}
+
+// --- תצוגת שוק (Market/Lifestyle Tab) ---
+function drawMarket(c) {
+    const mkPool = [
+        {n:"אייפון 15", c:5500, p:250, i:"📱"}, 
+        {n:"מחשב גיימינג", c:15000, p:700, i:"💻"}, 
+        {n:"טלוויזיה 8K", c:25000, p:1200, i:"📺"}, 
+        {n:"שעון יוקרה", c:120000, p:5000, i:"⌚"}, 
+        {n:"ריהוט מעצבים", c:45000, p:2000, i:"🛋️"}, 
+        {n:"בריכה פרטית", c:180000, p:8000, i:"🏊"}, 
+        {n:"ג'קוזי", c:25000, p:1000, i:"🛁"}, 
+        {n:"פסל אמנות", c:100000, p:4500, i:"🗿"}, 
+        {n:"יהלום", c:250000, p:12000, i:"💎"}
+    ];
+
+    let html = `<h3>🛒 שוק מוצרי יוקרה</h3><div class="grid-2">`;
+    mkPool.forEach(item => {
+        html += `
+        <div class="card fade-in" style="text-align:center; padding:15px;">
+            <div style="font-size:30px; margin-bottom:5px;">${item.i}</div>
+            <b style="display:block; font-size:14px; min-height:35px;">${item.n}</b>
+            <div style="color:var(--blue); font-size:11px; margin-bottom:10px;">+${item.p.toLocaleString()} XP</div>
+            <button class="sys-btn" style="width:100%;" onclick="executeBuy('market','${item.n}',${item.c},${item.p},'${item.i}')">
+                ${item.c.toLocaleString()}₪
+            </button>
+        </div>`;
+    });
+    c.innerHTML = html + `</div>`;
+}
+
+// --- פונקציית רכישה אחודה ---
+function executeBuy(type, name, cost, value, icon) {
+    if(money >= cost) {
+        money -= cost;
+        
+        if(type === 'business') {
+            passive += value;
+            inventory.push({name: name, icon: icon});
+            showMsg(`רכשת ${name}! ההכנסה הפסיבית עלתה.`, "var(--green)");
+        } else if(type === 'market') {
+            lifeXP += value;
+            inventory.push({name: name, icon: icon});
+            showMsg(`תתחדש על ה${name}! רמת החיים עלתה.`, "var(--blue)");
+        }
+        
+        updateUI();
+        saveGame();
+        
+        // רענון הטאב הנוכחי
+        if(type === 'business') drawBusiness(document.getElementById("content"));
+        else drawMarket(document.getElementById("content"));
+    } else {
+        showMsg("אין לך מספיק מזומן לרכישה זו!", "var(--red)");
+    }
+}
