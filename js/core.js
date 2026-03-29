@@ -1,10 +1,10 @@
-/* Smart Money Pro - js/core.js - v6.0.3 - Master Core Build */
+/* Smart Money Pro - js/core.js - v6.0.6 - Master Core with Level Checks */
 
-const VERSION = "6.0.3";
+const VERSION = "6.0.6";
 const SAVE_KEY = "smartMoneySave_v6_main";
 
 // --- משתנים גלובליים ---
-let money = 1200; // סכום התחלתי מעודכן
+let money = 1200; 
 let bank = 0;
 let loan = 0;
 let lifeXP = 0;
@@ -13,7 +13,6 @@ let lastGift = 0;
 let skills = [];
 let cars = [];
 let inventory = []; 
-// מניות (Stocks)
 let invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, META:0, ELAL:0 };
 let carSpeed = 1;
 let totalEarned = 0;
@@ -41,7 +40,6 @@ function loadGame() {
             totalEarned = data.totalEarned ?? 0;
         }
         
-        // החלת ערכת נושא שמורה
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.body.className = savedTheme + '-theme';
         
@@ -58,44 +56,61 @@ function saveGame() {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
 
+// --- מערכת הודעות חכמה וצבעונית ---
+function showMsg(txt, color = "var(--blue)") {
+    const bar = document.getElementById('status-bar');
+    if (!bar) return;
+
+    clearTimeout(msgTimer); 
+    
+    // עיצוב הבר לפי הצבע שנבחר
+    bar.innerText = txt;
+    bar.style.opacity = "1";
+    bar.style.transform = "translateY(0)";
+    bar.style.color = color;
+    bar.style.borderColor = color;
+    // יצירת רקע שקוף מעט מהצבע שנבחר
+    const bgColor = color.includes("var") ? `rgba(56, 189, 248, 0.15)` : color.replace(')', ', 0.15)');
+    bar.style.backgroundColor = color.includes("--green") ? "rgba(34, 197, 94, 0.15)" : 
+                               color.includes("--red") ? "rgba(239, 68, 68, 0.15)" : 
+                               color.includes("--purple") ? "rgba(168, 85, 247, 0.15)" : bgColor;
+
+    msgTimer = setTimeout(() => {
+        bar.style.opacity = "0";
+        bar.style.transform = "translateY(-5px)";
+    }, 3500);
+}
+
+// בדיקת עליית רמה
+function checkLevelUp() {
+    const currentLevel = Math.floor(lifeXP / 5000) + 1;
+    // נשלוף את הרמה שמוצגת כרגע ב-UI כדי להשוות
+    const displayedLevel = parseInt(document.getElementById('life-level-ui')?.innerText || "1");
+    
+    if (currentLevel > displayedLevel) {
+        showMsg(`🎊 מזל טוב! עלית לרמת חיים ${currentLevel}! 🎊`, "var(--purple)");
+        // בונוס עליית רמה
+        const bonus = currentLevel * 500;
+        money += bonus;
+        updateUI();
+    }
+}
+
 // --- עדכון ממשק משתמש (UI) ---
 
 function updateUI() {
-    // אלמנטים בבר העליון
     const mEl = document.getElementById('money');
     const bEl = document.getElementById('bank');
     const lEl = document.getElementById('life-level-ui');
-    const xpBar = document.querySelector('.xp-bar');
     
     if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
     if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
     
     const level = Math.floor(lifeXP / 5000) + 1;
     if(lEl) lEl.innerText = level;
-    
-    // עדכון פס התקדמות (XP)
-    if(xpBar) {
-        const progress = ((lifeXP % 5000) / 5000) * 100;
-        xpBar.style.width = progress + "%";
-    }
-}
 
-// מערכת הודעות חכמה
-function showMsg(txt, color = "white") {
-    const bar = document.getElementById('status-bar');
-    if (!bar) return;
-
-    clearTimeout(msgTimer); 
-    bar.innerText = txt;
-    bar.style.color = color;
-    bar.style.opacity = "1";
-    bar.style.transform = "translateY(0)";
-
-    msgTimer = setTimeout(() => {
-        bar.style.opacity = "0";
-        bar.style.transform = "translateY(-5px)";
-        setTimeout(() => { bar.innerText = ""; }, 300); 
-    }, 3000);
+    // בדיקה אוטומטית אם עלינו רמה בעקבות העדכון
+    checkLevelUp();
 }
 
 // --- פונקציות מערכת ---
@@ -110,7 +125,7 @@ function toggleTheme() {
 }
 
 function forceUpdate() {
-    showMsg("מרענן נתונים...", "var(--blue)");
+    showMsg("מרענן נתונים וגרסה...", "var(--yellow)");
     saveGame();
     setTimeout(() => {
         location.reload(true); 
@@ -118,7 +133,7 @@ function forceUpdate() {
 }
 
 function resetGame() {
-    if (confirm("⚠️ אזהרה: כל ההתקדמות שלך תימחק לצמיתות. לאפס?")) {
+    if (confirm("⚠️ אזהרה: כל ההתקדמות שלך תימחק. לאפס?")) {
         localStorage.removeItem(SAVE_KEY);
         location.reload();
     }
@@ -126,15 +141,14 @@ function resetGame() {
 
 // --- מנועי זמן (Loops) ---
 
-// 1. מנוע הכנסה פסיבית - עדכון ויזואלי מהיר (10Hz)
+// 1. מנוע הכנסה פסיבית - עדכון ויזואלי מהיר (10 פעמים בשנייה)
 setInterval(() => {
     if (passive > 0) {
-        // הכנסה פסיבית מחושבת לפי שעה, לכן נחלק ב-36,000 (10 פעמים בשניה * 3600 שניות)
-        const incomeTick = passive / 36000;
+        const incomeTick = passive / 36000; 
         money += incomeTick;
         totalEarned += incomeTick;
         
-        // עדכון ישיר של הכסף במסך לביצועים חלקים
+        // עדכון מהיר של התצוגה בלי לרענן את כל ה-UI
         const mEl = document.getElementById('money');
         if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
     }
@@ -147,5 +161,5 @@ setInterval(saveGame, 15000);
 document.addEventListener("DOMContentLoaded", () => {
     loadGame();
     updateUI();
-    console.log(`Smart Money Pro v${VERSION} Loaded.`);
+    console.log(`Smart Money Pro v${VERSION} Ready.`);
 });
