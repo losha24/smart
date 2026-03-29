@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/core.js - v6.0.7 - Master Core Engine */
+/* Smart Money Pro - js/core.js - v6.0.7 - Fixed Buttons & Fast Passive */
 
 const VERSION = "6.0.7";
 const SAVE_KEY = "smartMoneySave_v6_main";
@@ -40,7 +40,7 @@ function loadGame() {
         }
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.body.className = savedTheme + '-theme';
-    } catch (e) { console.error("Error loading:", e); }
+    } catch (e) { console.error("שגיאה בטעינה:", e); }
 }
 
 function saveGame() {
@@ -48,7 +48,7 @@ function saveGame() {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
 
-// --- מערכת הודעות צבעונית ---
+// --- מערכת הודעות ---
 function showMsg(txt, color = "var(--blue)") {
     const bar = document.getElementById('status-bar');
     if (!bar) return;
@@ -58,42 +58,61 @@ function showMsg(txt, color = "var(--blue)") {
     bar.style.transform = "translateY(0)";
     bar.style.color = color;
     bar.style.borderColor = color;
-    const bgColor = color.includes("var") ? `rgba(56, 189, 248, 0.15)` : color.replace(')', ', 0.15)');
-    bar.style.backgroundColor = color.includes("--green") ? "rgba(34, 197, 94, 0.15)" : 
-                               color.includes("--red") ? "rgba(239, 68, 68, 0.15)" : 
-                               color.includes("--purple") ? "rgba(168, 85, 247, 0.15)" : bgColor;
+    
     msgTimer = setTimeout(() => {
         bar.style.opacity = "0";
         bar.style.transform = "translateY(-5px)";
     }, 3500);
 }
 
+// --- פונקציות מערכת (אלו הכפתורים שלא עבדו לך) ---
+
+function toggleTheme() {
+    const isLight = document.body.classList.contains('light-theme');
+    const next = isLight ? 'dark' : 'light';
+    document.body.className = next + '-theme';
+    localStorage.setItem('theme', next);
+    showMsg(`עברת למצב ${next === 'light' ? 'יום' : 'לילה'}`, "var(--blue)");
+}
+
+function forceUpdate() {
+    showMsg("מרענן נתונים...", "var(--yellow)");
+    saveGame();
+    setTimeout(() => { location.reload(true); }, 500);
+}
+
+function resetGame() {
+    if (confirm("⚠️ אזהרה: כל ההתקדמות תימחק. לאפס?")) {
+        localStorage.removeItem(SAVE_KEY);
+        location.reload();
+    }
+}
+
 function checkLevelUp() {
     const currentLevel = Math.floor(lifeXP / 5000) + 1;
     const displayedLevel = parseInt(document.getElementById('life-level-ui')?.innerText || "1");
     if (currentLevel > displayedLevel) {
-        showMsg(`🎊 מזל טוב! רמה ${currentLevel}! 🎊`, "var(--purple)");
+        showMsg(`🎊 מזל טוב! עלית לרמה ${currentLevel}! 🎊`, "var(--purple)");
         money += currentLevel * 500;
         updateUI();
     }
 }
 
 function updateUI() {
-    const mEl = document.getElementById('money');
-    const bEl = document.getElementById('bank');
-    const lEl = document.getElementById('life-level-ui');
-    if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
-    if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
-    if(lEl) lEl.innerText = Math.floor(lifeXP / 5000) + 1;
-    checkLevelUp();
+    if (typeof window.updateUI === 'function') {
+        window.updateUI();
+    } else {
+        const mEl = document.getElementById('money');
+        if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
+    }
 }
 
 // --- מנועי זמן ---
 
-// 1. מנוע הכנסה פסיבית - רץ 10 פעמים בשנייה לעדכון "רץ" של הכסף
+// מנוע הכנסה פסיבית - מעדכן את המסך 10 פעמים בשנייה
 setInterval(() => {
     if (passive > 0) {
-        const tickIncome = passive / 36000; // חלוקה ל-3600 שניות * 10 פעמים בשנייה
+        const tickIncome = passive / 36000; 
         money += tickIncome;
         totalEarned += tickIncome;
         
@@ -102,9 +121,11 @@ setInterval(() => {
     }
 }, 100);
 
+// שמירה אוטומטית
 setInterval(saveGame, 15000);
 
+// אתחול
 document.addEventListener("DOMContentLoaded", () => {
     loadGame();
-    updateUI();
+    console.log(`Smart Money Pro v${VERSION} מנוע פועל.`);
 });
