@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money Pro | v6.0.0</title>
+    <title>Smart Money Pro | v6.0.1</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-theme" id="app-body">
+    
     <header class="main-header">
         <div class="header-center">
             <img src="logo.png" alt="Logo" class="header-logo-big" onclick="toggleTheme()" style="cursor:pointer;">
@@ -26,7 +27,7 @@
         <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
     </div>
 
-    <div id="status-bar" class="status-msg"></div>
+    <div id="status-bar" class="status-msg">מוכן לפעולה</div>
 
     <nav class="topbar">
         <div class="nav-row">
@@ -51,10 +52,10 @@
         </div>
     </nav>
 
-    <main id="content" class="fade-in"></main>
+    <main id="content" class="fade-in container"></main>
 
-    <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
-        <div class="modal-content" onclick="event.stopPropagation()">
+    <div id="installModal" class="modal-overlay" style="display:none;" onclick="closeInstallGuide()">
+        <div class="modal-card" onclick="event.stopPropagation()">
             <h3>📲 התקנת האפליקציה</h3>
             <div id="android-instr" class="instr">
                 <p>לחץ על כפתור התפריט בדפדפן (3 נקודות) ובחר ב-<b>"התקן אפליקציה"</b>.</p>
@@ -63,11 +64,13 @@
                 <p>1. לחץ על כפתור <b>השיתוף</b> בתחתית הדפדפן.</p>
                 <p>2. בחר ב-<b>"הוסף למסך הבית"</b> (➕).</p>
             </div>
-            <button class="action" onclick="closeInstallGuide()">הבנתי</button>
+            <button class="action" onclick="closeInstallGuide()" style="margin-top:15px; background:var(--red);">סגור</button>
         </div>
     </div>
 
-    <footer class="main-footer">© 2026 Smart Money Pro v6.0.0</footer>
+    <footer class="main-footer" style="text-align:center; padding:20px; font-size:10px; opacity:0.5;">
+        © 2026 Smart Money Pro v6.0.1 | Alexey Zavodisker
+    </footer>
 
     <script src="js/core.js"></script>
     <script src="js/ui.js"></script>
@@ -75,11 +78,19 @@
     <script src="js/activities.js"></script>
 
     <script>
+        // אתחול האפליקציה ורישום ה-Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
-            .then(() => console.log("v6.0.0 SW Registered"))
+            .then(() => console.log("v6.0.1 SW Registered"))
             .catch(err => console.error("SW Registration Failed:", err));
         }
+
+        // טעינת דף הבית בסטארט-אפ
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => {
+                if(typeof openTab === 'function') openTab('home');
+            }, 150);
+        });
     </script>
 </body>
 </html>
