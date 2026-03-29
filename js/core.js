@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/core.js - v5.7.7 - Final */
+/* Smart Money Pro - js/core.js - v5.7.7 - Final Updated */
 
 // משתני משחק גלובליים
 let money = 1000;
@@ -9,7 +9,7 @@ let passive = 0;
 let lastGift = 0;
 let skills = [];
 let cars = [];
-let inventory = []; // תוספת למלאי פריטים מהשוק
+let inventory = []; 
 let invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, META:0, ELAL:0 };
 let carSpeed = 1;
 let totalEarned = 0;
@@ -66,16 +66,13 @@ function updateUI() {
     saveGame();
 }
 
-// פונקציית עזר להצגת הודעות בראש המסך
+// פונקציית עזר להצגת הודעות בראש המסך (Status Bar)
 function showMsg(txt, color = "white") {
     const bar = document.getElementById('status-bar');
     if (bar) {
         bar.innerText = txt;
         bar.style.color = color;
-        bar.style.opacity = "1";
-        
-        // אם הטקסט ריק, נסתיר את הבר
-        if(txt === "") bar.style.opacity = "0";
+        bar.style.opacity = (txt === "") ? "0" : "1";
     }
 }
 
@@ -88,19 +85,28 @@ function toggleTheme() {
     }
 }
 
-// רענון כפוי (לעדכוני גרסה)
+// רענון גרסה שקט - ללא Confirm, הודעה בשורת הסטטוס
 function forceUpdate() {
-    if (confirm("האם לרענן גרסה? כל הנתונים יישמרו.")) {
+    showMsg("בוצע עדכון לגרסא חדשה 5.7.7", "var(--blue)");
+    setTimeout(() => {
         location.reload(true);
-    }
+    }, 1500);
 }
 
-// לוגיקת הכנסה פסיבית בכל שניה
+// לוגיקת כסף רץ - מתעדכן כל שנייה בבר למעלה
 setInterval(() => {
     if (passive > 0) {
         const perSec = passive / 3600;
         money += perSec;
-        updateUI();
+        
+        // עדכון ויזואלי מהיר של הכסף בלבד (ללא שמירה כבדה)
+        const mEl = document.getElementById('money');
+        if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
+        
+        // שמירה ל-Storage רק פעם ב-10 שניות (כדי לא לפגוע בביצועים)
+        if (Math.round(money) % 10 === 0) {
+            saveGame();
+        }
     }
 }, 1000);
 
