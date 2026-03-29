@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/economy.js - v6.0.4 - Full Economy & Market Update */
+/* Smart Money Pro - js/economy.js - v6.0.5 - Full Expansion Update */
 
 // --- מערכת הבנק המרכזית ---
 
@@ -190,7 +190,39 @@ function executeStockOp(type, id, price) {
     drawInvest(document.getElementById("content")); 
 }
 
-// --- עסקים ושוק (מעודכן עם כל הרשימה שלך) ---
+// --- נדל"ן (מעודכן: 10 נכסים, 2 בשורה) ---
+
+function drawEstate(c) {
+    if(!c) return;
+    const estPool = [
+        {n:"דירת סטודיו", c:250000, p:800, i:"🏢"}, 
+        {n:"דירת 3 חדרים", c:550000, p:1800, i:"🏠"}, 
+        {n:"דירת גן", c:900000, p:3500, i:"🏡"}, 
+        {n:"בית פרטי", c:1200000, p:5000, i:"🏘️"},
+        {n:"פנטהאוז", c:1800000, p:7500, i:"🏙️"}, 
+        {n:"דופלקס מעצבים", c:2500000, p:10500, i:"💎"},
+        {n:"וילה יוקרתית", c:4500000, p:18000, i:"🏰"},
+        {n:"אחוזה כפרית", c:8500000, p:35000, i:"🚜"},
+        {n:"בניין מגורים", c:15000000, p:70000, i:"🏢"},
+        {n:"אי פרטי", c:50000000, p:250000, i:"🏝️"}
+    ];
+
+    let html = `<h3>🏠 השקעות נדל"ן</h3><div class="grid-2">`;
+    estPool.forEach(item => {
+        html += `
+        <div class="card fade-in" style="text-align:center; padding:12px;">
+            <div style="font-size:28px; margin-bottom:5px;">${item.i}</div>
+            <b style="display:block; font-size:13px; min-height:32px;">${item.n}</b>
+            <div style="color:var(--green); font-size:11px; margin-bottom:8px;">+${item.p.toLocaleString()}₪/ש</div>
+            <button class="sys-btn" style="width:100%;" onclick="executeBuy('estate','${item.n}',${item.c},${item.p},'${item.i}')">
+                ${item.c.toLocaleString()}₪
+            </button>
+        </div>`;
+    });
+    c.innerHTML = html + `</div>`;
+}
+
+// --- עסקים ושוק ---
 
 function drawBusiness(c) {
     if(!c) return;
@@ -251,23 +283,30 @@ function drawMarket(c) {
     c.innerHTML = html + `</div>`;
 }
 
+// --- פונקציית רכישה אחודה ---
+
 function executeBuy(type, name, cost, value, icon) {
     if(money >= cost) {
         money -= cost;
-        if(type === 'business') {
+        
+        if(type === 'business' || type === 'estate') {
             passive += value;
-        } else {
+        } else if(type === 'market') {
             lifeXP += value;
         }
+        
         inventory.push({name: name, icon: icon});
         showMsg(`רכשת ${name}!`, "var(--green)");
+        
         updateUI();
         saveGame();
         
+        // רענון הטאב הנוכחי
         const content = document.getElementById("content");
         if(type === 'business') drawBusiness(content);
+        else if(type === 'estate') drawEstate(content);
         else drawMarket(content);
     } else {
-        showMsg("אין לך מספיק מזומן!", "var(--red)");
+        showMsg("אין לך מספיק מזומן לרכישה זו!", "var(--red)");
     }
 }
