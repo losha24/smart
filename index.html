@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Money Pro | v5.7.6</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Smart Money Pro | v5.7.7</title>
     <link rel="apple-touch-icon" href="logo.png">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-theme" id="app-body">
     <header class="main-header">
@@ -23,7 +23,7 @@
     <nav class="topbar">
         <div class="nav-row">
             <button onclick="openTab('home')" id="btnHome" class="active">🏠 בית</button>
-            <button onclick="openTab('work')" id="btnWork">⚒️ עבודה</button>
+            <button onclick="openTab('work')" id="btnWork">⚒️ עבודות</button>
             <button onclick="openTab('tasks')" id="btnTasks">🎰 קזינו</button>
         </div>
         <div class="nav-row">
@@ -39,14 +39,25 @@
         <div class="nav-row">
             <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
             <button onclick="forceUpdate()" class="sys-btn">🔄</button>
-            <button onclick="resetGame()" class="sys-btn reset-red">⚠️ איפוס</button>
             <button onclick="toggleTheme()" class="sys-btn">🌓</button>
         </div>
     </nav>
 
     <main id="content" class="fade-in"></main>
 
-    <footer class="main-footer">© 2026 Smart Money Pro v5.7.6</footer>
+    <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3>📲 התקנת האפליקציה</h3>
+            <div id="android-instr" class="instr"><p>לחץ על כפתור התפריט בדפדפן ובחר <b>"התקן אפליקציה"</b>.</p></div>
+            <div id="ios-instr" class="instr">
+                <p>1. לחץ על כפתור <b>השיתוף</b> בתחתית המסך (⎋).</p>
+                <p>2. גלול ובחר ב-<b>"הוסף למסך הבית"</b> (➕).</p>
+            </div>
+            <button class="action" onclick="closeInstallGuide()">הבנתי</button>
+        </div>
+    </div>
+
+    <footer class="main-footer">© 2026 Smart Money Pro v5.7.7</footer>
 
     <script src="js/core.js"></script>
     <script src="js/ui.js"></script>
