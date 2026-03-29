@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.0.5 - Navigation & Top-Bar Sync */
+/* Smart Money Pro - js/ui.js - v6.0.6 - Real-time Passive & Home Fix */
 
 let deferredPrompt;
 
@@ -8,6 +8,15 @@ window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt = e;
     renderInstallBtn();
 });
+
+// --- 🔥 מנוע הכנסה פסיבית (עדכון כל שנייה) ---
+setInterval(() => {
+    if (typeof passive !== 'undefined' && passive > 0) {
+        // מחלקים את ההכנסה השעתית ב-3600 שניות כדי לקבל רווח לשנייה
+        money += (passive / 3600);
+        updateUI();
+    }
+}, 1000);
 
 // --- עדכון הבר העליון (Top Bar) ---
 function updateUI() {
@@ -19,16 +28,13 @@ function updateUI() {
     if(bankEl) bankEl.innerText = Math.floor(bank).toLocaleString();
     if(levelEl) levelEl.innerText = Math.floor(lifeXP / 5000) + 1;
     
-    // שמירה אוטומטית בכל עדכון UI חשוב
+    // שמירה אוטומטית
     if(typeof saveGame === 'function') saveGame();
 }
 
-// --- ניווט ראשי בין טאבים ---
+// --- ניווט ראשי ---
 function openTab(t) {
-    // 1. עדכון ויזואלי של כפתורי הניווט
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
-    
-    // מציאת הכפתור לפי ה-ID שלו (למשל btnHome, btnMarket)
     const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
     const btn = document.getElementById(btnId);
     if(btn) btn.classList.add("active");
@@ -36,13 +42,10 @@ function openTab(t) {
     const c = document.getElementById("content"); 
     if(!c) return;
     
-    // 2. אנימציית מעבר
     c.style.opacity = "0";
     
     setTimeout(() => {
         c.innerHTML = "";
-        
-        // 3. ניתוב חכם לפונקציות הציור (שמות מעודכנים לפי v6.0.5)
         switch(t) {
             case 'home':       drawHome(c); break;
             case 'work':       if(typeof drawWork === 'function') drawWork(c); break;
@@ -59,11 +62,11 @@ function openTab(t) {
         
         c.style.opacity = "1";
         window.scrollTo(0,0);
-        updateUI(); // עדכון הנתונים למעלה בכל מעבר טאב
+        updateUI();
     }, 100);
 }
 
-// --- ציור דף הבית (Dashboard) ---
+// --- ציור דף הבית (Dashboard) מעודכן ---
 function drawHome(c) {
     const level = Math.floor(lifeXP / 5000) + 1;
     const progress = ((lifeXP % 5000) / 5000) * 100;
@@ -96,15 +99,20 @@ function drawHome(c) {
                 </div>
             </div>
 
+            <div class="card" style="margin-top:15px; font-size:13px; background:rgba(255,255,255,0.02); padding:10px; border:1px dashed var(--border);">
+                <p style="margin:5px 0;">🎓 <b>כישורים:</b> ${skills.length > 0 ? skills.join(", ") : "ללא הכשרה"}</p>
+                <p style="margin:5px 0;">🚗 <b>רכב:</b> ${cars.length > 0 ? cars.join(", ") : "אין רכב"}</p>
+            </div>
+
             <div class="card" style="margin-top:15px; padding:12px; background:rgba(255,255,255,0.02);">
-                <small style="opacity:0.6; display:block; margin-bottom:8px;">📦 הרכוש שלי:</small>
+                <small style="opacity:0.6; display:block; margin-bottom:8px;">📦 המלאי שלי:</small>
                 <div id="inventory-list" style="display:flex; gap:8px; overflow-x:auto; min-height:50px; padding-bottom:5px; align-items:center;">
                     ${inventory.length > 0 
                         ? inventory.map(item => `
                             <div title="${item.name || item}" style="font-size:22px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; min-width:45px; text-align:center; border:1px solid var(--border);">
                                 ${item.icon || '📦'}
                             </div>`).join('') 
-                        : '<span style="opacity:0.4; font-size:11px;">המלאי ריק. רכוש נכסים בשוק או בנדל"ן.</span>'}
+                        : '<span style="opacity:0.4; font-size:11px;">המלאי ריק.</span>'}
                 </div>
             </div>
 
@@ -121,33 +129,22 @@ function drawHome(c) {
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
-    
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
     if(!isStandalone && deferredPrompt) {
-        cont.innerHTML = `
-            <button class="action" style="background:var(--blue); color:#fff; font-weight:bold;" onclick="triggerInstall()">
-                📲 התקן אפליקציה
-            </button>`;
-    } else {
-        cont.innerHTML = ""; 
-    }
+        cont.innerHTML = `<button class="action" style="background:var(--blue); color:#fff; font-weight:bold;" onclick="triggerInstall()">📲 התקן אפליקציה</button>`;
+    } else { cont.innerHTML = ""; }
 }
 
 async function triggerInstall() {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-        deferredPrompt = null;
-        renderInstallBtn();
-    }
+    if (outcome === 'accepted') { deferredPrompt = null; renderInstallBtn(); }
 }
 
 // --- אתחול מערכת ---
 document.addEventListener("DOMContentLoaded", () => {
     if(typeof loadGame === 'function') loadGame();
-    
     setTimeout(() => {
         openTab('home');
         updateUI();
