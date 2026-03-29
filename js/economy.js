@@ -1,8 +1,9 @@
-/* Smart Money Pro - js/economy.js - v6.0.3 - Full Economy & Market Update */
+/* Smart Money Pro - js/economy.js - v6.0.4 - Full Economy & Market Update */
 
 // --- מערכת הבנק המרכזית ---
 
 function drawBank(c) {
+    if(!c) return;
     c.innerHTML = `
     <div class="card fade-in">
         <h3 style="margin-top:0;">🏦 ניהול חשבון בנק</h3>
@@ -46,6 +47,7 @@ function drawBank(c) {
 
 function executeBankOp(type) {
     const input = document.getElementById('bank-amt');
+    if(!input) return;
     const amt = parseInt(input.value);
     
     if(!amt || amt <= 0) { 
@@ -73,10 +75,10 @@ function executeBankOp(type) {
         }
     }
     
-    input.value = ''; // ניקוי השדה
+    input.value = '';
     updateUI(); 
     saveGame();
-    drawBank(document.getElementById("content")); // רענון תצוגת הבנק
+    drawBank(document.getElementById("content"));
 }
 
 function executeLoanOp(type) {
@@ -91,7 +93,7 @@ function executeLoanOp(type) {
         }
         if (money >= 10500) { 
             money -= 10500; 
-            loan = Math.max(0, loan - 10000); // מונע ירידה של החוב מתחת לאפס
+            loan = Math.max(0, loan - 10000); 
             showMsg("שילמת 10,000₪ מהחוב + 500₪ ריבית.", "var(--green)"); 
         } else {
             showMsg("אין לך 10,500₪ במזומן להחזר החוב!", "var(--red)");
@@ -104,10 +106,8 @@ function executeLoanOp(type) {
     drawBank(document.getElementById("content"));
 }
 
+// --- בורסה דינמית ---
 
-// --- מערכת בורסה דינמית (Stock Market) ---
-
-// מחירי בסיס ראשוניים
 const baseStocks = [
     { id: 'AAPL', name: 'Apple', basePrice: 150 },
     { id: 'TSLA', name: 'Tesla', basePrice: 200 },
@@ -121,23 +121,18 @@ const baseStocks = [
     { id: 'ELAL', name: 'El-Al', basePrice: 5 }
 ];
 
-// מחירי מניות נוכחיים (מתעדכנים רנדומלית)
 let currentStocks = JSON.parse(JSON.stringify(baseStocks));
 
-// פונקציה לעדכון מחירי המניות (נקראת בכל פעם שנכנסים לטאב הבורסה)
 function refreshStockPrices() {
     currentStocks.forEach(stock => {
-        // תנודה של בין מינוס 15% לפלוס 15% מהמחיר הקודם
         const fluctuation = 1 + ((Math.random() * 0.3) - 0.15);
-        let newPrice = stock.basePrice * fluctuation;
-        
-        // מונע מהמניה לקרוס לאפס
-        stock.basePrice = Math.max(1, Math.floor(newPrice)); 
+        stock.basePrice = Math.max(1, Math.floor(stock.basePrice * fluctuation)); 
     });
 }
 
 function drawInvest(c) {
-    refreshStockPrices(); // עדכון מחירים בכל כניסה לבורסה
+    if(!c) return;
+    refreshStockPrices();
     
     let html = `
     <div class="card fade-in">
@@ -174,33 +169,31 @@ function executeStockOp(type, id, price) {
         if(money >= price) { 
             money -= price; 
             invOwned[id] = (invOwned[id] || 0) + 1; 
-            showMsg(`רכשת מניית ${id} ב-${price.toLocaleString()}₪`, "var(--green)"); 
+            showMsg(`רכשת ${id} ב-${price.toLocaleString()}₪`, "var(--green)"); 
         } else {
-            showMsg("אין לך מספיק מזומן לקניית המניה!", "var(--red)");
+            showMsg("אין לך מספיק מזומן!", "var(--red)");
             return;
         }
     } else if(type === 'sell') {
         if(invOwned[id] && invOwned[id] > 0) { 
             money += price; 
             invOwned[id]--; 
-            showMsg(`מכרת מניית ${id} ב-${price.toLocaleString()}₪`, "var(--blue)"); 
+            showMsg(`מכרת ${id} ב-${price.toLocaleString()}₪`, "var(--blue)"); 
         } else {
-            showMsg("אין לך מניות מסוג זה למכור!", "var(--red)");
+            showMsg("אין לך מה למכור!", "var(--red)");
             return;
         }
     }
     
     updateUI(); 
     saveGame();
-    // לא קוראים ל-drawInvest שוב מיד כדי לא לשנות את המחירים בזמן שהשחקן קונה רצוף.
-    // אם נרצה לעדכן רק את הכפתורים/כמות נצטרך לעשות עדכון UI מקומי, 
-    // אבל לשם הפשטות - נרענן את כל הטאב.
-    openTab('invest'); 
+    drawInvest(document.getElementById("content")); 
 }
 
+// --- עסקים ושוק (מעודכן עם כל הרשימה שלך) ---
 
-// --- תצוגת עסקים (Business Tab) ---
 function drawBusiness(c) {
+    if(!c) return;
     const bzPool = [
         {n:"דוכן קפה", c:15000, p:20, i:"☕"}, 
         {n:"קיוסק", c:45000, p:60, i:"🏪"}, 
@@ -220,7 +213,7 @@ function drawBusiness(c) {
         <div class="card fade-in" style="text-align:center; padding:15px;">
             <div style="font-size:30px; margin-bottom:5px;">${item.i}</div>
             <b style="display:block; font-size:14px; min-height:35px;">${item.n}</b>
-            <div style="color:var(--green); font-size:12px; margin-bottom:10px;">+${item.p.toLocaleString()}₪/שעה</div>
+            <div style="color:var(--green); font-size:12px; margin-bottom:10px;">+${item.p.toLocaleString()}₪/ש</div>
             <button class="sys-btn" style="width:100%;" onclick="executeBuy('business','${item.n}',${item.c},${item.p},'${item.i}')">
                 ${item.c.toLocaleString()}₪
             </button>
@@ -229,8 +222,8 @@ function drawBusiness(c) {
     c.innerHTML = html + `</div>`;
 }
 
-// --- תצוגת שוק (Market/Lifestyle Tab) ---
 function drawMarket(c) {
+    if(!c) return;
     const mkPool = [
         {n:"אייפון 15", c:5500, p:250, i:"📱"}, 
         {n:"מחשב גיימינג", c:15000, p:700, i:"💻"}, 
@@ -258,28 +251,23 @@ function drawMarket(c) {
     c.innerHTML = html + `</div>`;
 }
 
-// --- פונקציית רכישה אחודה ---
 function executeBuy(type, name, cost, value, icon) {
     if(money >= cost) {
         money -= cost;
-        
         if(type === 'business') {
             passive += value;
-            inventory.push({name: name, icon: icon});
-            showMsg(`רכשת ${name}! ההכנסה הפסיבית עלתה.`, "var(--green)");
-        } else if(type === 'market') {
+        } else {
             lifeXP += value;
-            inventory.push({name: name, icon: icon});
-            showMsg(`תתחדש על ה${name}! רמת החיים עלתה.`, "var(--blue)");
         }
-        
+        inventory.push({name: name, icon: icon});
+        showMsg(`רכשת ${name}!`, "var(--green)");
         updateUI();
         saveGame();
         
-        // רענון הטאב הנוכחי
-        if(type === 'business') drawBusiness(document.getElementById("content"));
-        else drawMarket(document.getElementById("content"));
+        const content = document.getElementById("content");
+        if(type === 'business') drawBusiness(content);
+        else drawMarket(content);
     } else {
-        showMsg("אין לך מספיק מזומן לרכישה זו!", "var(--red)");
+        showMsg("אין לך מספיק מזומן!", "var(--red)");
     }
 }
