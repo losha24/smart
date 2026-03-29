@@ -1,4 +1,4 @@
-/* Smart Money Pro - style.css - v6.0.3 - Final Build */
+/* Smart Money Pro - style.css - v6.0.3 - Final Optimized Build */
 
 :root { 
     --bg: #0f172a; 
@@ -13,7 +13,7 @@
     --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* ערכת נושא בהירה - מופעלת ע"י class ב-body */
+/* ערכת נושא בהירה */
 .light-theme { 
     --bg: #f8fafc; 
     --card: #ffffff; 
@@ -33,7 +33,7 @@ body {
     background-color: var(--bg); 
     color: var(--text); 
     direction: rtl; 
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
     transition: background 0.3s ease, color 0.3s ease;
     overflow-x: hidden;
     min-height: 100vh;
@@ -42,25 +42,20 @@ body {
 /* לוגו עליון */
 .main-header { 
     background: var(--card); 
-    height: 60px; 
+    height: 50px; 
     display: flex; 
     justify-content: center; 
     align-items: center; 
     border-bottom: 1px solid var(--border);
-    position: relative;
-    z-index: 1001;
 }
 
 .header-logo-big { 
-    max-height: 38px; 
-    width: auto;
+    max-height: 30px; 
     cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: 0.2s;
 }
 
-.header-logo-big:active { transform: scale(0.9); }
-
-/* סטטיסטיקה עליונה (דביקה) */
+/* סטטיסטיקה עליונה - דביקה */
 .stats-bar-top { 
     display: flex; 
     justify-content: space-around; 
@@ -70,28 +65,27 @@ body {
     top: 0; 
     z-index: 1000; 
     border-bottom: 2px solid var(--blue); 
-    font-weight: 800; 
     box-shadow: var(--shadow);
 }
 
-.stat-item { font-size: 13px; }
+.stat-item { font-size: 13px; font-weight: 800; }
 .stat-item span { color: var(--blue); font-variant-numeric: tabular-nums; }
 
 /* שורת סטטוס חכמה */
-.status-msg { 
+#status-bar { 
     text-align: center; 
     min-height: 34px; 
     line-height: 34px; 
     font-size: 13px; 
     font-weight: 600; 
     opacity: 0; 
-    transition: opacity 0.3s, transform 0.3s; 
+    transition: 0.3s; 
     margin: 8px 15px;
     background: rgba(56, 189, 248, 0.1);
     border-radius: 12px;
 }
 
-/* תפריט ניווט - תיקון שורה 4 וגודל כפתורים */
+/* תפריט ניווט - תיקון פריסה */
 .topbar { 
     padding: 8px; 
     background: var(--card); 
@@ -102,13 +96,13 @@ body {
     display: flex; 
     gap: 6px; 
     margin-bottom: 6px; 
-    width: 100%; /* מוודא פריסה מלאה */
+    width: 100%; 
 }
 
-.topbar button, .sys-btn { 
-    flex: 1; /* מחלק את הרווח שווה בשווה בין כל הכפתורים בשורה */
-    min-width: 0; /* מונע מהטקסט לדחוף את הכפתור החוצה */
-    padding: 12px 2px; 
+.topbar button { 
+    flex: 1; 
+    min-width: 0; 
+    padding: 10px 2px; 
     border-radius: 10px; 
     border: 1px solid var(--border); 
     background: rgba(255, 255, 255, 0.03); 
@@ -117,7 +111,7 @@ body {
     font-weight: 700;
     cursor: pointer;
     transition: 0.2s;
-    white-space: nowrap; /* מונע ירידת שורה בטקסט קצר */
+    white-space: nowrap;
 }
 
 .topbar button.active { 
@@ -126,113 +120,89 @@ body {
     border-color: var(--blue);
 }
 
-.sys-btn { 
-    background: rgba(56, 189, 248, 0.1) !important; 
-    color: var(--blue) !important; 
-}
-
 /* תוכן ראשי */
 .container { 
     padding: 15px; 
     max-width: 500px; 
     margin: 0 auto; 
-    padding-bottom: env(safe-area-inset-bottom, 80px); 
+    padding-bottom: 80px; 
 }
 
 .card { 
     background: var(--card); 
-    border-radius: 20px; 
-    padding: 18px; 
+    border-radius: 18px; 
+    padding: 15px; 
     margin-bottom: 15px; 
     border: 1px solid var(--border); 
     box-shadow: var(--shadow);
 }
 
+/* תיקון ה-Grid ל-2 בשורה */
 .grid-2 { 
     display: grid; 
     grid-template-columns: 1fr 1fr; 
     gap: 12px; 
 }
 
-/* כפתורי פעולה */
+.grid-2 .card {
+    margin-bottom: 0; /* מונע רווח כפול בתוך גריד */
+    padding: 12px;
+    text-align: center;
+}
+
+/* כפתורי מערכת ופעולה */
+.sys-btn { 
+    background: rgba(56, 189, 248, 0.1); 
+    color: var(--blue); 
+    border: 1px solid var(--blue); 
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
 .action { 
     width: 100%; 
-    padding: 15px; 
-    border-radius: 14px; 
+    padding: 16px; 
+    border-radius: 15px; 
     border: none; 
     background: var(--blue); 
     color: #0f172a; 
     font-weight: 800; 
     font-size: 15px; 
     cursor: pointer; 
-    transition: transform 0.1s, opacity 0.2s;
+    transition: 0.2s;
 }
 
-.action:active { transform: scale(0.97); }
-.action:disabled { opacity: 0.2; filter: grayscale(1); cursor: not-allowed; }
+.action:active { transform: scale(0.96); }
 
-/* פסי התקדמות (עבודות ו-XP) */
+/* פסי התקדמות */
 .progress-container { 
     background: rgba(0, 0, 0, 0.2); 
     border-radius: 20px; 
     height: 10px; 
     margin: 10px 0; 
     overflow: hidden; 
-    border: 1px solid var(--border); 
 }
 
 .progress-bar { 
     height: 100%; 
-    width: 0%; 
     background: var(--blue); 
-    transition: width 0.1s linear; 
+    transition: width 0.3s ease; 
 }
 
-.xp-bar { 
-    background: linear-gradient(90deg, var(--blue), var(--purple)) !important; 
-}
+.xp-bar { background: linear-gradient(90deg, var(--blue), var(--purple)) !important; }
 
-/* מודלים והנחיות התקנה */
-.modal-overlay { 
-    position: fixed; 
-    inset: 0; 
-    background: rgba(0, 0, 0, 0.85); 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    z-index: 2000; 
-    backdrop-filter: blur(5px); 
-}
-
-.modal-card { 
-    background: var(--card); 
-    padding: 25px; 
-    border-radius: 24px; 
-    width: 85%; 
-    max-width: 380px; 
-    text-align: center; 
-    border: 1px solid var(--blue);
-}
-
-/* אנימציות */
-.fade-in { 
-    animation: fadeIn 0.4s ease-out; 
-}
-
+/* אנימציות כניסה */
+.fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { 
-    from { opacity: 0; transform: translateY(8px); } 
+    from { opacity: 0; transform: translateY(10px); } 
     to { opacity: 1; transform: translateY(0); } 
 }
 
-.main-footer { 
-    text-align: center; 
-    padding: 30px; 
-    font-size: 10px; 
-    opacity: 0.3; 
-}
-
-/* התאמות למסכים קטנים מאוד */
+/* התאמה למובייל קטן */
 @media (max-width: 360px) {
-    .topbar button { font-size: 10px; padding: 10px 1px; }
+    .topbar button { font-size: 10px; }
     .stat-item { font-size: 11px; }
 }
