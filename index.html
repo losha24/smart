@@ -4,12 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Smart Money Pro | v5.7.7</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <link rel="apple-touch-icon" href="logo.png">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-theme" id="app-body">
     <header class="main-header">
-        <div class="header-center"><img src="logo.png" alt="Logo" class="header-logo-big"></div>
+        <div class="header-center">
+            <img src="logo.png" alt="Logo" class="header-logo-big" onclick="toggleTheme()" style="cursor:pointer;">
+        </div>
     </header>
 
     <div class="stats-bar-top">
@@ -38,8 +47,8 @@
         </div>
         <div class="nav-row">
             <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-            <button onclick="forceUpdate()" class="sys-btn">🔄</button>
-            <button onclick="toggleTheme()" class="sys-btn">🌓</button>
+            <button onclick="forceUpdate()" class="sys-btn" title="רענון גרסה">🔄</button>
+            <button onclick="toggleTheme()" class="sys-btn" title="מצב יום/לילה">🌓</button>
         </div>
     </nav>
 
@@ -48,9 +57,11 @@
     <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3>📲 התקנת האפליקציה</h3>
-            <div id="android-instr" class="instr"><p>לחץ על כפתור התפריט בדפדפן ובחר <b>"התקן אפליקציה"</b>.</p></div>
-            <div id="ios-instr" class="instr">
-                <p>1. לחץ על כפתור <b>השיתוף</b> בתחתית המסך (⎋).</p>
+            <div id="android-instr" class="instr">
+                <p>לחץ על כפתור התפריט בדפדפן (3 נקודות) ובחר ב-<b>"התקן אפליקציה"</b>.</p>
+            </div>
+            <div id="ios-instr" class="instr" style="display:none;">
+                <p>1. לחץ על כפתור <b>השיתוף</b> בתחתית הדפדפן (□ עם חץ).</p>
                 <p>2. גלול ובחר ב-<b>"הוסף למסך הבית"</b> (➕).</p>
             </div>
             <button class="action" onclick="closeInstallGuide()">הבנתי</button>
@@ -63,5 +74,13 @@
     <script src="js/ui.js"></script>
     <script src="js/economy.js"></script>
     <script src="js/activities.js"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+            .then(() => console.log("v5.7.7 SW Registered"))
+            .catch(err => console.error("SW Registration Failed:", err));
+        }
+    </script>
 </body>
 </html>
