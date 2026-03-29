@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.0.3 - Full UI & Inventory Logic Build */
+/* Smart Money Pro - js/ui.js - v6.0.3 - Full UI & Navigation Logic Build */
 
 let deferredPrompt;
 
@@ -9,12 +9,12 @@ window.addEventListener('beforeinstallprompt', (e) => {
     renderInstallBtn();
 });
 
-// ניווט ראשי בין טאבים
+// --- ניווט ראשי בין טאבים ---
 function openTab(t) {
-    // עדכון ויזואלי של כפתורי הניווט
+    // 1. עדכון ויזואלי של כפתורי הניווט (הסרת active מכולם)
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
     
-    // מציאת הכפתור לפי ה-ID (הופך 'home' ל-'btnHome')
+    // 2. הפיכת 'home' ל-'btnHome' ומציאת הכפתור
     const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
     const btn = document.getElementById(btnId);
     if(btn) btn.classList.add("active");
@@ -22,21 +22,25 @@ function openTab(t) {
     const c = document.getElementById("content"); 
     if(!c) return;
     
-    // אנימציית מעבר חלקה
+    // 3. אנימציית מעבר חלקה
     c.style.opacity = "0";
     
     setTimeout(() => {
         c.innerHTML = "";
         
-        // ניתוב חכם לפונקציות הציור מתוך activities.js
+        // 4. ניתוב חכם לכל חלקי האפליקציה (מתוקן)
         switch(t) {
-            case 'home':   drawHome(c); break;
-            case 'work':   drawWork(c); break;
-            case 'skills': drawSkills(c); break;
-            case 'cars':   drawCars(c); break;
-            case 'estate': drawRealestate(c); break;
-            case 'tasks':  drawCasino(c); break;
-            default:       drawHome(c);
+            case 'home':       drawHome(c); break;
+            case 'work':       if(typeof drawWork === 'function') drawWork(c); break;
+            case 'tasks':      if(typeof drawCasino === 'function') drawCasino(c); break;
+            case 'invest':     if(typeof drawInvest === 'function') drawInvest(c); break;
+            case 'bank':       if(typeof drawBank === 'function') drawBank(c); break;
+            case 'skills':     if(typeof drawSkills === 'function') drawSkills(c); break;
+            case 'cars':       if(typeof drawCars === 'function') drawCars(c); break;
+            case 'estate':     if(typeof drawRealestate === 'function') drawRealestate(c); break;
+            case 'business':   if(typeof drawBusiness === 'function') drawBusiness(c); break;
+            case 'market':     if(typeof drawMarket === 'function') drawMarket(c); break;
+            default:           drawHome(c);
         }
         
         c.style.opacity = "1";
@@ -44,6 +48,7 @@ function openTab(t) {
     }, 100);
 }
 
+// --- ציור דף הבית (Dashboard) ---
 function drawHome(c) {
     const level = Math.floor(lifeXP / 5000) + 1;
     const progress = ((lifeXP % 5000) / 5000) * 100;
@@ -60,47 +65,49 @@ function drawHome(c) {
                     <span>רמת חיים <b>${level}</b></span>
                     <span>${Math.floor(lifeXP % 5000).toLocaleString()} / 5,000 XP</span>
                 </div>
-                <div class="progress-container"><div class="progress-bar xp-bar" style="width:${progress}%"></div></div>
+                <div class="progress-container" style="height:10px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden;">
+                    <div class="progress-bar xp-bar" style="width:${progress}%; height:100%; background:var(--blue); transition: width 0.3s ease;"></div>
+                </div>
             </div>
 
             <div class="grid-2">
-                <div class="card" style="margin:0; padding:12px; text-align:center;">
+                <div class="card" style="margin:0; padding:12px; text-align:center; border:1px solid rgba(34, 197, 94, 0.2);">
                     <small style="opacity:0.7; font-size:10px;">הכנסה פסיבית</small><br>
                     <b style="color:var(--green); font-size:14px;">${passive.toFixed(2)}₪/ש</b>
                 </div>
-                <div class="card" style="margin:0; padding:12px; text-align:center;">
+                <div class="card" style="margin:0; padding:12px; text-align:center; border:1px solid rgba(239, 68, 68, 0.2);">
                     <small style="opacity:0.7; font-size:10px;">חוב לבנק</small><br>
                     <b style="color:var(--red); font-size:14px;">${loan.toLocaleString()}₪</b>
                 </div>
             </div>
 
             <div class="card" style="margin-top:15px; padding:12px; background:rgba(255,255,255,0.02);">
-                <small style="opacity:0.6;">📦 המלאי שלי (Inventory):</small>
-                <div id="inventory-list" style="display:flex; gap:8px; margin-top:8px; overflow-x:auto; min-height:45px; padding-bottom:5px; align-items:center;">
+                <small style="opacity:0.6; display:block; margin-bottom:8px;">📦 המלאי שלי (Inventory):</small>
+                <div id="inventory-list" style="display:flex; gap:8px; overflow-x:auto; min-height:50px; padding-bottom:5px; align-items:center;">
                     ${inventory.length > 0 
                         ? inventory.map(item => `
-                            <div title="${item.name}" style="font-size:24px; background:rgba(255,255,255,0.05); padding:8px; border-radius:12px; min-width:45px; text-align:center; border:1px solid var(--border);">
-                                ${item.icon}
+                            <div title="${item}" style="font-size:20px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; min-width:40px; text-align:center; border:1px solid var(--border);">
+                                📦
                             </div>`).join('') 
-                        : '<span style="opacity:0.4; font-size:11px; padding:10px;">המלאי ריק. רכוש נכסים או פריטים כדי לראותם כאן.</span>'}
+                        : '<span style="opacity:0.4; font-size:11px;">המלאי ריק. רכוש נכסים או פריטים כדי לראותם כאן.</span>'}
                 </div>
             </div>
 
-            <div class="card" style="margin-top:15px; font-size:0.85em; border-style:dashed; opacity:0.8; background:none;">
+            <div class="card" style="margin-top:15px; font-size:13px; border-style:dashed; opacity:0.8; background:none; padding:10px;">
                 <p style="margin:5px 0;">🎓 <b>השכלה:</b> ${skills.length > 0 ? skills.join(", ") : "ללא הכשרה מקצועית"}</p>
                 <p style="margin:5px 0;">🚗 <b>רכב:</b> ${cars.length > 0 ? cars[cars.length-1] : "הולך ברגל"}</p>
             </div>
 
             <div id="install-container" style="margin-top:15px;"></div>
 
-            <button class="action" style="background:none; border:1px solid var(--red); color:var(--red); margin-top:20px; font-size:11px; padding:8px; opacity:0.5;" onclick="resetGameConfirm()">🗑️ איפוס חשבון</button>
+            <button class="action" style="background:none; border:1px solid var(--red); color:var(--red); margin-top:20px; font-size:11px; padding:8px; opacity:0.5; width:100%;" onclick="resetGame()">🗑️ איפוס חשבון</button>
         </div>
     `;
 
     renderInstallBtn();
 }
 
-// ניהול כפתור ההתקנה (PWA)
+// --- ניהול התקנת PWA ---
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
@@ -127,16 +134,9 @@ async function triggerInstall() {
     }
 }
 
-function resetGameConfirm() {
-    if(confirm("האם אתה בטוח שברצונך למחוק את כל ההתקדמות? פעולה זו אינה הפיכה!")) {
-        localStorage.clear();
-        location.reload();
-    }
-}
-
-// הפעלה ראשונית
+// --- אתחול מערכת ---
 document.addEventListener("DOMContentLoaded", () => {
-    // טעינת נתונים
+    // טעינת נתונים (core.js)
     if(typeof loadGame === 'function') loadGame();
     
     // פתיחת דף הבית
