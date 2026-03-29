@@ -1,12 +1,6 @@
 {
-  "name": "Smart Money Pro",
   "short_name": "SmartMoney",
-  "description": "ניהול פיננסי וצמיחה כלכלית אישית",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#38bdf8",
-  "orientation": "portrait",
+  "name": "Smart Money Pro v5.7.7",
   "icons": [
     {
       "src": "logo.png",
@@ -19,5 +13,14 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "start_url": "index.html",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#38bdf8",
+  "description": "סימולטור ניהול כספים וקריירה מתקדם",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "he"
 }
