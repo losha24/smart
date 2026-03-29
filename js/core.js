@@ -1,7 +1,8 @@
-/* Smart Money Pro - js/core.js - v6.0.2 - Fixed Passive & Status */
+/* Smart Money Pro - js/core.js - v6.0.3 - Fixed Update & Theme Logic */
 
-const VERSION = "6.0.2";
-const SAVE_KEY = `smartMoneySave_v${VERSION}`;
+const VERSION = "6.0.3";
+// שימוש במפתח קבוע לסדרה 6 כדי שעדכוני גרסה לא ימחקו שמירות
+const SAVE_KEY = "smartMoneySave_v6_main";
 
 // משתנים גלובליים
 let money = 1000;
@@ -17,12 +18,13 @@ let invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, 
 let carSpeed = 1;
 let totalEarned = 0;
 
-let msgTimer; // טיימר להעלמת הודעות
+let msgTimer; 
 
 function loadGame() {
     try {
-        const data = JSON.parse(localStorage.getItem(SAVE_KEY));
-        if (data) {
+        const saved = localStorage.getItem(SAVE_KEY);
+        if (saved) {
+            const data = JSON.parse(saved);
             money = data.money ?? 1000;
             bank = data.bank ?? 0;
             loan = data.loan ?? 0;
@@ -34,12 +36,24 @@ function loadGame() {
             inventory = data.inventory ?? [];
             invOwned = data.invOwned ?? invOwned;
             carSpeed = data.carSpeed ?? 1;
+            totalEarned = data.totalEarned ?? 0;
         }
-    } catch (e) { console.error("Load failed", e); }
+        
+        // טעינת ערכת נושא שמורה (יום/לילה)
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.getElementById('app-body').classList.replace('dark-theme', 'light-theme');
+        }
+    } catch (e) { 
+        console.error("Load failed", e); 
+    }
 }
 
 function saveGame() {
-    const data = { money, bank, loan, lifeXP, passive, lastGift, skills, cars, inventory, invOwned, carSpeed };
+    const data = { 
+        money, bank, loan, lifeXP, passive, lastGift, 
+        skills, cars, inventory, invOwned, carSpeed, totalEarned 
+    };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
 
@@ -50,19 +64,21 @@ function updateUI() {
     
     if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
     if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
-    if(lEl) lEl.innerText = Math.floor(lifeXP / 5000) + 1;
     
+    const level = Math.floor(lifeXP / 5000) + 1;
+    if(lEl) lEl.innerText = level;
+    
+    // עדכון פס XP בדף הבית אם הוא קיים
     const progress = ((lifeXP % 5000) / 5000) * 100;
     const xpBar = document.querySelector('.xp-bar');
     if(xpBar) xpBar.style.width = progress + "%";
 }
 
-// תיקון הודעות: נעלמות אחרי 3 שניות בוודאות
 function showMsg(txt, color = "white") {
     const bar = document.getElementById('status-bar');
     if (!bar) return;
 
-    clearTimeout(msgTimer); // מבטל טיימר קודם אם יש
+    clearTimeout(msgTimer); 
     bar.innerText = txt;
     bar.style.color = color;
     bar.style.opacity = (txt === "") ? "0" : "1";
@@ -70,25 +86,56 @@ function showMsg(txt, color = "white") {
     if (txt !== "") {
         msgTimer = setTimeout(() => {
             bar.style.opacity = "0";
-            setTimeout(() => { bar.innerText = ""; }, 300); // מנקה את המלל אחרי שהנראות ירדה
+            setTimeout(() => { bar.innerText = ""; }, 300); 
         }, 3000);
     }
 }
 
-// --- מנוע הכנסה פסיבית - עדכון כל 100 מילי-שנייה ---
+// לוגיקת החלפת מצב יום/לילה
+function toggleTheme() {
+    const body = document.getElementById('app-body');
+    const isDark = body.classList.contains('dark-theme');
+    
+    if (isDark) {
+        body.classList.replace('dark-theme', 'light-theme');
+        localStorage.setItem('theme', 'light');
+    } else {
+        body.classList.replace('light-theme', 'dark-theme');
+        localStorage.setItem('theme', 'dark');
+    }
+}
+
+// רענון גרסה "קשיח" ללא איפוס נתונים
+function forceUpdate() {
+    showMsg("מרענן גרסה...", "var(--blue)");
+    saveGame(); // שומר לפני הרענון ליתר ביטחון
+    setTimeout(() => {
+        location.reload(true); 
+    }, 800);
+}
+
+// איפוס משחק (עם אישור)
+function resetGame() {
+    if (confirm("האם אתה בטוח? כל הכסף וההתקדמות יימחקו לצמיתות!")) {
+        localStorage.removeItem(SAVE_KEY);
+        location.reload();
+    }
+}
+
+// מנוע הכנסה פסיבית - עדכון כל 100 מילי-שנייה
 setInterval(() => {
     if (passive > 0) {
-        // מחלקים את ההכנסה השעתית ל-36,000 חלקים (כי יש 3600 שניות בשעה ועדכון 10 פעמים בשנייה)
         const incomeTick = passive / 36000;
         money += incomeTick;
         totalEarned += incomeTick;
         
-        // עדכון המספר על המסך בלבד לביצועים מהירים
+        // עדכון UI מהיר לכסף
         const mEl = document.getElementById('money');
         if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
     }
 }, 100);
 
+// שמירה אוטומטית כל 10 שניות
 setInterval(saveGame, 10000);
 
 document.addEventListener("DOMContentLoaded", () => {
