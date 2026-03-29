@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v6.0.6 - Work Level Sync & Color Msgs */
+/* Smart Money Pro - js/activities.js - v6.0.7 - Accurate Passive & Level Sync */
 
 // --- מאגרי נתונים ---
 const jobList = [
@@ -59,7 +59,7 @@ function drawWork(c) {
     c.innerHTML = html + `</div>`;
 }
 
-// 🔥 פונקציית עבודה מעודכנת עם חיבור לבר צבעוני ורמות
+// 🔥 פונקציית עבודה מעודכנת עם בונוס פסיבי מדויק
 function startWork(id) {
     const j = jobList.find(x => x.id === id);
     if (!j) return;
@@ -67,14 +67,11 @@ function startWork(id) {
     const btn = document.getElementById(`job-${j.id}`);
     const container = document.getElementById(`prog-cont-${j.id}`);
     const bar = document.getElementById(`bar-${j.id}`);
-    
-    // חישוב זמן לפי מהירות רכב (מינימום 1 כדי לא לחלק ב-0)
     const actualTime = j.time / (carSpeed || 1);
 
     if(btn) btn.disabled = true;
     if(container) container.style.display = "block";
     
-    // התחלת אנימציה של הפס
     setTimeout(() => { 
         if(bar) {
             bar.style.transition = `width ${actualTime}ms linear`; 
@@ -83,27 +80,22 @@ function startWork(id) {
     }, 50);
 
     setTimeout(() => {
-        // עדכון משתנים
+        // 1. שכר וניסיון
         money += j.pay;
         lifeXP += j.xp;
         
-        // בונוס פסיבי של 1% משווי העבודה לכל שעה
-        const passiveBonus = Math.floor(j.pay * 0.01);
-        passive += passiveBonus;
+        // 2. הוספת 1% מהשכר להכנסה הפסיבית (ללא Math.floor לדיוק מקסימלי)
+        const passiveAdd = j.pay * 0.01;
+        passive += passiveAdd; 
 
-        // ✅ הודעה צבעונית בבר הסטטוס
-        showMsg(`💰 הרווחת ${j.pay.toLocaleString()}₪ ובונוס פסיבי!`, "var(--green)");
+        // 3. הודעה בבר הסטטוס (מציג 2 ספרות אחרי הנקודה)
+        showMsg(`💰 +${j.pay}₪ | פסיבי צמח ב-${passiveAdd.toFixed(2)}₪`, "var(--green)");
         
-        // ✅ בדיקת עליית רמה
+        // בדיקת רמה ואיפוס ויזואלי
         if (typeof checkLevelUp === 'function') checkLevelUp();
-
-        // איפוס ויזואלי של הכפתור והפס
         if(btn) btn.disabled = false;
         if(container) container.style.display = "none";
-        if(bar) { 
-            bar.style.transition = "none"; 
-            bar.style.width = "0%"; 
-        }
+        if(bar) { bar.style.transition = "none"; bar.style.width = "0%"; }
         
         updateUI();
         saveGame();
