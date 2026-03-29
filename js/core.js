@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/core.js - v5.7.7 */
+/* Smart Money Pro - js/core.js - v5.7.7 - Final */
 
 // משתני משחק גלובליים
 let money = 1000;
@@ -9,7 +9,7 @@ let passive = 0;
 let lastGift = 0;
 let skills = [];
 let cars = [];
-let inventory = []; // תוספת חדשה לגרסה 5.7.7
+let inventory = []; // תוספת למלאי פריטים מהשוק
 let invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, META:0, ELAL:0 };
 let carSpeed = 1;
 let totalEarned = 0;
@@ -19,19 +19,19 @@ let totalSpent = 0;
 function loadGame() {
     const data = JSON.parse(localStorage.getItem('smartMoneySave_v5.7.7'));
     if (data) {
-        money = data.money || 1000;
-        bank = data.bank || 0;
-        loan = data.loan || 0;
-        lifeXP = data.lifeXP || 0;
-        passive = data.passive || 0;
-        lastGift = data.lastGift || 0;
-        skills = data.skills || [];
-        cars = data.cars || [];
-        inventory = data.inventory || [];
-        invOwned = data.invOwned || invOwned;
-        carSpeed = data.carSpeed || 1;
-        totalEarned = data.totalEarned || 0;
-        totalSpent = data.totalSpent || 0;
+        money = data.money ?? 1000;
+        bank = data.bank ?? 0;
+        loan = data.loan ?? 0;
+        lifeXP = data.lifeXP ?? 0;
+        passive = data.passive ?? 0;
+        lastGift = data.lastGift ?? 0;
+        skills = data.skills ?? [];
+        cars = data.cars ?? [];
+        inventory = data.inventory ?? [];
+        invOwned = data.invOwned ?? invOwned;
+        carSpeed = data.carSpeed ?? 1;
+        totalEarned = data.totalEarned ?? 0;
+        totalSpent = data.totalSpent ?? 0;
     }
 }
 
@@ -45,11 +45,24 @@ function saveGame() {
     localStorage.setItem('smartMoneySave_v5.7.7', JSON.stringify(data));
 }
 
+// פונקציית איפוס התקדמות (Reset)
+function resetGame() {
+    if (confirm("האם אתה בטוח שברצונך למחוק את כל ההתקדמות ולהתחיל מחדש?")) {
+        localStorage.removeItem('smartMoneySave_v5.7.7');
+        location.reload();
+    }
+}
+
 // עדכון התצוגה (UI)
 function updateUI() {
-    document.getElementById('money').innerText = Math.floor(money).toLocaleString();
-    document.getElementById('bank').innerText = Math.floor(bank).toLocaleString();
-    document.getElementById('life-level-ui').innerText = Math.floor(lifeXP / 5000) + 1;
+    const mEl = document.getElementById('money');
+    const bEl = document.getElementById('bank');
+    const lEl = document.getElementById('life-level-ui');
+    
+    if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
+    if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
+    if(lEl) lEl.innerText = Math.floor(lifeXP / 5000) + 1;
+    
     saveGame();
 }
 
@@ -59,14 +72,20 @@ function showMsg(txt, color = "white") {
     if (bar) {
         bar.innerText = txt;
         bar.style.color = color;
+        bar.style.opacity = "1";
+        
+        // אם הטקסט ריק, נסתיר את הבר
+        if(txt === "") bar.style.opacity = "0";
     }
 }
 
 // שינוי עיצוב (כהה/בהיר)
 function toggleTheme() {
     const body = document.getElementById('app-body');
-    body.classList.toggle('light-theme');
-    body.classList.toggle('dark-theme');
+    if(body) {
+        body.classList.toggle('light-theme');
+        body.classList.toggle('dark-theme');
+    }
 }
 
 // רענון כפוי (לעדכוני גרסה)
@@ -86,5 +105,7 @@ setInterval(() => {
 }, 1000);
 
 // אתחול המשחק
-loadGame();
-updateUI();
+document.addEventListener("DOMContentLoaded", () => {
+    loadGame();
+    updateUI();
+});
