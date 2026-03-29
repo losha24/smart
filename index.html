@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.0.4</title>
+    <title>Smart Money Pro | v6.0.5</title>
     
-    <link rel="manifest" href="manifest.json?v=6.0.4">
+    <link rel="manifest" href="manifest.json?v=6.0.5">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.0.4">
+    <link rel="stylesheet" href="style.css?v=6.0.5">
 </head>
 <body class="dark-theme">
     
@@ -45,7 +45,7 @@
         </div>
         <div class="nav-row">
             <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-            <button onclick="forceUpdate()" class="sys-btn" title="רענון גרסה">🔄 עדכון</button>
+            <button onclick="location.reload(true)" class="sys-btn" title="רענון גרסה">🔄 עדכון</button>
             <button onclick="toggleTheme()" class="sys-btn" title="מצב יום/לילה">🌓 מצב</button>
         </div>
     </nav>
@@ -66,20 +66,20 @@
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.0.4 | Alexey Zavodisker
+        © 2026 Smart Money Pro v6.0.5 | Alexey Zavodisker
     </footer>
 
-    <script src="js/core.js?v=6.0.4"></script>
-    <script src="js/activities.js?v=6.0.4"></script>
-    <script src="js/economy.js?v=6.0.4"></script>
-    <script src="js/ui.js?v=6.0.4"></script>
+    <script src="js/core.js?v=6.0.5"></script>
+    <script src="js/activities.js?v=6.0.5"></script>
+    <script src="js/economy.js?v=6.0.5"></script>
+    <script src="js/ui.js?v=6.0.5"></script>
 
     <script>
-        // רישום Service Worker
+        // רישום Service Worker ועדכון
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=6.0.4').then(reg => {
-                    console.log('SW Registered');
+                navigator.serviceWorker.register('sw.js?v=6.0.5').then(reg => {
+                    console.log('SW v6.0.5 Registered');
                     reg.update();
                 }).catch(err => console.log('SW Reg Failed', err));
             });
