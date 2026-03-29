@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v5.7.7 - Final */
+/* Smart Money Pro - js/ui.js - v5.7.7 - Final Updated */
 
 let deferredPrompt;
 
@@ -30,9 +30,8 @@ function drawHome(c) {
     const nextXP = level * 5000;
     const progress = ((lifeXP % 5000) / 5000) * 100;
 
-    // הוספת margin-bottom כדי שהתוכן לא יוסתר על ידי תיבת ההתקנה הצפה
     c.innerHTML = `
-        <div class="card fade-in" style="margin-bottom: 120px;">
+        <div class="card fade-in">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3>🏠 מרכז שליטה</h3>
                 <div id="gift-container"></div>
@@ -61,9 +60,9 @@ function drawHome(c) {
             </div>
 
             <button class="action" style="background:var(--red); margin-top:20px; border:none;" onclick="resetGame()">🗑️ איפוס התקדמות</button>
+            
+            <div id="install-container" style="margin-top:15px;"></div>
         </div>
-        
-        <div id="install-container" style="position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000;"></div>
     `;
 
     renderGiftBtn();
@@ -71,7 +70,7 @@ function drawHome(c) {
     updateUI();
 }
 
-// לוגיקת כפתור ההתקנה (מעוגנת למרכז)
+// לוגיקת כפתור ההתקנה (סטטי בתוך הכרטיס)
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
@@ -79,14 +78,13 @@ function renderInstallBtn() {
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
     if(isInstalled) {
-        // כפתור "אפליקציה מותקנת" - כעת בעיצוב כרטיס אדום בולט
         cont.innerHTML = `
-            <div class="card" style="background:rgba(239, 68, 68, 0.95); color:white; text-align:center; margin:0; padding:12px; border:none; box-shadow: 0 -4px 15px rgba(0,0,0,0.3); font-weight:bold;">
-                ✅ האפליקציה מותקנת
+            <div class="card" style="background:rgba(34, 197, 94, 0.1); color:var(--green); text-align:center; margin:0; padding:12px; border:1px solid var(--green); font-weight:bold; border-radius:10px;">
+                ✅ האפליקציה מותקנת בהצלחה
             </div>`;
     } else {
         cont.innerHTML = `
-            <button class="action" style="background:var(--blue); box-shadow: 0 -4px 15px rgba(0,0,0,0.3); margin:0; width:100%;" onclick="showInstallGuide()">
+            <button class="action" style="background:var(--blue); border:none; margin:0; width:100%;" onclick="showInstallGuide()">
                 📲 התקן אפליקציה למסך הבית
             </button>`;
     }
