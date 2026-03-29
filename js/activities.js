@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v6.0.5 - Work Progress & Dynamic Casino */
+/* Smart Money Pro - js/activities.js - v6.0.6 - Work Level Sync & Color Msgs */
 
 // --- מאגרי נתונים ---
 const jobList = [
@@ -59,6 +59,7 @@ function drawWork(c) {
     c.innerHTML = html + `</div>`;
 }
 
+// 🔥 פונקציית עבודה מעודכנת עם חיבור לבר צבעוני ורמות
 function startWork(id) {
     const j = jobList.find(x => x.id === id);
     if (!j) return;
@@ -67,29 +68,42 @@ function startWork(id) {
     const container = document.getElementById(`prog-cont-${j.id}`);
     const bar = document.getElementById(`bar-${j.id}`);
     
-    // חישוב זמן לפי מהירות רכב
+    // חישוב זמן לפי מהירות רכב (מינימום 1 כדי לא לחלק ב-0)
     const actualTime = j.time / (carSpeed || 1);
 
     if(btn) btn.disabled = true;
     if(container) container.style.display = "block";
     
-    // אנימציה של הפס
-    setTimeout(() => { if(bar) bar.style.transition = `width ${actualTime}ms linear`; if(bar) bar.style.width = "100%"; }, 50);
+    // התחלת אנימציה של הפס
+    setTimeout(() => { 
+        if(bar) {
+            bar.style.transition = `width ${actualTime}ms linear`; 
+            bar.style.width = "100%"; 
+        }
+    }, 50);
 
     setTimeout(() => {
+        // עדכון משתנים
         money += j.pay;
         lifeXP += j.xp;
         
-        // בונוס פסיבי של 1% משווי העבודה
+        // בונוס פסיבי של 1% משווי העבודה לכל שעה
         const passiveBonus = Math.floor(j.pay * 0.01);
         passive += passiveBonus;
 
-        showMsg(`סיימת! +${j.pay}₪ ו-+${passiveBonus}₪ הכנסה פסיבית`, "var(--green)");
+        // ✅ הודעה צבעונית בבר הסטטוס
+        showMsg(`💰 הרווחת ${j.pay.toLocaleString()}₪ ובונוס פסיבי!`, "var(--green)");
         
-        // איפוס תצוגה
+        // ✅ בדיקת עליית רמה
+        if (typeof checkLevelUp === 'function') checkLevelUp();
+
+        // איפוס ויזואלי של הכפתור והפס
         if(btn) btn.disabled = false;
         if(container) container.style.display = "none";
-        if(bar) { bar.style.transition = "none"; bar.style.width = "0%"; }
+        if(bar) { 
+            bar.style.transition = "none"; 
+            bar.style.width = "0%"; 
+        }
         
         updateUI();
         saveGame();
@@ -113,13 +127,16 @@ function playCasino() {
     const input = document.getElementById('gamble-amt');
     const amt = parseInt(input.value);
     
-    if(!amt || amt <= 0 || amt > money) return showMsg("סכום לא חוקי או חסר כסף", "var(--red)");
+    if(!amt || amt <= 0 || amt > money) {
+        return showMsg("סכום לא חוקי או חסר כסף", "var(--red)");
+    }
 
     money -= amt;
     updateUI();
     
     const res = document.getElementById('casino-anim');
     res.innerText = "🎲 מסובב את הגלגל...";
+    res.style.color = "var(--text)";
     
     setTimeout(() => {
         if (Math.random() > 0.55) {
@@ -127,16 +144,18 @@ function playCasino() {
             money += win;
             res.innerText = `💰 זכית ב-${win.toLocaleString()}₪!`;
             res.style.color = "var(--green)";
+            showMsg(`💎 זכייה בקזינו: ${win.toLocaleString()}₪!`, "var(--yellow)");
         } else {
             res.innerText = "❌ הפסדת, נסה שוב...";
             res.style.color = "var(--red)";
+            showMsg(`💀 הפסדת ${amt.toLocaleString()}₪ בקזינו`, "var(--red)");
         }
         input.value = '';
-        updateUI(); saveGame();
+        updateUI(); 
+        saveGame();
     }, 1000);
 }
 
-// שאר הפונקציות נשארות זהות
 function drawSkills(c) {
     let html = `<h3>🎓 הכשרה ולימודים</h3><div class="grid-2">`;
     skillList.forEach(s => {
@@ -174,9 +193,13 @@ function buySkill(name, price) {
     if (money >= price) {
         money -= price;
         skills.push(name);
-        showMsg(`למדת: ${name}`, "var(--green)");
-        saveGame(); updateUI(); drawSkills(document.getElementById('content'));
-    } else { showMsg("אין מספיק כסף!", "var(--red)"); }
+        showMsg(`📜 למדת: ${name}`, "var(--green)");
+        saveGame(); 
+        updateUI(); 
+        drawSkills(document.getElementById('content'));
+    } else { 
+        showMsg("אין מספיק כסף להכשרה!", "var(--red)"); 
+    }
 }
 
 function buyCar(name, price, speed) {
@@ -184,9 +207,13 @@ function buyCar(name, price, speed) {
         money -= price;
         cars.push(name);
         carSpeed = speed; 
-        showMsg(`תתחדש על ה${name}!`, "var(--green)");
-        saveGame(); updateUI(); drawCars(document.getElementById('content'));
-    } else { showMsg("אין מספיק כסף!", "var(--red)"); }
+        showMsg(`🏎️ תתחדש על ה${name}!`, "var(--blue)");
+        saveGame(); 
+        updateUI(); 
+        drawCars(document.getElementById('content'));
+    } else { 
+        showMsg("אין מספיק כסף לרכב!", "var(--red)"); 
+    }
 }
 
 function getDailyGift() {
@@ -195,7 +222,11 @@ function getDailyGift() {
     if (now - lastGift > day) {
         money += 2000;
         lastGift = now;
-        showMsg(`מתנה יומית: 2,000₪`, "var(--yellow)");
-        saveGame(); updateUI(); openTab('home');
-    } else { showMsg("כבר קיבלת מתנה היום", "var(--white)"); }
+        showMsg(`🎁 מתנה יומית: 2,000₪`, "var(--yellow)");
+        saveGame(); 
+        updateUI(); 
+        openTab('home');
+    } else { 
+        showMsg("כבר קיבלת מתנה היום", "var(--white)"); 
+    }
 }
