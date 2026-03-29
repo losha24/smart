@@ -1,28 +1,32 @@
-/* Smart Money Pro - js/ui.js - v6.0.1 - Updated & Synced */
+/* Smart Money Pro - js/ui.js - v6.0.3 - Full UI Logic */
 
 let deferredPrompt;
 
+// תפיסת אירוע ההתקנה של הדפדפן
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
     renderInstallBtn();
 });
 
+// ניווט ראשי בין טאבים
 function openTab(t) {
+    // עדכון כפתורי הניווט
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
     const btn = document.getElementById("btn" + t.charAt(0).toUpperCase() + t.slice(1));
     if(btn) btn.classList.add("active");
     
     const c = document.getElementById("content"); 
+    if(!c) return;
     c.innerHTML = "";
     
+    // ניתוב לתוכן המתאים
     if(t === 'home') drawHome(c);
     else if(t === 'work') drawWork(c);
     else if(t === 'tasks') drawCasino(c);
     else if(t === 'invest') drawInvest(c);
     else if(t === 'bank') drawBank(c);
-    else if(t === 'market') drawMarket(c, 'market');
-    else drawMarket(c, t);
+    else drawMarket(c, t); // לכישורים, רכבים ונדל"ן
     
     window.scrollTo(0,0);
 }
@@ -57,15 +61,14 @@ function drawHome(c) {
                 </div>
             </div>
 
+            <div id="install-container" style="margin-top:15px;"></div>
+
             <div class="card" style="margin-top:15px; font-size:0.85em; background:rgba(255,255,255,0.02);">
-                <p>🎓 <b>כישורים:</b> ${skills.length > 0 ? skills.join(", ") : "טרם נלמדו"}</p>
-                <p>🚗 <b>רכבים:</b> ${cars.length > 0 ? cars.join(", ") : "ללא רכב"}</p>
-                <p>🛒 <b>מלאי:</b> ${inventory.length > 0 ? inventory.length + " פריטים" : "ריק"}</p>
+                <p>🎓 <b>כישורים:</b> ${skills.length > 0 ? skills.join(", ") : "אין"}</p>
+                <p>🚗 <b>רכבים:</b> ${cars.length > 0 ? cars.join(", ") : "ברגל"}</p>
             </div>
 
-            <div id="install-container"></div>
-            
-            <button class="action" style="background:none; border:1px solid var(--red); color:var(--red); margin-top:20px; font-size:11px; padding:10px;" onclick="resetGame()">🗑️ איפוס נתונים</button>
+            <button class="action" style="background:none; border:1px solid var(--red); color:var(--red); margin-top:20px; font-size:11px;" onclick="resetGame()">🗑️ איפוס נתונים</button>
         </div>
     `;
 
@@ -74,26 +77,41 @@ function drawHome(c) {
     updateUI();
 }
 
+// ניהול כפתור ההתקנה
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
+    
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
     if(!isInstalled) {
         cont.innerHTML = `
-            <button class="action" style="background:var(--blue); margin-top:15px;" onclick="showInstallGuide()">
-                📲 התקן אפליקציה למכשיר
+            <button class="action" style="background:var(--blue); width:100%;" onclick="showInstallGuide()">
+                📲 התקן אפליקציה למסך הבית
             </button>`;
+    } else {
+        cont.innerHTML = ""; // לא מציג כלום אם מותקן
     }
 }
 
+// הצגת מדריך התקנה (iOS/Android)
 function showInstallGuide() {
     const modal = document.getElementById("installModal");
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
     if(modal) {
         modal.style.display = "flex";
-        document.getElementById("ios-instr").style.display = ios ? "block" : "none";
-        document.getElementById("android-instr").style.display = ios ? "none" : "block";
+        // הצגת הוראות לפי סוג מכשיר
+        const iosInstr = document.getElementById("ios-instr");
+        const andInstr = document.getElementById("android-instr");
+        if(iosInstr) iosInstr.style.display = ios ? "block" : "none";
+        if(andInstr) andInstr.style.display = ios ? "none" : "block";
+    }
+    
+    // הפעלת חלון התקנה של דפדפן (אנדרואיד/כרום)
+    if (!ios && deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
     }
 }
 
@@ -101,3 +119,8 @@ function closeInstallGuide() {
     const modal = document.getElementById("installModal");
     if(modal) modal.style.display = "none";
 }
+
+// הפעלה ראשונית
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => openTab('home'), 100);
+});
