@@ -13,17 +13,40 @@ function drawBank(c) {
 
 function bankOp(t) {
     const a = parseInt(document.getElementById('bank-amt').value);
-    if(!a || a <= 0) return;
-    if(t==='dep' && money>=a) { money-=a; bank+=a; }
-    else if(t==='wd' && bank>=a) { bank-=a; money+=a; }
-    else return showMsg("אין מספיק כסף", "var(--red)");
+    if(!a || a <= 0) {
+        showMsg("הזן סכום תקין", "var(--red)");
+        return;
+    }
+    if(t==='dep' && money>=a) { 
+        money-=a; bank+=a; 
+        showMsg(`הופקד: ${a.toLocaleString()}₪`, "var(--green)");
+    }
+    else if(t==='wd' && bank>=a) { 
+        bank-=a; money+=a; 
+        showMsg(`נמשך: ${a.toLocaleString()}₪`, "var(--green)");
+    }
+    else {
+        showMsg("אין מספיק כסף", "var(--red)");
+        return;
+    }
+    setTimeout(() => showMsg(""), 3000);
     updateUI(); openTab('bank');
 }
 
 function loanOp(t) {
-    if(t==='take') { loan+=10000; money+=10000; }
-    else if(money>=10500 && loan>=10000) { money-=10500; loan-=10000; showMsg("הלוואה הוחזרה"); }
-    else return showMsg("אין מספיק כסף");
+    if(t==='take') { 
+        loan+=10000; money+=10000; 
+        showMsg("קיבלת הלוואה: 10,000₪", "var(--blue)");
+    }
+    else if(money>=10500 && loan>=10000) { 
+        money-=10500; loan-=10000; 
+        showMsg("הלוואה הוחזרה (כולל ריבית)", "var(--green)"); 
+    }
+    else {
+        showMsg("אין מספיק כסף להחזר", "var(--red)");
+        return;
+    }
+    setTimeout(() => showMsg(""), 3000);
     updateUI(); openTab('bank');
 }
 
@@ -44,19 +67,18 @@ function executeBuy(t, n, c, v) {
         if(t==='skills') skills.push(n);
         else if(t==='cars') { cars.push(n); carSpeed = v; }
         else if(t==='business' || t==='realestate' || t==='market') {
-            if(t==='market') inventory.push(n); // הוספה למלאי פריטים בבית
+            if(t==='market') inventory.push(n); 
             passive += v;
         }
         
-        // הצגת הודעה ל-3 שניות
-        showMsg(`נקנה: ${n}`, "var(--green)");
-        setTimeout(() => { 
-            const bar = document.getElementById("status-bar");
-            if(bar && bar.innerText.includes(n)) bar.innerText = ""; 
-        }, 3000);
+        showMsg(`נקנה בהצלחה: ${n}`, "var(--green)");
+        setTimeout(() => showMsg(""), 3000);
         
         updateUI(); openTab(t);
-    } else showMsg("חסר כסף!", "var(--red)");
+    } else {
+        showMsg("חסר כסף!", "var(--red)");
+        setTimeout(() => showMsg(""), 3000);
+    }
 }
 
 function drawInvest(c) {
@@ -68,5 +90,26 @@ function drawInvest(c) {
     c.innerHTML = h + `</div></div>`;
 }
 
-function buyStk(i, p) { if(money>=p){money-=p; invOwned[i]++; updateUI(); openTab('invest');} }
-function sellStk(i, p) { if(invOwned[i]>0){money+=p; invOwned[i]--; updateUI(); openTab('invest');} }
+function buyStk(i, p) { 
+    if(money>=p){
+        money-=p; invOwned[i]++; 
+        showMsg(`קנית מניה: ${i}`, "var(--green)");
+        setTimeout(() => showMsg(""), 3000);
+        updateUI(); openTab('invest');
+    } else {
+        showMsg("אין מספיק כסף למניה", "var(--red)");
+        setTimeout(() => showMsg(""), 3000);
+    }
+}
+
+function sellStk(i, p) { 
+    if(invOwned[i]>0){
+        money+=p; invOwned[i]--; 
+        showMsg(`מכרת מניה: ${i}`, "var(--blue)");
+        setTimeout(() => showMsg(""), 3000);
+        updateUI(); openTab('invest');
+    } else {
+        showMsg("אין לך מניות כאלה", "var(--red)");
+        setTimeout(() => showMsg(""), 3000);
+    }
+}
