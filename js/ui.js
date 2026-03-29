@@ -1,26 +1,29 @@
-/* Smart Money Pro - js/ui.js - v5.7.7 - Final Updated */
+/* Smart Money Pro - js/ui.js - v6.0.0 - Updated & Synced */
 
 let deferredPrompt;
 
-// תפיסת אירוע ההתקנה מהדפדפן
+// תפיסת אירוע ההתקנה
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
     renderInstallBtn();
 });
 
+// פונקציית ניווט בין טאבים - מעודכן לגרסה 6
 function openTab(t) {
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
     const btn = document.getElementById("btn" + t.charAt(0).toUpperCase() + t.slice(1));
     if(btn) btn.classList.add("active");
-    const c = document.getElementById("content"); c.innerHTML = "";
+    
+    const c = document.getElementById("content"); 
+    c.innerHTML = "";
     
     if(t === 'home') drawHome(c);
     else if(t === 'work') drawWork(c);
     else if(t === 'tasks') drawCasino(c);
     else if(t === 'invest') drawInvest(c);
     else if(t === 'bank') drawBank(c);
-    else drawMarket(c, t);
+    else drawMarket(c, t); // מטפל בכישורים, רכבים, נדל"ן ועסקים
     
     window.scrollTo(0,0);
 }
@@ -38,39 +41,41 @@ function drawHome(c) {
             </div>
             
             <div style="margin:10px 0;">
-                <small>רמת חיים: <b>${level}</b> (${Math.floor(lifeXP)} / ${nextXP} XP)</small>
+                <small>רמת חיים: <b>${level}</b> (${Math.floor(lifeXP).toLocaleString()} / ${nextXP.toLocaleString()} XP)</small>
                 <div class="progress-container"><div class="progress-bar xp-bar" style="width:${progress}%"></div></div>
             </div>
 
             <div class="grid-2">
                 <div class="card" style="margin:0; padding:10px; text-align:center;">
-                    <small>הכנסה פסיבית</small><br><b style="color:var(--green)">${passive.toFixed(2)}₪/ש</b>
+                    <small>הכנסה פסיבית</small><br>
+                    <b style="color:var(--green)">${passive.toFixed(2)}₪/ש</b>
                 </div>
                 <div class="card" style="margin:0; padding:10px; text-align:center;">
-                    <small>חוב לבנק</small><br><b style="color:var(--red)">${loan.toLocaleString()}₪</b>
+                    <small>חוב לבנק</small><br>
+                    <b style="color:var(--red)">${loan.toLocaleString()}₪</b>
                 </div>
             </div>
 
             <hr style="opacity:0.1; margin:15px 0;">
             
-            <div style="font-size:0.85em;">
+            <div style="font-size:0.85em; line-height:1.5;">
                 <p>🎓 <b>כישורים:</b> ${skills.length > 0 ? skills.join(", ") : "אין"}</p>
                 <p>🚗 <b>רכבים:</b> ${cars.length > 0 ? cars.join(", ") : "ברגל"}</p>
                 <p>🛒 <b>פריטים:</b> ${inventory.length > 0 ? inventory.join(", ") : "אין"}</p>
             </div>
 
-            <button class="action" style="background:var(--red); margin-top:20px; border:none;" onclick="resetGame()">🗑️ איפוס התקדמות</button>
+            <button class="action" style="background:var(--red); margin-top:20px; border:none; font-size:12px;" onclick="resetGame()">🗑️ איפוס התקדמות</button>
             
             <div id="install-container" style="margin-top:15px;"></div>
         </div>
     `;
 
-    renderGiftBtn();
+    // קריאה לפונקציות עזר מקבצים אחרים
+    if (typeof renderGiftBtn === "function") renderGiftBtn();
     renderInstallBtn();
     updateUI();
 }
 
-// לוגיקת כפתור ההתקנה (סטטי בתוך הכרטיס)
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
@@ -79,7 +84,7 @@ function renderInstallBtn() {
 
     if(isInstalled) {
         cont.innerHTML = `
-            <div class="card" style="background:rgba(34, 197, 94, 0.1); color:var(--green); text-align:center; margin:0; padding:12px; border:1px solid var(--green); font-weight:bold; border-radius:10px;">
+            <div class="card" style="background:rgba(34, 197, 94, 0.1); color:var(--green); text-align:center; margin:0; padding:12px; border:1px solid var(--green); font-weight:bold; border-radius:10px; font-size:13px;">
                 ✅ האפליקציה מותקנת בהצלחה
             </div>`;
     } else {
@@ -102,6 +107,9 @@ function showInstallGuide() {
     
     if (!ios && deferredPrompt) {
         deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            deferredPrompt = null;
+        });
     }
 }
 
@@ -110,6 +118,8 @@ function closeInstallGuide() {
     if(modal) modal.style.display = "none";
 }
 
+// אתחול דף הבית בטעינה
 document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => openTab('home'), 200);
+    // השהייה קטנה כדי לוודא ש-core טען את הנתונים מה-Storage
+    setTimeout(() => openTab('home'), 150);
 });
