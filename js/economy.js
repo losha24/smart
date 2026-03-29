@@ -1,122 +1,199 @@
-/* Smart Money Pro - js/economy.js - v6.0.1 - Full Passive Update */
+/* Smart Money Pro - js/economy.js - v6.0.3 - Full Economy & Market Update */
 
-const bzPool = [{n:"דוכן קפה", c:15000, p:20}, {n:"קיוסק", c:45000, p:60}, {n:"פיצריה", c:250000, p:350}, {n:"מספרה", c:80000, p:110}, {n:"חנות בגדים", c:550000, p:800}, {n:"מוסך", c:1200000, p:1800}, {n:"מסעדה", c:3000000, p:4500}, {n:"סופרמרקט", c:8000000, p:12000}, {n:"קניון", c:25000000, p:40000}, {n:"מפעל", c:60000000, p:100000}];
-const rePool = [{n:"חניה", c:90000, p:45}, {n:"מחסן", c:250000, p:130}, {n:"דירת 2 חדרים", c:1200000, p:650}, {n:"דירת 4 חדרים", c:2400000, p:1400}, {n:"וילה", c:5500000, p:3500}, {n:"בניין", c:18000000, p:15000}, {n:"קומה במגדל", c:45000000, p:42000}, {n:"מרכז לוגיסטי", c:90000000, p:85000}, {n:"מלון", c:200000000, p:200000}, {n:"אי פרטי", c:500000000, p:550000}];
-const skPool = [{n:"ניהול זמן", c:5000, s:5}, {n:"מכירות", c:15000, s:15}, {n:"רישיון נשק", c:30000, s:30}, {n:"תכנות", c:50000, s:60}, {n:"שיווק", c:85000, s:120}, {n:"ניהול השקעות", c:150000, s:250}, {n:"יזמות", c:400000, s:700}, {n:"קריפטו", c:750000, s:1500}, {n:"מנהיגות", c:2000000, s:5000}, {n:"פוליטיקה", c:10000000, s:25000}];
-const carPool = [{n:"קורקינט", c:3000, v:1.2}, {n:"אופנוע", c:25000, v:1.5}, {n:"משפחתית", c:150000, v:2}, {n:"ג'יפ", c:350000, v:2.5}, {n:"חשמלית יוקרה", c:600000, v:3.2}, {n:"ספורט", c:1200000, v:4.5}, {n:"יאכטה", c:5000000, v:7}, {n:"מסוק", c:12000000, v:10}, {n:"מטוס", c:45000000, v:15}, {n:"חללית", c:250000000, v:30}];
-const mkPool = [{n:"אייפון", c:5500, p:2}, {n:"מחשב גיימינג", c:15000, p:6}, {n:"טלוויזיה 8K", c:25000, p:12}, {n:"שעון יוקרה", c:120000, p:50}, {n:"ריהוט מעצבים", c:4500, p:20}, {n:"מערכת קול", c:3500, p:15}, {n:"בריכה", c:180000, p:100}, {n:"ג'קוזי", c:4000, p:18}, {n:"פסל אמנות", c:100000, p:500}, {n:"יהלום", c:250000, p:1200}];
+// --- מערכת הבנק המרכזית ---
 
 function drawBank(c) {
     c.innerHTML = `
     <div class="card fade-in">
         <h3 style="margin-top:0;">🏦 ניהול חשבון בנק</h3>
+        <p style="font-size:12px; opacity:0.8;">כסף בבנק בטוח מפני הפסדים בקזינו.</p>
+        
         <div class="grid-2">
-            <div class="card" style="margin:0; text-align:center;">
-                <small>יתרה בבנק</small><br><b>${bank.toLocaleString()}₪</b>
+            <div class="card" style="margin:0; text-align:center; padding:15px; border:1px solid var(--blue);">
+                <small>יתרה בבנק</small><br>
+                <b style="font-size:18px; color:var(--blue);">${bank.toLocaleString()}₪</b>
             </div>
-            <div class="card" style="margin:0; text-align:center;">
-                <small>חוב קיים</small><br><b style="color:var(--red)">${loan.toLocaleString()}₪</b>
+            <div class="card" style="margin:0; text-align:center; padding:15px; border:1px solid var(--red);">
+                <small>חוב קיים (הלוואות)</small><br>
+                <b style="font-size:18px; color:var(--red);">${loan.toLocaleString()}₪</b>
             </div>
         </div>
-        <div style="margin:15px 0;">
-            <input type="number" id="bank-amt" placeholder="סכום לפעולה..." 
-                style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); text-align:center;">
+        
+        <div style="margin:20px 0;">
+            <input type="number" id="bank-amt" placeholder="הכנס סכום להפקדה/משיכה..." 
+                style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:var(--text); text-align:center; font-size:16px;">
         </div>
+        
         <div class="grid-2">
-            <button class="action" onclick="bankOp('dep')">הפקד</button>
-            <button class="action" style="background:var(--blue)" onclick="bankOp('wd')">משוך</button>
+            <button class="action" onclick="executeBankOp('dep')" style="background:var(--green); color:white;">⬇️ הפקד לבנק</button>
+            <button class="action" onclick="executeBankOp('wd')" style="background:var(--blue); color:white;">⬆️ משוך מזומן</button>
         </div>
-        <hr style="opacity:0.1; margin:20px 0;">
+        
+        <hr style="opacity:0.1; margin:25px 0;">
+        
+        <h4 style="margin:0 0 10px 0;">מסגרת אשראי והלוואות</h4>
         <div class="grid-2">
-            <button class="action" style="background:var(--yellow); color:black;" onclick="loanOp('take')">קח הלוואה 10K</button>
-            <button class="action" style="background:#ec4899" onclick="loanOp('pay')">החזר חוב 10K</button>
+            <button class="action" style="background:var(--yellow); color:black; font-size:13px;" onclick="executeLoanOp('take')">
+                קח הלוואה: 10,000₪
+            </button>
+            <button class="action" style="background:#ec4899; color:white; font-size:13px;" onclick="executeLoanOp('pay')">
+                החזר חוב: 10,500₪
+            </button>
         </div>
+        <p style="font-size:10px; color:var(--red); text-align:center; margin-top:8px;">* החזר הלוואה כולל עמלת ריבית של 5%.</p>
     </div>`;
 }
 
-function bankOp(t) {
-    const a = parseInt(document.getElementById('bank-amt').value);
-    if(!a || a <= 0) { showMsg("הזן סכום תקין", "var(--red)"); return; }
+function executeBankOp(type) {
+    const input = document.getElementById('bank-amt');
+    const amt = parseInt(input.value);
     
-    if(t==='dep' && money>=a) { money-=a; bank+=a; showMsg(`הפקדת ${a.toLocaleString()}₪`, "var(--green)"); }
-    else if(t==='wd' && bank>=a) { bank-=a; money+=a; showMsg(`משכת ${a.toLocaleString()}₪`, "var(--blue)"); }
-    else { showMsg("אין מספיק יתרה לפעולה", "var(--red)"); return; }
-    
-    updateUI(); drawBank(document.getElementById("content"));
-}
-
-function loanOp(t) {
-    if(t==='take') { 
-        loan+=10000; money+=10000; 
-        showMsg("קיבלת הלוואה: 10,000₪", "var(--blue)");
-    } else if(money>=10500 && loan>=10000) { 
-        money-=10500; loan-=10000; 
-        showMsg("החזרת 10K מהחוב (כולל ריבית)", "var(--green)"); 
-    } else {
-        showMsg("אין מספיק כסף להחזר החוב", "var(--red)");
-        return;
+    if(!amt || amt <= 0) { 
+        showMsg("אנא הזן סכום חוקי לפעולה", "var(--red)"); 
+        return; 
     }
-    updateUI(); drawBank(document.getElementById("content"));
+    
+    if(type === 'dep') {
+        if(money >= amt) {
+            money -= amt; 
+            bank += amt; 
+            showMsg(`הופקדו ${amt.toLocaleString()}₪ בהצלחה לחשבון`, "var(--green)"); 
+        } else {
+            showMsg("אין עליך מספיק מזומן להפקדה זו!", "var(--red)");
+            return;
+        }
+    } else if(type === 'wd') {
+        if(bank >= amt) {
+            bank -= amt; 
+            money += amt; 
+            showMsg(`משכת ${amt.toLocaleString()}₪ מהבנק`, "var(--blue)"); 
+        } else {
+            showMsg("אין מספיק יתרה בבנק למשיכה זו!", "var(--red)");
+            return;
+        }
+    }
+    
+    input.value = ''; // ניקוי השדה
+    updateUI(); 
+    saveGame();
+    drawBank(document.getElementById("content")); // רענון תצוגת הבנק
 }
 
-function drawMarket(c, t) {
-    let l = (t==='business')?bzPool:(t==='realestate')?rePool:(t==='skills')?skPool:(t==='cars')?carPool:mkPool;
-    let h = `<div class="grid-2 fade-in">`;
-    l.forEach(i => {
-        const has = (t==='skills'&&skills.includes(i.n))||(t==='cars'&&cars.includes(i.n));
-        h += `
-        <div class="card" style="font-size:12px; text-align:center; padding:12px;">
-            <b style="display:block; margin-bottom:5px;">${i.n}</b>
-            <span style="opacity:0.8;">${i.c.toLocaleString()}₪</span>
-            <button class="action" style="padding:8px 0; font-size:11px; margin-top:10px; height:auto;" 
-                onclick="executeBuy('${t}','${i.n}',${i.c},${i.p||i.s||i.v||0})" ${has?'disabled':''}>
-                ${has?'בבעלותך':'קנה'}
-            </button>
-        </div>`;
-    });
-    c.innerHTML = h + `</div>`;
+function executeLoanOp(type) {
+    if(type === 'take') { 
+        loan += 10000; 
+        money += 10000; 
+        showMsg("ההלוואה אושרה! קיבלת 10,000₪ מזומן.", "var(--yellow)");
+    } else if (type === 'pay') {
+        if (loan === 0) {
+            showMsg("אין לך חובות לבנק כרגע.", "var(--white)");
+            return;
+        }
+        if (money >= 10500) { 
+            money -= 10500; 
+            loan = Math.max(0, loan - 10000); // מונע ירידה של החוב מתחת לאפס
+            showMsg("שילמת 10,000₪ מהחוב + 500₪ ריבית.", "var(--green)"); 
+        } else {
+            showMsg("אין לך 10,500₪ במזומן להחזר החוב!", "var(--red)");
+            return;
+        }
+    }
+    
+    updateUI(); 
+    saveGame();
+    drawBank(document.getElementById("content"));
 }
 
-function executeBuy(t, n, c, v) {
-    if(money >= c) {
-        money -= c; 
-        totalSpent += c; 
-        lifeXP += (c * 0.05);
 
-        if(t==='skills') { skills.push(n); passive += v; }
-        else if(t==='cars') { cars.push(n); carSpeed = v; passive += (c * 0.001); }
-        else { if(t==='market') inventory.push(n); passive += v; }
+// --- מערכת בורסה דינמית (Stock Market) ---
+
+// מחירי בסיס ראשוניים
+const baseStocks = [
+    { id: 'AAPL', name: 'Apple', basePrice: 150 },
+    { id: 'TSLA', name: 'Tesla', basePrice: 200 },
+    { id: 'NVDA', name: 'Nvidia', basePrice: 450 },
+    { id: 'BTC',  name: 'Bitcoin', basePrice: 65000 },
+    { id: 'GOOG', name: 'Google', basePrice: 140 },
+    { id: 'AMZN', name: 'Amazon', basePrice: 175 },
+    { id: 'MSFT', name: 'Microsoft', basePrice: 400 },
+    { id: 'NFLX', name: 'Netflix', basePrice: 600 },
+    { id: 'META', name: 'Meta', basePrice: 480 },
+    { id: 'ELAL', name: 'El-Al', basePrice: 5 }
+];
+
+// מחירי מניות נוכחיים (מתעדכנים רנדומלית)
+let currentStocks = JSON.parse(JSON.stringify(baseStocks));
+
+// פונקציה לעדכון מחירי המניות (נקראת בכל פעם שנכנסים לטאב הבורסה)
+function refreshStockPrices() {
+    currentStocks.forEach(stock => {
+        // תנודה של בין מינוס 15% לפלוס 15% מהמחיר הקודם
+        const fluctuation = 1 + ((Math.random() * 0.3) - 0.15);
+        let newPrice = stock.basePrice * fluctuation;
         
-        showMsg(`רכשת: ${n} | הפסיבי עלה!`, "var(--green)");
-        updateUI(); openTab(t);
-    } else {
-        showMsg("חסר לך כסף לרכישה זו", "var(--red)");
-    }
+        // מונע מהמניה לקרוס לאפס
+        stock.basePrice = Math.max(1, Math.floor(newPrice)); 
+    });
 }
 
 function drawInvest(c) {
-    let h = `<div class="card fade-in"><h3 style="margin-top:0;">📈 מסחר בבורסה</h3><div class="grid-2">`;
-    const st = [{id:'AAPL', n:'Apple', p:150}, {id:'TSLA', n:'Tesla', p:200}, {id:'NVDA', n:'Nvidia', p:450}, {id:'BTC', n:'Bitcoin', p:65000}, {id:'GOOG', n:'Google', p:140}, {id:'AMZN', n:'Amazon', p:175}, {id:'MSFT', n:'Microsoft', p:400}, {id:'NFLX', n:'Netflix', p:600}, {id:'META', n:'Meta', p:480}, {id:'ELAL', n:'El-Al', p:5}];
-    st.forEach(s => {
-        h += `
-        <div class="card" style="padding:10px; font-size:12px; text-align:center;">
-            <b>${s.n}</b><br><small>${s.p}₪</small>
-            <div class="grid-2" style="margin-top:8px; gap:5px;">
-                <button class="action" style="padding:5px 0; height:auto; background:var(--green);" onclick="buyStk('${s.id}',${s.p})">קנה</button>
-                <button class="action" style="padding:5px 0; height:auto; background:var(--red);" onclick="sellStk('${s.id}',${s.p})">מכור</button>
+    refreshStockPrices(); // עדכון מחירים בכל כניסה לבורסה
+    
+    let html = `
+    <div class="card fade-in">
+        <h3 style="margin-top:0;">📈 מסחר בבורסה</h3>
+        <p style="font-size:11px; opacity:0.8; margin-bottom:15px;">המחירים משתנים בכל פעם שאתה נכנס למסך זה. קנה בזול, מכור ביוקר!</p>
+        <div class="grid-2">`;
+        
+    currentStocks.forEach(s => {
+        const ownedCount = invOwned[s.id] || 0;
+        const totalValue = ownedCount * s.basePrice;
+        
+        html += `
+        <div class="card" style="padding:12px; font-size:12px; text-align:center; border:1px solid rgba(255,255,255,0.05);">
+            <b style="font-size:14px;">${s.name} (${s.id})</b><br>
+            <span style="color:var(--yellow); font-weight:bold; font-size:16px;">${s.basePrice.toLocaleString()}₪</span>
+            
+            <div class="grid-2" style="margin-top:10px; gap:8px;">
+                <button class="action" style="padding:8px 0; height:auto; background:var(--green); color:white; font-size:12px;" onclick="executeStockOp('buy', '${s.id}', ${s.basePrice})">קנה</button>
+                <button class="action" style="padding:8px 0; height:auto; background:var(--red); color:white; font-size:12px;" onclick="executeStockOp('sell', '${s.id}', ${s.basePrice})" ${ownedCount === 0 ? 'disabled' : ''}>מכור</button>
             </div>
-            <div style="margin-top:5px; font-size:10px; opacity:0.7;">יש לך: ${invOwned[s.id]||0}</div>
+            
+            <div style="margin-top:8px; font-size:11px; background:rgba(0,0,0,0.2); padding:5px; border-radius:6px;">
+                בתיק: <b>${ownedCount}</b> <br> שווי: <b style="color:var(--blue)">${totalValue.toLocaleString()}₪</b>
+            </div>
         </div>`;
     });
-    c.innerHTML = h + `</div></div>`;
+    
+    html += `</div></div>`;
+    c.innerHTML = html;
 }
 
-function buyStk(i, p) { 
-    if(money>=p){ money-=p; invOwned[i]++; showMsg(`קנית מניית ${i}`, "var(--green)"); updateUI(); drawInvest(document.getElementById("content")); }
-    else showMsg("אין מספיק כסף", "var(--red)");
-}
-
-function sellStk(i, p) { 
-    if(invOwned[i]>0){ money+=p; invOwned[i]--; showMsg(`מכרת מניית ${i}`, "var(--blue)"); updateUI(); drawInvest(document.getElementById("content")); }
-    else showMsg("אין לך מניות למכור", "var(--red)");
+function executeStockOp(type, id, price) {
+    if(type === 'buy') {
+        if(money >= price) { 
+            money -= price; 
+            invOwned[id] = (invOwned[id] || 0) + 1; 
+            showMsg(`רכשת מניית ${id} ב-${price.toLocaleString()}₪`, "var(--green)"); 
+        } else {
+            showMsg("אין לך מספיק מזומן לקניית המניה!", "var(--red)");
+            return;
+        }
+    } else if(type === 'sell') {
+        if(invOwned[id] && invOwned[id] > 0) { 
+            money += price; 
+            invOwned[id]--; 
+            showMsg(`מכרת מניית ${id} ב-${price.toLocaleString()}₪`, "var(--blue)"); 
+        } else {
+            showMsg("אין לך מניות מסוג זה למכור!", "var(--red)");
+            return;
+        }
+    }
+    
+    updateUI(); 
+    saveGame();
+    // לא קוראים ל-drawInvest שוב מיד כדי לא לשנות את המחירים בזמן שהשחקן קונה רצוף.
+    // אם נרצה לעדכן רק את הכפתורים/כמות נצטרך לעשות עדכון UI מקומי, 
+    // אבל לשם הפשטות - נרענן את כל הטאב.
+    openTab('invest'); 
 }
