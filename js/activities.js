@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v6.0.0 - Working & Rewards Update */
+/* Smart Money Pro - js/activities.js - v6.0.1 - Working & Rewards Update */
 let working = false;
 
 const jobs = [
@@ -9,28 +9,31 @@ const jobs = [
     {n:"מתכנת", r:1100, req:"תכנות", type:"skill", xp:110},
     {n:"מנהל מכירות", r:2200, req:"מכירות", type:"skill", xp:250},
     {n:"טייס", r:12000, req:"מטוס", type:"car", xp:800},
-    {n:"מנכלית", r:35000, req:"מנהיגות", type:"skill", xp:2000}
+    {n:"מנכ״ל/ית", r:35000, req:"מנהיגות", type:"skill", xp:2000}
 ];
 
 function drawWork(c) {
     let h = `
     <div class="card fade-in">
-        <h3>⚒️ עבודות</h3>
+        <h3 style="margin-top:0;">⚒️ לוח עבודות</h3>
+        <p style="font-size:12px; opacity:0.7;">השלם עבודה כדי להרוויח כסף וניסיון (XP)</p>
         <div class="progress-container">
-            <div id="work-progress" class="progress-bar" style="transition: width 0.1s linear; width: 0%;"></div>
+            <div id="work-progress" class="progress-bar" style="width: 0%;"></div>
         </div>
         <div class="grid-2">`;
     
     jobs.forEach(j => {
-        // בדיקת דרישות (כישורים או רכבים)
-        const hasReq = !j.req || (j.type === "skill" ? skills.includes(j.req) : cars.includes(j.req));
+        // בדיקת דרישות חכמה
+        const hasSkill = j.type === "skill" && skills.includes(j.req);
+        const hasCar = j.type === "car" && cars.includes(j.req);
+        const hasReq = !j.req || hasSkill || hasCar;
         
         h += `
-        <div class="card" style="text-align:center; padding:10px; border: 1px solid var(--border);">
-            <b style="font-size:14px;">${j.n}</b><br>
-            <small style="color:var(--green)">${j.r.toLocaleString()}₪</small><br>
+        <div class="card" style="text-align:center; padding:12px; border: 1px solid var(--border); background: rgba(0,0,0,0.1);">
+            <b style="font-size:14px; display:block; margin-bottom:5px;">${j.n}</b>
+            <span style="color:var(--green); font-weight:bold;">${j.r.toLocaleString()}₪</span><br>
             <button class="action" 
-                style="font-size:11px; padding:8px 2px; margin-top:10px;" 
+                style="font-size:11px; padding:8px 2px; margin-top:10px; height:auto;" 
                 ${!hasReq || working ? 'disabled' : ''} 
                 onclick="startWork(${j.r}, ${j.xp})">
                 ${hasReq ? 'צא לעבודה' : '🔒 ' + j.req}
@@ -45,18 +48,17 @@ function startWork(reward, xpGain) {
     if(working) return;
     working = true;
     
-    // רענון ה-UI כדי לחסום כפתורים מיד
-    const buttons = document.querySelectorAll('.action');
-    buttons.forEach(btn => btn.disabled = true);
+    // חסימת כפתורים
+    document.querySelectorAll('.action').forEach(btn => btn.disabled = true);
     
     const bar = document.getElementById("work-progress");
     let w = 0;
     
-    // המהירות מושפעת מהרכב (carSpeed) אבל מאוזנת לגרסה 6
-    const speedBoost = Math.max(1, carSpeed / 2); 
+    // מהירות עבודה מושפעת מהרכב - מאוזן לגרסה 6
+    const speedFactor = Math.max(1, carSpeed); 
     
     let i = setInterval(() => {
-        w += (3 * speedBoost); 
+        w += (2 * speedFactor); 
         if(bar) bar.style.width = w + "%";
         
         if(w >= 100) {
@@ -64,51 +66,46 @@ function startWork(reward, xpGain) {
             working = false;
             if(bar) bar.style.width = "0%";
             
-            // עדכון נתונים
+            // עדכון נתונים גלובליים (מ-core.js)
             money += reward;
             totalEarned += reward;
             lifeXP += xpGain;
             
-            // בונוס וותק: כל עבודה מוסיפה 1% מהשכר להכנסה הפסיבית הקבועה
-            const seniorityBonus = reward * 0.01;
-            passive += seniorityBonus;
+            // בונוס וותק: 0.5% מהשכר הופך להכנסה פסיבית קבועה
+            passive += (reward * 0.005);
             
-            showMsg(`💸 +${reward.toLocaleString()}₪ | ⭐ +${xpGain} XP | 📈 פסיבי עלה`, "var(--green)");
+            showMsg(`💸 +${reward.toLocaleString()}₪ | ⭐ +${xpGain} XP`, "var(--green)");
             
             updateUI();
-            openTab('work'); // פותח מחדש כדי לשחרר את הכפתורים
+            openTab('work'); 
             setTimeout(() => showMsg(""), 3000);
         }
-    }, 60);
+    }, 50);
 }
 
 function renderGiftBtn() {
     const cont = document.getElementById("gift-container");
     if(!cont) return;
     
-    const now = Date.now();
-    const diff = now - lastGift;
     const cooldown = 4 * 60 * 60 * 1000; // 4 שעות
+    const diff = Date.now() - lastGift;
     
     if(diff < cooldown) {
         const remainingMin = Math.ceil((cooldown - diff) / (60 * 1000));
-        cont.innerHTML = `<button class="action" style="width:auto; padding:5px 12px; font-size:11px; background:var(--card); color:var(--text); opacity:0.6;" disabled>🎁 ${remainingMin} ד'</button>`;
+        cont.innerHTML = `<button class="action" style="width:auto; padding:5px 10px; font-size:11px; background:var(--card); opacity:0.5;" disabled>🎁 ${remainingMin} ד'</button>`;
     } else {
-        cont.innerHTML = `<button class="action" style="width:auto; padding:5px 12px; font-size:11px; animation: pulse 1.5s infinite;" onclick="claimGift()">🎁 בונוס!</button>`;
+        cont.innerHTML = `<button class="action" style="width:auto; padding:8px 15px; font-size:12px; background:var(--yellow); color:black;" onclick="claimGift()">🎁 קבל בונוס!</button>`;
     }
 }
 
 function claimGift() {
-    const cooldown = 4 * 60 * 60 * 1000;
-    if(Date.now() - lastGift < cooldown) return;
-    
     lastGift = Date.now();
-    // בונוס רנדומלי משופר לגרסה 6
-    const r = Math.floor(Math.random() * 25000) + 5000;
+    // מתנה רנדומלית משופרת לגרסה 6 (בין 5K ל-30K)
+    const r = Math.floor(Math.random() * 25001) + 5000;
     money += r;
-    lifeXP += 250;
+    lifeXP += 300;
     
-    showMsg(`🎁 קיבלת מתנה: ${r.toLocaleString()}₪ ו-250 XP!`, "var(--blue)");
+    showMsg(`🎁 קיבלת ${r.toLocaleString()}₪ ובונוס XP!`, "var(--blue)");
     
     updateUI();
     openTab('home');
@@ -118,21 +115,20 @@ function claimGift() {
 function drawCasino(c) {
     c.innerHTML = `
         <div class="card fade-in" style="text-align:center;">
-            <h2 style="margin-top:0;">🎰 קזינו מזל</h2>
-            <p style="font-size:0.9em; opacity:0.8;">סיכוי זכייה: 35% | פרס: פי 3</p>
+            <h2 style="margin-top:0; color:var(--yellow);">🎰 קזינו רויאל</h2>
+            <p style="font-size:13px; opacity:0.8;">המר על הכסף שלך - סיכוי לזכות פי 3!</p>
             
-            <div style="background:rgba(0,0,0,0.2); padding:20px; border-radius:15px; margin:15px 0;">
-                <input type="number" id="bet-amt" placeholder="כמה מהמרים?" 
-                    style="width:80%; padding:15px; font-size:1.2em; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); text-align:center;">
+            <div style="background:rgba(0,0,0,0.3); padding:25px; border-radius:20px; margin:20px 0; border:1px solid var(--border);">
+                <label style="display:block; margin-bottom:10px; font-size:12px;">סכום ההימור שלך:</label>
+                <input type="number" id="bet-amt" placeholder="0" 
+                    style="width:100%; padding:15px; font-size:1.5em; border-radius:12px; border:none; background:var(--bg); color:var(--text); text-align:center; font-weight:bold;">
             </div>
             
-            <button id="casino-btn" class="action" style="background:var(--yellow); color:black;" onclick="playCasino()">🎰 סובב את המזל (x3)</button>
-            <p id="casino-result" style="margin-top:15px; font-weight:bold;"></p>
+            <button id="casino-btn" class="action" style="background:var(--yellow); color:black; font-size:18px;" onclick="playCasino()">🎰 סובב (x3)</button>
         </div>`;
 }
 
 function playCasino() {
-    const btn = document.getElementById('casino-btn');
     const input = document.getElementById('bet-amt');
     const amt = parseInt(input.value);
     
@@ -141,24 +137,23 @@ function playCasino() {
         return;
     }
     
+    const btn = document.getElementById('casino-btn');
     btn.disabled = true;
     money -= amt;
     updateUI();
     
-    showMsg("🎰 המכונה מסתובבת...", "var(--yellow)");
+    showMsg("🎰 המכונה מסתובבת... בהצלחה!", "var(--yellow)");
     
     setTimeout(() => {
         if(Math.random() < 0.35) { 
             const win = amt * 3;
             money += win;
-            lifeXP += Math.floor(amt * 0.1); // בונוס XP קטן על זכייה
-            showMsg(`💰 זכית ב-${win.toLocaleString()}₪!!!`, "var(--green)");
+            lifeXP += 100;
+            showMsg(`💰 בום! זכית ב-${win.toLocaleString()}₪!`, "var(--green)");
         } else { 
-            showMsg("הפסדת... אולי בפעם הבאה?", "var(--red)");
+            showMsg("אופס... המזל לא איתך הפעם.", "var(--red)");
         }
-        
         btn.disabled = false;
         updateUI();
-        // נשארים בטאב כדי שיוכל להמר שוב מהר
-    }, 800);
+    }, 1200);
 }
