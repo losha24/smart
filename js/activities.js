@@ -1,147 +1,163 @@
-/* Smart Money Pro - js/activities.js - v6.0.2 - Synced with Core Engine */
-let working = false;
+/* Smart Money Pro - js/activities.js - v6.0.3 - Jobs, Market & Casino */
 
+// --- נתוני העבודות ---
 const jobs = [
-    {n:"עובד כללי", r:250, req:null, type:null, xp:50},
-    {n:"שליח קורקינט", r:400, req:"קורקינט", type:"car", xp:80},
-    {n:"מאבטח", r:650, req:"רישיון נשק", type:"skill", xp:150},
-    {n:"נהג מונית", r:900, req:"משפחתית", type:"car", xp:200},
-    {n:"מתכנת", r:1800, req:"תכנות", type:"skill", xp:450},
-    {n:"מנהל מכירות", r:3500, req:"מכירות", type:"skill", xp:800},
-    {n:"טייס", r:16000, req:"מטוס", type:"car", xp:2500},
-    {n:"מנכ״ל/ית", r:50000, req:"מנהיגות", type:"skill", xp:6000}
+    { id: 'cleaner', name: 'מנקה רחובות', pay: 40, xp: 10, time: 5, icon: '🧹' },
+    { id: 'delivery', name: 'שליח פיצה', pay: 65, xp: 25, time: 8, icon: '🍕' },
+    { id: 'security', name: 'מאבטח', pay: 90, xp: 40, time: 12, icon: '🛡️' },
+    { id: 'driver', name: 'נהג מונית', pay: 150, xp: 60, time: 15, icon: '🚕', reqCar: true },
+    { id: 'coder', name: 'מתכנת ג'וניור', pay: 350, xp: 120, time: 20, icon: '💻', reqSkill: 'תכנות' }
 ];
 
+// --- נתוני השוק ---
+const marketItems = [
+    { id: 'coffee', name: 'קפה משובח', price: 50, xp: 20, icon: '☕' },
+    { id: 'pizza_box', name: 'מגש פיצה משפחתי', price: 90, xp: 35, icon: '🍕' },
+    { id: 'watch', name: 'שעון יד אלגנט', price: 2500, xp: 800, icon: '⌚' },
+    { id: 'smartphone', name: 'סמארטפון דור 5', price: 4500, xp: 1500, icon: '📱' },
+    { id: 'laptop', name: 'מחשב נייד חזק', price: 7500, xp: 2500, icon: '💻' },
+    { id: 'gold_chain', name: 'שרשרת זהב', price: 12000, xp: 5000, icon: '⛓️' }
+];
+
+// --- פונקציות עבודה ---
 function drawWork(c) {
-    let h = `
-    <div class="card fade-in">
-        <h3 style="margin-top:0;">⚒️ לוח עבודות</h3>
-        <p style="font-size:12px; opacity:0.7;">השלם עבודה כדי להרוויח כסף וניסיון (XP)</p>
-        <div class="progress-container" style="height:12px; margin-bottom:15px;">
-            <div id="work-progress" class="progress-bar" style="width: 0%; transition: width 0.1s linear;"></div>
-        </div>
-        <div class="grid-2">`;
-    
+    c.innerHTML = `<h3>⚒️ מרכז תעסוקה</h3>`;
     jobs.forEach(j => {
-        const hasReq = !j.req || (j.type === "skill" ? skills.includes(j.req) : cars.includes(j.req));
-        
-        h += `
-        <div class="card" style="text-align:center; padding:12px; border: 1px solid var(--border); background: rgba(255,255,255,0.02);">
-            <b style="font-size:14px; display:block; margin-bottom:5px;">${j.n}</b>
-            <span style="color:var(--green); font-weight:bold;">${j.r.toLocaleString()}₪</span><br>
-            <button class="action" 
-                style="font-size:11px; padding:8px 0; margin-top:10px; height:auto;" 
-                ${!hasReq || working ? 'disabled' : ''} 
-                onclick="startWork(${j.r}, ${j.xp})">
-                ${hasReq ? 'צא לעבודה' : '🔒 ' + j.req}
-            </button>
-        </div>`;
+        const canWork = (!j.reqCar || cars.length > 0) && (!j.reqSkill || skills.includes(j.reqSkill));
+        c.innerHTML += `
+            <div class="card fade-in" style="opacity: ${canWork ? 1 : 0.6}">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <b>${j.icon} ${j.name}</b><br>
+                        <small style="color:var(--green)">${j.pay}₪</small> | <small style="color:var(--blue)">+${j.xp} XP</small>
+                    </div>
+                    <button class="sys-btn" onclick="startWork('${j.id}')" ${canWork ? '' : 'disabled'}>
+                        ${canWork ? 'עבוד' : 'נעול'}
+                    </button>
+                </div>
+            </div>
+        `;
     });
-    
-    c.innerHTML = h + `</div></div>`;
 }
 
-function startWork(reward, xpGain) {
-    if(working) return;
-    working = true;
+function startWork(id) {
+    const j = jobs.find(x => x.id === id);
+    showMsg(`עובד בתור ${j.name}...`, "var(--blue)");
     
-    document.querySelectorAll('.action').forEach(btn => btn.disabled = true);
-    
-    const bar = document.getElementById("work-progress");
-    let w = 0;
-    const speedBoost = Math.max(1, carSpeed); 
-    
-    let i = setInterval(() => {
-        w += (2.5 * speedBoost); 
-        if(bar) bar.style.width = w + "%";
+    // כאן אפשר להוסיף פס התקדמות אם תרצה בעתיד
+    setTimeout(() => {
+        money += j.pay;
+        lifeXP += j.xp;
+        showMsg(`סיימת משמרת! הרווחת ${j.pay}₪`, "var(--green)");
+        updateUI();
+        saveGame();
+        if (document.getElementById('btnHome').classList.contains('active')) drawHome(document.getElementById('content'));
+    }, j.time * 100); 
+}
+
+// --- פונקציות שוק (Market) ---
+function drawMarket(c) {
+    c.innerHTML = `
+        <div class="fade-in">
+            <h3>🛒 שוק מוצרי צריכה</h3>
+            <p style="font-size:12px; opacity:0.7;">קניית מוצרים מעלה את רמת החיים (XP) לצמיתות.</p>
+            <div id="market-grid"></div>
+        </div>
+    `;
+    const grid = document.getElementById('market-grid');
+    marketItems.forEach(item => {
+        grid.innerHTML += `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:24px;">${item.icon}</span>
+                    <div>
+                        <b>${item.name}</b><br>
+                        <small style="color:var(--green)">${item.price.toLocaleString()}₪</small> | 
+                        <small style="color:var(--purple)">+${item.xp} XP</small>
+                    </div>
+                </div>
+                <button class="sys-btn" onclick="buyMarketItem('${item.id}')" style="padding:10px 15px;">קנה</button>
+            </div>
+        `;
+    });
+}
+
+function buyMarketItem(id) {
+    const item = marketItems.find(x => x.id === id);
+    if (money >= item.price) {
+        money -= item.price;
+        lifeXP += item.xp;
         
-        if(w >= 100) {
-            clearInterval(i);
-            working = false;
-            if(bar) bar.style.width = "0%";
-            
-            // עדכון נתונים
-            money += reward;
-            lifeXP += xpGain;
-            
-            // בונוס וותק (Passive)
-            passive += (reward * 0.005);
-            
-            showMsg(`💸 +${reward.toLocaleString()}₪ | ⭐ +${xpGain} XP`, "var(--green)");
-            
-            updateUI();
-            openTab('work'); 
-        }
-    }, 60);
-}
-
-function renderGiftBtn() {
-    const cont = document.getElementById("gift-container");
-    if(!cont) return;
-    
-    const cooldown = 4 * 60 * 60 * 1000;
-    const diff = Date.now() - lastGift;
-    
-    if(diff < cooldown) {
-        const remainingMin = Math.ceil((cooldown - diff) / (60 * 1000));
-        cont.innerHTML = `<button class="action" style="width:auto; padding:5px 10px; font-size:11px; background:rgba(255,255,255,0.05); color:gray;" disabled>🎁 ${remainingMin} ד'</button>`;
+        // הוספה למלאי (Inventory)
+        inventory.push({ id: item.id, icon: item.icon, name: item.name });
+        
+        showMsg(`תתחדש! קנית ${item.name}`, "var(--green)");
+        saveGame();
+        updateUI();
+        drawMarket(document.getElementById('content')); // רענון השוק
     } else {
-        cont.innerHTML = `<button class="action" style="width:auto; padding:8px 15px; font-size:12px; background:var(--yellow); color:black; font-weight:bold; border:none;" onclick="claimGift()">🎁 קבל בונוס!</button>`;
+        showMsg("אין לך מספיק כסף מזומן!", "var(--red)");
     }
 }
 
-function claimGift() {
-    lastGift = Date.now();
-    const r = Math.floor(Math.random() * 25001) + 5000;
-    money += r;
-    lifeXP += 500;
-    
-    showMsg(`🎁 קיבלת ${r.toLocaleString()}₪ ובונוס XP!`, "var(--blue)");
-    
-    updateUI();
-    openTab('home');
-}
-
+// --- קזינו (Tasks/Casino) ---
 function drawCasino(c) {
     c.innerHTML = `
-        <div class="card fade-in" style="text-align:center;">
-            <h2 style="margin-top:0; color:var(--yellow);">🎰 קזינו רויאל</h2>
-            <div style="background:rgba(0,0,0,0.3); padding:25px; border-radius:20px; margin:20px 0; border:1px solid var(--border);">
-                <label style="display:block; margin-bottom:10px; font-size:12px; opacity:0.8;">סכום ההימור שלך:</label>
-                <input type="number" id="bet-amt" placeholder="0" 
-                    style="width:100%; padding:15px; font-size:1.5em; border-radius:12px; border:none; background:var(--bg); color:var(--text); text-align:center; font-weight:bold;">
+        <div class="card fade-in" style="text-align:center; border:1px solid var(--yellow);">
+            <h3 style="color:var(--yellow)">🎰 קזינו מזל</h3>
+            <p>נסה את מזלך - הכפל את הכסף או הפסד הכל!</p>
+            <input type="number" id="betAmount" placeholder="סכום הימור" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:white; margin-bottom:10px; text-align:center;">
+            <div class="grid-2">
+                <button class="action" onclick="playCasino(2)" style="background:var(--yellow); color:black;">פי 2 (50%)</button>
+                <button class="action" onclick="playCasino(5)" style="background:var(--purple);">פי 5 (15%)</button>
             </div>
-            <button id="casino-btn" class="action" style="background:var(--yellow); color:black; font-size:18px; font-weight:bold; border:none;" onclick="playCasino()">🎰 סובב וזכה (x3)</button>
-        </div>`;
+        </div>
+    `;
 }
 
-function playCasino() {
-    const input = document.getElementById('bet-amt');
-    const amt = parseInt(input.value);
-    
-    if(!amt || amt <= 0 || money < amt) {
-        showMsg("אין לך מספיק כסף להימור כזה!", "var(--red)");
+function playCasino(mult) {
+    const amt = parseInt(document.getElementById('betAmount').value);
+    if (!amt || amt <= 0 || amt > money) {
+        showMsg("סכום הימור לא תקין!", "var(--red)");
         return;
     }
-    
-    const btn = document.getElementById('casino-btn');
-    btn.disabled = true;
+
     money -= amt;
     updateUI();
     
-    showMsg("🎰 המכונה מסתובבת...", "var(--yellow)");
+    const chance = mult === 2 ? 0.48 : 0.15; // סיכויי זכייה (קצת פחות מ-50% לבית)
+    
+    showMsg("מסובב את הרולטה...", "var(--yellow)");
     
     setTimeout(() => {
-        if(Math.random() < 0.35) { 
-            const win = amt * 3;
+        if (Math.random() < chance) {
+            const win = amt * mult;
             money += win;
-            lifeXP += 200;
-            showMsg(`💰 בום! זכית ב-${win.toLocaleString()}₪!`, "var(--green)");
-        } else { 
-            showMsg("אופס... המזל לא איתך הפעם.", "var(--red)");
+            showMsg(`זכית ב-${win.toLocaleString()}₪! 🎉`, "var(--green)");
+        } else {
+            showMsg("הפסדת את ההימור. נסה שוב!", "var(--red)");
         }
-        btn.disabled = false;
+        saveGame();
         updateUI();
-        drawCasino(document.getElementById("content"));
-    }, 1200);
+    }, 1000);
+}
+
+// --- מתנה יומית ---
+function getDailyGift() {
+    const now = Date.now();
+    const cooldown = 24 * 60 * 60 * 1000; // 24 שעות
+
+    if (now - lastGift > cooldown) {
+        const gift = 500 + Math.floor(Math.random() * 1000);
+        money += gift;
+        lastGift = now;
+        showMsg(`קיבלת מתנה יומית: ${gift}₪!`, "var(--yellow)");
+        saveGame();
+        updateUI();
+        if (document.getElementById('btnHome').classList.contains('active')) drawHome(document.getElementById('content'));
+    } else {
+        const remain = cooldown - (now - lastGift);
+        const hours = Math.floor(remain / (60 * 60 * 1000));
+        showMsg(`המתנה הבאה בעוד ${hours} שעות`, "var(--white)");
+    }
 }
