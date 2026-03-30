@@ -168,4 +168,5 @@ setInterval(saveGame, 15000);
 document.addEventListener("DOMContentLoaded", () => {
     loadGame();
     updateUI();
-    console.log(`Smart Money Pro v$
+    console.log(`Smart Money Pro v${VERSION} Engine Loaded.`);
+});
