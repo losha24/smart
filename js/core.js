@@ -1,6 +1,6 @@
-/* Smart Money Pro - js/core.js - v6.1.1 - Fast XP & Ultra Money */
+/* Smart Money Pro - js/core.js - v6.2.0 - Offline Income & 1000 XP */
 
-const VERSION = "6.1.1";
+const VERSION = "6.2.0";
 const SAVE_KEY = "smartMoneySave_v6_main";
 
 // --- משתנים גלובליים ---
@@ -16,6 +16,7 @@ let inventory = [];
 let invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, META:0, ELAL:0 };
 let carSpeed = 1;
 let totalEarned = 0;
+let lastSaveTime = Date.now(); // משתנה חדש לזמן שמירה
 
 let msgTimer; 
 
@@ -37,6 +38,27 @@ function loadGame() {
             invOwned = data.invOwned ?? invOwned;
             carSpeed = data.carSpeed ?? 1;
             totalEarned = data.totalEarned ?? 0;
+            
+            // --- חישוב הכנסה לא מקוונת ---
+            if (data.lastSaveTime && passive > 0) {
+                const now = Date.now();
+                let msPassed = now - data.lastSaveTime;
+                
+                // הגבלה ל-12 שעות (12 * 60 * 60 * 1000 מילי-שניות)
+                const maxMS = 12 * 60 * 60 * 1000;
+                if (msPassed > maxMS) msPassed = maxMS;
+                
+                const hoursPassed = msPassed / (1000 * 60 * 60);
+                const offlineEarnings = hoursPassed * passive;
+                
+                if (offlineEarnings > 1) {
+                    money += offlineEarnings;
+                    totalEarned += offlineEarnings;
+                    setTimeout(() => {
+                        showMsg(`💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()}₪ בזמן שלא היית! (מוגבל ל-12 שעות)`, "var(--yellow)");
+                    }, 1500);
+                }
+            }
         }
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.body.className = savedTheme + '-theme';
@@ -46,7 +68,12 @@ function loadGame() {
 }
 
 function saveGame() {
-    const data = { money, bank, loan, lifeXP, passive, lastGift, skills, cars, inventory, invOwned, carSpeed, totalEarned };
+    lastSaveTime = Date.now(); // עדכון זמן השמירה לפני הכתיבה ל-LocalStorage
+    const data = { 
+        money, bank, loan, lifeXP, passive, lastGift, 
+        skills, cars, inventory, invOwned, carSpeed, 
+        totalEarned, lastSaveTime 
+    };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
 
@@ -76,12 +103,10 @@ function updateUI() {
     if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
     if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
     
-    // שינוי: רמה לפי 1,000 XP
     const currentLevel = Math.floor(lifeXP / 1000) + 1;
     if(lEl) lEl.innerText = currentLevel;
 
     if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate();
-    
     checkLevelUp();
 }
 
@@ -92,7 +117,7 @@ function checkLevelUp() {
 
     if (currentLevel > displayedLevel) {
         showMsg(`🎊 מזל טוב! עלית לרמה ${currentLevel}! 🎊`, "var(--purple)");
-        money += currentLevel * 1000; // בונוס שגדל עם הרמה
+        money += currentLevel * 1000; 
         updateUI();
     }
 }
@@ -121,7 +146,7 @@ function resetGame() {
 
 // --- מנועי זמן (Loops) ---
 
-// מנוע הכנסה פסיבית אולטרה-מהיר (רץ 20 פעמים בשנייה)
+// מנוע הכנסה פסיבית אולטרה-מהיר
 setInterval(() => {
     if (passive > 0) {
         const tickIncome = passive / 720; 
@@ -137,6 +162,7 @@ setInterval(() => {
     }
 }, 50); 
 
+// שמירה אוטומטית כל 15 שניות
 setInterval(saveGame, 15000);
 
 document.addEventListener("DOMContentLoaded", () => {
