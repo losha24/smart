@@ -1,6 +1,6 @@
-/* Smart Money Pro - js/core.js - v6.0.8 - Final Production Build */
+/* Smart Money Pro - js/core.js - v6.0.9 - Fast Speed Update */
 
-const VERSION = "6.0.8";
+const VERSION = "6.0.9";
 const SAVE_KEY = "smartMoneySave_v6_main";
 
 // --- משתנים גלובליים ---
@@ -125,7 +125,8 @@ function resetGame() {
 // מנוע הכנסה פסיבית - רץ 10 פעמים בשנייה לעדכון חלק
 setInterval(() => {
     if (passive > 0) {
-        const tickIncome = passive / 36000; 
+        // --- שורה 109: שיניתי מ-36000 ל-3600 כדי להאיץ את הקצב פי 10 ---
+        const tickIncome = passive / 3600; 
         money += tickIncome;
         totalEarned += tickIncome;
         
