@@ -1,6 +1,6 @@
-/* Smart Money Pro - js/core.js - v6.0.9 - Fast Speed Update */
+/* Smart Money Pro - js/core.js - v6.1.0 - Ultra Speed Engine */
 
-const VERSION = "6.0.9";
+const VERSION = "6.1.0";
 const SAVE_KEY = "smartMoneySave_v6_main";
 
 // --- משתנים גלובליים ---
@@ -73,18 +73,14 @@ function updateUI() {
     const bEl = document.getElementById('bank');
     const lEl = document.getElementById('life-level-ui');
 
-    // עדכון ערכים בבר העליון
     if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
     if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
     
-    // חישוב רמה (כל 5000 XP עולים רמה)
     const currentLevel = Math.floor(lifeXP / 5000) + 1;
     if(lEl) lEl.innerText = currentLevel;
 
-    // קריאה לפונקציית הרינדור ב-UI אם קיימת (לשוניות וכד')
     if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate();
     
-    // בדיקת עליית רמה
     checkLevelUp();
 }
 
@@ -93,7 +89,7 @@ function checkLevelUp() {
     const displayedLevel = parseInt(document.getElementById('life-level-ui')?.innerText || "1");
     if (currentLevel > displayedLevel) {
         showMsg(`🎊 מזל טוב! עלית לרמה ${currentLevel}! 🎊`, "var(--purple)");
-        money += currentLevel * 500; // בונוס כספי על עליית רמה
+        money += currentLevel * 500; 
         updateUI();
     }
 }
@@ -122,19 +118,23 @@ function resetGame() {
 
 // --- מנועי זמן (Loops) ---
 
-// מנוע הכנסה פסיבית - רץ 10 פעמים בשנייה לעדכון חלק
+// 🚀 מנוע הכנסה פסיבית אולטרה-מהיר - רץ 20 פעמים בשנייה
 setInterval(() => {
     if (passive > 0) {
-        // --- שורה 109: שיניתי מ-36000 ל-3600 כדי להאיץ את הקצב פי 10 ---
-        const tickIncome = passive / 3600; 
+        // שורה 109: חלוקה ב-720 במקום 36000 להאצה מטורפת של זרימת המזומנים
+        const tickIncome = passive / 720; 
         money += tickIncome;
         totalEarned += tickIncome;
         
-        // עדכון ויזואלי מהיר של הכסף בלבד (ביצועים)
         const mEl = document.getElementById('money');
         if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
+
+        // עדכון גרפי בזמן אמת של דף הבית
+        if (typeof window.renderUIUpdate === 'function') {
+            window.renderUIUpdate();
+        }
     }
-}, 100);
+}, 50); 
 
 // שמירה אוטומטית כל 15 שניות
 setInterval(saveGame, 15000);
