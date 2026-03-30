@@ -1,6 +1,6 @@
-/* Smart Money Pro - js/core.js - v6.1.0 - Ultra Speed Engine */
+/* Smart Money Pro - js/core.js - v6.1.1 - Fast XP & Ultra Money */
 
-const VERSION = "6.1.0";
+const VERSION = "6.1.1";
 const SAVE_KEY = "smartMoneySave_v6_main";
 
 // --- משתנים גלובליים ---
@@ -76,7 +76,8 @@ function updateUI() {
     if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
     if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
     
-    const currentLevel = Math.floor(lifeXP / 5000) + 1;
+    // שינוי: רמה לפי 1,000 XP
+    const currentLevel = Math.floor(lifeXP / 1000) + 1;
     if(lEl) lEl.innerText = currentLevel;
 
     if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate();
@@ -85,11 +86,13 @@ function updateUI() {
 }
 
 function checkLevelUp() {
-    const currentLevel = Math.floor(lifeXP / 5000) + 1;
-    const displayedLevel = parseInt(document.getElementById('life-level-ui')?.innerText || "1");
+    const currentLevel = Math.floor(lifeXP / 1000) + 1;
+    const levelDisplay = document.getElementById('life-level-ui');
+    const displayedLevel = parseInt(levelDisplay?.innerText || "1");
+
     if (currentLevel > displayedLevel) {
         showMsg(`🎊 מזל טוב! עלית לרמה ${currentLevel}! 🎊`, "var(--purple)");
-        money += currentLevel * 500; 
+        money += currentLevel * 1000; // בונוס שגדל עם הרמה
         updateUI();
     }
 }
@@ -118,10 +121,9 @@ function resetGame() {
 
 // --- מנועי זמן (Loops) ---
 
-// 🚀 מנוע הכנסה פסיבית אולטרה-מהיר - רץ 20 פעמים בשנייה
+// מנוע הכנסה פסיבית אולטרה-מהיר (רץ 20 פעמים בשנייה)
 setInterval(() => {
     if (passive > 0) {
-        // שורה 109: חלוקה ב-720 במקום 36000 להאצה מטורפת של זרימת המזומנים
         const tickIncome = passive / 720; 
         money += tickIncome;
         totalEarned += tickIncome;
@@ -129,17 +131,14 @@ setInterval(() => {
         const mEl = document.getElementById('money');
         if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
 
-        // עדכון גרפי בזמן אמת של דף הבית
         if (typeof window.renderUIUpdate === 'function') {
             window.renderUIUpdate();
         }
     }
 }, 50); 
 
-// שמירה אוטומטית כל 15 שניות
 setInterval(saveGame, 15000);
 
-// --- אתחול המערכת ---
 document.addEventListener("DOMContentLoaded", () => {
     loadGame();
     updateUI();
