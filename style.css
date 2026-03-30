@@ -1,4 +1,4 @@
-/* Smart Money Pro - style.css - v6.1.0 - Enhanced UI & Logo Scale */
+/* Smart Money Pro - style.css - v6.0.5 - Modern Progress & UI Sync */
 
 :root { 
     --bg: #0f172a; 
@@ -10,9 +10,10 @@
     --yellow: #f59e0b;
     --purple: #a855f7;
     --border: rgba(255, 255, 255, 0.08); 
-    --shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
+/* ערכת נושא בהירה */
 .light-theme { 
     --bg: #f8fafc; 
     --card: #ffffff; 
@@ -24,6 +25,7 @@
 * { 
     box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent; 
+    outline: none; 
 }
 
 body { 
@@ -32,14 +34,15 @@ body {
     color: var(--text); 
     direction: rtl; 
     font-family: 'Segoe UI', system-ui, sans-serif; 
-    transition: background 0.3s ease;
+    transition: background 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
     min-height: 100vh;
 }
 
-/* לוגו עליון - שורה 45 */
+/* לוגו עליון */
 .main-header { 
     background: var(--card); 
-    height: 70px; /* הוגדל מ-50 */
+    height: 50px; 
     display: flex; 
     justify-content: center; 
     align-items: center; 
@@ -47,22 +50,16 @@ body {
 }
 
 .header-logo-big { 
-    max-height: 55px; /* הוגדל מ-30 */
-    width: auto;
+    max-height: 30px; 
     cursor: pointer;
-    transition: transform 0.2s ease;
-    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4));
+    transition: 0.2s;
 }
 
-.header-logo-big:active { transform: scale(0.95); }
-
-/* סטטיסטיקה עליונה - אפקט זכוכית */
+/* סטטיסטיקה עליונה - דביקה */
 .stats-bar-top { 
     display: flex; 
     justify-content: space-around; 
-    background: rgba(30, 41, 59, 0.85); 
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--card); 
     padding: 12px 5px; 
     position: sticky; 
     top: 0; 
@@ -74,7 +71,7 @@ body {
 .stat-item { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 4px; }
 .stat-item span { color: var(--blue); font-variant-numeric: tabular-nums; }
 
-/* שורת סטטוס */
+/* שורת סטטוס חכמה */
 #status-bar { 
     text-align: center; 
     min-height: 38px; 
@@ -84,87 +81,148 @@ body {
     opacity: 0; 
     transition: 0.3s; 
     margin: 8px 15px;
-    background: rgba(56, 189, 248, 0.05);
+    background: rgba(56, 189, 248, 0.1);
     border: 1px solid var(--border);
     border-radius: 12px;
 }
 
 /* תפריט ניווט */
-.topbar { padding: 8px; background: var(--card); }
-.nav-row { display: flex; gap: 6px; margin-bottom: 6px; }
+.topbar { 
+    padding: 8px; 
+    background: var(--card); 
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-row { 
+    display: flex; 
+    gap: 6px; 
+    margin-bottom: 6px; 
+    width: 100%; 
+}
 
 .topbar button { 
     flex: 1; 
-    padding: 12px 2px; 
-    border-radius: 12px; 
+    min-width: 0; 
+    padding: 10px 2px; 
+    border-radius: 10px; 
     border: 1px solid var(--border); 
     background: rgba(255, 255, 255, 0.03); 
     color: var(--text); 
     font-size: 11px; 
     font-weight: 700;
+    cursor: pointer;
     transition: 0.2s;
+    white-space: nowrap;
 }
 
 .topbar button.active { 
     background: var(--blue); 
     color: #0f172a; 
     border-color: var(--blue);
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
 }
 
-/* תוכן וכרטיסיות */
-.container { padding: 15px; max-width: 500px; margin: 0 auto; padding-bottom: 40px; }
+/* תוכן ראשי */
+.container { 
+    padding: 15px; 
+    max-width: 500px; 
+    margin: 0 auto; 
+    padding-bottom: 40px; 
+}
 
 .card { 
     background: var(--card); 
-    border-radius: 20px; 
-    padding: 18px; 
+    border-radius: 18px; 
+    padding: 15px; 
     margin-bottom: 15px; 
     border: 1px solid var(--border); 
     box-shadow: var(--shadow);
-    transition: transform 0.2s ease;
 }
 
-.card:active { transform: scale(0.98); }
+/* Grid ל-2 בשורה */
+.grid-2 { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 12px; 
+}
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-2 .card {
+    margin-bottom: 0;
+    padding: 12px;
+    text-align: center;
+}
 
-/* כפתורים ופעולות */
+/* כפתורי מערכת */
 .sys-btn { 
     background: rgba(56, 189, 248, 0.1); 
     color: var(--blue); 
     border: 1px solid var(--blue); 
-    padding: 8px 14px;
+    padding: 8px 12px;
     border-radius: 10px;
+    font-size: 11px;
     font-weight: bold;
+    cursor: pointer;
 }
 
 .action { 
-    width: 100%; padding: 16px; border-radius: 15px; border: none; 
-    background: linear-gradient(135deg, var(--blue), #0ea5e9);
-    color: #0f172a; font-weight: 800; font-size: 16px; 
-    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
+    width: 100%; 
+    padding: 16px; 
+    border-radius: 15px; 
+    border: none; 
+    background: var(--blue); 
+    color: #0f172a; 
+    font-weight: 800; 
+    font-size: 15px; 
+    cursor: pointer; 
+    transition: 0.2s;
 }
 
-/* פסי התקדמות */
+.action:disabled { opacity: 0.5; cursor: not-allowed; }
+.action:active:not(:disabled) { transform: scale(0.96); }
+
+/* פסי התקדמות משופרים */
 .progress-container { 
-    background: rgba(0, 0, 0, 0.3); 
-    border-radius: 20px; height: 12px; 
-    margin: 10px 0; overflow: hidden; border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2); 
+    border-radius: 20px; 
+    height: 10px; 
+    margin: 10px 0; 
+    overflow: hidden; 
+    border: 1px solid var(--border);
 }
 
-.progress-bar { height: 100%; background: var(--blue); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.progress-bar { 
+    height: 100%; 
+    background: var(--blue); 
+    transition: width 0.3s ease; 
+}
+
 .xp-bar { background: linear-gradient(90deg, var(--blue), var(--purple)) !important; }
+
+/* רשימת מלאי (Inventory) אופקית */
+#inventory-list {
+    scrollbar-width: none; /* Firefox */
+}
+#inventory-list::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
 
 /* אנימציות */
 .fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { 
-    from { opacity: 0; transform: translateY(8px); } 
+    from { opacity: 0; transform: translateY(10px); } 
     to { opacity: 1; transform: translateY(0); } 
 }
 
+/* התאמה למובייל */
 @media (max-width: 360px) {
-    .topbar button { font-size: 10px; }
-    .main-header { height: 60px; }
-    .header-logo-big { max-height: 45px; }
+    .topbar button { font-size: 10px; padding: 8px 1px; }
+    .stat-item { font-size: 11px; }
+    .grid-2 { gap: 8px; }
+}
+
+footer.main-footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 10px;
+    opacity: 0.4;
+    color: var(--text);
 }
