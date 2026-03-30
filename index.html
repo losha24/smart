@@ -3,11 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.2.2</title>
-    <link rel="stylesheet" href="style.css?v=6.2.2">
+    <title>Smart Money Pro | v6.0.6</title>
+    
+    <link rel="manifest" href="manifest.json?v=6.0.6">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="logo.png">
+    
+    <link rel="stylesheet" href="style.css?v=6.0.6">
     <style>
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; }
-        .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 30px; border: 1px solid var(--blue); background: #1e293b; border-radius: 20px; }
+        /* מרכוז חלון ההתקנה */
+        .modal-overlay {
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.85); 
+            z-index: 9999; 
+            justify-content: center; 
+            align-items: center;
+        }
+        .modal-card {
+            width: 85%;
+            max-width: 320px;
+            text-align: center;
+            padding: 25px;
+            background: #1e293b;
+            border-radius: 15px;
+            border: 1px solid var(--blue);
+        }
     </style>
 </head>
 <body class="dark-theme">
@@ -42,8 +67,9 @@
         </div>
         <div class="nav-row">
             <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-            <button onclick="forceUpdate()" class="sys-btn">🔄 עדכון</button>
-            <button onclick="toggleTheme()" class="sys-btn">🌓 מצב</button>
+            <button onclick="document.getElementById('installModal').style.display='flex'" class="sys-btn" title="התקנה">📲</button>
+            <button onclick="forceUpdate()" class="sys-btn" title="עדכון">🔄</button>
+            <button onclick="toggleTheme()" class="sys-btn" title="מצב">🌓</button>
         </div>
     </nav>
 
@@ -51,122 +77,81 @@
 
     <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
         <div class="modal-card" onclick="event.stopPropagation()">
-            <div style="font-size: 3rem;">📲</div>
+            <div style="font-size: 2.5rem; margin-bottom: 10px;">📲</div>
             <h3>התקנת האפליקציה</h3>
-            <p>לחץ על 3 הנקודות בתפריט ובחר "התקן אפליקציה".</p>
-            <button class="action" onclick="closeInstallGuide()" style="background:var(--red); color:#fff; width: 100%; margin-top:15px;">סגור</button>
+            <div id="android-instr">
+                <p>לחץ על 3 הנקודות בתפריט הדפדפן ובחר <b>"התקן אפליקציה"</b>.</p>
+            </div>
+            <div id="ios-instr" style="display:none;">
+                <p>לחץ על <b>שתף</b> בתחתית המסך ואז על <b>"הוסף למסך הבית"</b>.</p>
+            </div>
+            <button class="action" onclick="closeInstallGuide()" style="background:var(--red); margin-top:15px; color:#fff; width: 100%;">סגור</button>
         </div>
     </div>
 
-    <footer class="main-footer">© 2026 Smart Money Pro v6.2.2 | אלכסיי זבודיסקר</footer>
+    <footer class="main-footer">
+        © 2026 Smart Money Pro v6.0.6 | אלכסיי זבודיסקר
+    </footer>
 
-    <script src="js/core.js?v=6.2.2"></script>
-    <script src="js/activities.js?v=6.2.2"></script>
-    <script src="js/economy.js?v=6.2.2"></script>
-    <script src="js/ui.js?v=6.2.2"></script>
+    <script src="js/core.js?v=6.0.6"></script>
+    <script src="js/activities.js?v=6.0.6"></script>
+    <script src="js/economy.js?v=6.0.6"></script>
+    <script src="js/ui.js?v=6.0.6"></script>
 
     <script>
-        const adminMessage = "ברוכים הבאים ל-Smart Money Pro! תתחילו לעבוד ולבנות את האימפריה שלכם.";
-
-        // פונקציה לעדכון נתונים מורחב בבית
-        function refreshHomeUI() {
-            if (typeof updateUI === 'function') updateUI();
-            
-            // עדכון המונים נוספים בתוך כרטיס הבית
-            const bizDisplay = document.getElementById('biz-count');
-            const carDisplay = document.getElementById('car-count');
-            const moneyDisplay = document.getElementById('money-display');
-            
-            if (bizDisplay && typeof businesses !== 'undefined') bizDisplay.innerText = businesses.length || 0;
-            if (carDisplay && typeof myCars !== 'undefined') carDisplay.innerText = myCars.length || 0;
-            if (moneyDisplay) moneyDisplay.innerText = Number(money).toLocaleString();
-        }
-
-        function claimDailyGift() {
-            const now = Date.now();
-            const lastGift = localStorage.getItem('lastDailyGift') || 0;
-            const cooldown = 24 * 60 * 60 * 1000;
-
-            if (now - lastGift < cooldown) {
-                const hoursLeft = Math.ceil((cooldown - (now - lastGift)) / (1000 * 60 * 60));
-                if(window.showStatus) showStatus(`🎁 חזור בעוד ${hoursLeft} שעות.`, 'yellow');
-                else alert(`חזור בעוד ${hoursLeft} שעות.`);
-                return;
-            }
-
-            // הוספת הכסף למשתנה הגלובלי
-            if (typeof money !== 'undefined') {
-                const gift = 1500;
-                money += gift;
-                localStorage.setItem('lastDailyGift', now);
-                if(window.saveGame) saveGame();
-                refreshHomeUI();
-                showStatus(`🎁 קיבלת ${gift}₪!`, 'green');
-            }
-        }
-
+        // פונקציית פתיחת טאבים מוודאת שכל הפונקציות קיימות
         function openTab(tabName) {
             const content = document.getElementById('content');
+            if (!content) return;
+
             document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById('btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
-            if(activeBtn) activeBtn.classList.add('active');
+            if (activeBtn) activeBtn.classList.add('active');
 
             content.innerHTML = ""; 
 
-            if(tabName === 'home') {
-                content.innerHTML = `
-                    <div class="card fade-in" style="border-right: 4px solid var(--purple);">
-                        <h3 style="margin:0; color:var(--purple); font-size: 16px;">📢 הודעת מנהל</h3>
-                        <p style="font-size: 14px;">${adminMessage}</p>
-                    </div>
-
-                    <div class="card fade-in">
-                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:8px;">
-                            <span>רמה <span id="life-level-ui-home">1</span></span>
-                            <span id="xp-text-home" style="color:var(--blue); font-weight:bold;">0/1000 XP</span>
-                        </div>
-                        <div class="progress-container" style="margin:0;"><div id="xp-bar-home" class="progress-bar xp-bar" style="width: 0%"></div></div>
-                    </div>
-
-                    <div class="grid-2 fade-in">
-                        <div class="card" style="border: 1px solid var(--yellow); text-align:center; cursor:pointer;" onclick="claimDailyGift()">
-                            <div style="font-size: 1.5rem;">🎁</div>
-                            <div style="font-size: 12px; font-weight:bold;">מתנה יומית</div>
-                        </div>
-                        <div class="card" style="border: 1px solid var(--blue); text-align:center; cursor:pointer;" onclick="document.getElementById('installModal').style.display='flex'">
-                            <div style="font-size: 1.5rem;">📲</div>
-                            <div style="font-size: 12px; font-weight:bold; color:var(--blue);">התקנה</div>
-                        </div>
-                    </div>
-
-                    <div class="card fade-in" style="border-right: 4px solid var(--green);">
-                        <h4 style="margin:0 0 10px 0;">📊 מצב עו"ש</h4>
-                        <div style="font-size: 18px; font-weight: bold; color: var(--green);">₪<span id="money-display">0</span></div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:12px; margin-top:10px;">
-                            <div>🏢 עסקים: <b id="biz-count">0</b></div>
-                            <div>🚗 רכבים: <b id="car-count">0</b></div>
-                        </div>
-                    </div>
-
-                    <div class="card fade-in" style="border: 1px solid var(--red); text-align:center; cursor:pointer; opacity: 0.6;" onclick="if(confirm('לאפס הכל?')) { localStorage.clear(); location.reload(); }">
-                        <div style="color: var(--red); font-size: 11px;">⚠️ איפוס משחק</div>
-                    </div>
-                `;
-                refreshHomeUI();
+            if (tabName === 'home') {
+                if (typeof drawHome === 'function') drawHome(content);
+                else {
+                    content.innerHTML = `<div class="card"><h3>🏠 ברוך הבא, אלכסיי</h3><p>בחר פעילות מהתפריט למעלה כדי להתחיל.</p></div>`;
+                }
             } 
-            else if(tabName === 'work') drawWork(content);
-            else if(tabName === 'invest') drawInvest(content);
-            else if(tabName === 'business') drawBusiness(content);
-            else if(tabName === 'tasks') drawTasks(content);
-            else if(tabName === 'estate') drawEstate(content);
-            else if(tabName === 'skills') drawSkills(content);
-            else if(tabName === 'bank') drawBank(content);
-            else if(tabName === 'cars') drawCars(content);
-            else if(tabName === 'market') drawMarket(content);
+            else if (tabName === 'work' && typeof drawWork === 'function') drawWork(content);
+            else if (tabName === 'invest' && typeof drawInvest === 'function') drawInvest(content);
+            else if (tabName === 'business' && typeof drawBusiness === 'function') drawBusiness(content);
+            else if (tabName === 'tasks' && typeof drawTasks === 'function') drawTasks(content);
+            else if (tabName === 'estate' && typeof drawEstate === 'function') drawEstate(content);
+            else if (tabName === 'skills' && typeof drawSkills === 'function') drawSkills(content);
+            else if (tabName === 'bank' && typeof drawBank === 'function') drawBank(content);
+            else if (tabName === 'cars' && typeof drawCars === 'function') drawCars(content);
+            else if (tabName === 'market' && typeof drawMarket === 'function') drawMarket(content);
+            
+            // עדכון UI כללי אחרי מעבר טאב
+            if (typeof updateUI === 'function') updateUI();
         }
 
-        function closeInstallGuide() { document.getElementById('installModal').style.display = 'none'; }
-        document.addEventListener('DOMContentLoaded', () => openTab('home'));
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js?v=6.0.6').then(reg => {
+                    reg.update();
+                });
+            });
+        }
+
+        function closeInstallGuide() {
+            document.getElementById('installModal').style.display = 'none';
+        }
+
+        // טעינה ראשונית של דף הבית
+        document.addEventListener('DOMContentLoaded', () => {
+            openTab('home');
+            
+            // זיהוי אוטומטי של iOS להצגת הוראות מתאימות
+            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                document.getElementById('android-instr').style.display = 'none';
+                document.getElementById('ios-instr').style.display = 'block';
+            }
+        });
     </script>
 </body>
 </html>
