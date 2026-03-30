@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.1.4</title>
+    <title>Smart Money Pro | v6.1.5</title>
     
-    <link rel="manifest" href="manifest.json?v=6.1.4">
+    <link rel="manifest" href="manifest.json?v=6.1.5">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.1.4">
+    <link rel="stylesheet" href="style.css?v=6.1.5">
 </head>
 <body class="dark-theme">
     
@@ -25,7 +25,7 @@
         <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
     </div>
 
-    <div id="status-bar" class="status-msg"></div>
+    <div id="status-bar" class="status-msg" style="transition: all 0.3s ease; border: 1px solid transparent;"></div>
 
     <nav class="topbar">
         <div class="nav-row">
@@ -45,8 +45,8 @@
         </div>
         <div class="nav-row">
             <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-            <button onclick="forceUpdate()" class="sys-btn">🔄 עדכון</button>
-            <button onclick="toggleTheme()" class="sys-btn">🌓 מצב</button>
+            <button onclick="forceUpdate()" class="sys-btn" title="רענון גרסה">🔄 עדכון</button>
+            <button onclick="toggleTheme()" class="sys-btn" title="מצב יום/לילה">🌓 מצב</button>
         </div>
     </nav>
 
@@ -55,41 +55,50 @@
     <div id="installModal" class="modal-overlay" style="display:none;" onclick="closeInstallGuide()">
         <div class="modal-card" onclick="event.stopPropagation()">
             <h3>📲 התקנת האפליקציה</h3>
-            <div id="android-instr"><p>לחץ על 3 הנקודות בתפריט ובחר <b>"התקן אפליקציה"</b>.</p></div>
-            <div id="ios-instr" style="display:none;"><p>לחץ על <b>שתף</b> ואז על <b>"הוסף למסך הבית"</b>.</p></div>
+            <div id="android-instr">
+                <p>לחץ על 3 הנקודות בתפריט ובחר <b>"התקן אפליקציה"</b>.</p>
+            </div>
+            <div id="ios-instr" style="display:none;">
+                <p>לחץ על <b>שתף</b> ואז על <b>"הוסף למסך הבית"</b>.</p>
+            </div>
             <button class="action" onclick="closeInstallGuide()" style="background:var(--red); margin-top:15px; color:#fff;">סגור</button>
         </div>
     </div>
 
-    <footer class="main-footer">© 2026 Smart Money Pro v6.1.4 | אלכסיי זבודיסקר</footer>
+    <footer class="main-footer">
+        © 2026 Smart Money Pro v6.1.5 | אלכסיי זבודיסקר
+    </footer>
 
-    <script src="js/core.js?v=6.1.4"></script>
-    <script src="js/activities.js?v=6.1.4"></script>
-    <script src="js/economy.js?v=6.1.4"></script>
-    <script src="js/ui.js?v=6.1.4"></script>
+    <script src="js/core.js?v=6.1.5"></script>
+    <script src="js/activities.js?v=6.1.5"></script>
+    <script src="js/economy.js?v=6.1.5"></script>
+    <script src="js/ui.js?v=6.1.5"></script>
 
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=6.1.4');
+                navigator.serviceWorker.register('sw.js?v=6.1.5').then(reg => {
+                    reg.update();
+                }).catch(err => console.log('SW Reg Failed', err));
             });
         }
 
+        // --- הוספת הפונקציה שחסרה לניהול הטאבים ---
         function openTab(tabName) {
             const content = document.getElementById('content');
+            
+            // עדכון כפתור פעיל בתפריט
             document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById('btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
-            if(activeBtn) activeBtn.classList.add('active');
+            const btnId = 'btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+            if(document.getElementById(btnId)) document.getElementById(btnId).classList.add('active');
 
-            content.innerHTML = ""; 
+            content.innerHTML = "";
 
             if(tabName === 'home') {
-                // כאן החזרתי את כל המבנה המלא של דף הבית
                 content.innerHTML = `
                     <div class="card fade-in">
                         <h3>🏠 מרכז שליטה</h3>
-                        <p>שלום אלכסיי, האימפריה שלך מוכנה להמשך פעילות.</p>
-                        
+                        <p>שלום ,ברוך הבא חזרה לאימפריה שלך.</p>
                         <div style="margin-top:15px;">
                             <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
                                 <span>התקדמות לרמה הבאה</span>
@@ -102,20 +111,17 @@
                     </div>
 
                     <div class="grid-2 fade-in">
-                        <div class="card" style="border: 1px solid var(--yellow); cursor: pointer;" onclick="if(typeof claimDailyGift === 'function') claimDailyGift(); else alert('🎁 מתנה תהיה זמינה בקרוב!');">
+                        <div class="card" style="border: 1px solid var(--yellow); cursor: pointer;" onclick="if(typeof claimDailyGift === 'function') claimDailyGift(); else showStatus('🎁 מתנה תהיה זמינה בקרוב!', 'yellow');">
                             <div style="font-size: 1.5rem;">🎁</div>
-                            <div style="font-size: 12px; font-weight: bold; margin-top: 5px;">מתנה יומית</div>
+                            <div style="font-size: 11px; font-weight: bold; margin-top: 5px;">מתנה יומית</div>
                         </div>
 
                         <div class="card" style="border: 1px solid var(--blue); background: rgba(56, 189, 248, 0.05); cursor: pointer;" onclick="document.getElementById('installModal').style.display='flex'">
                             <div style="font-size: 1.5rem;">📲</div>
-                            <div style="font-size: 12px; font-weight: bold; margin-top: 5px; color: var(--blue);">התקנת אפליקציה</div>
+                            <div style="font-size: 11px; font-weight: bold; margin-top: 5px; color: var(--blue);">התקנת אפליקציה</div>
                         </div>
                     </div>
-
-                    <div id="home-dynamic-content"></div>
                 `;
-                // קריאה לפונקציית עדכון UI כדי שהנתונים (XP) יתמלאו מיד
                 if(typeof updateUI === 'function') updateUI();
             } 
             else if(tabName === 'work') drawWork(content);
@@ -133,6 +139,7 @@
             document.getElementById('installModal').style.display = 'none';
         }
 
+        // טעינה ראשונית של דף הבית
         document.addEventListener('DOMContentLoaded', () => {
             openTab('home');
         });
