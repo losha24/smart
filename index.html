@@ -3,28 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.1.1</title>
+    <title>Smart Money Pro | v6.1.2</title>
     
-    <link rel="manifest" href="manifest.json?v=6.1.1">
+    <link rel="manifest" href="manifest.json?v=6.1.2">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.1.1">
+    <link rel="stylesheet" href="style.css?v=6.1.2">
     <style>
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
         .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid var(--blue); }
         
         /* עיצוב הודעת מנהל משופר */
         .admin-box {
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(59, 130, 246, 0.15);
             border-right: 4px solid var(--blue);
             padding: 15px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-size: 14px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -78,16 +79,16 @@
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.1.1 | אלכסיי זבודיסקר
+        © 2026 Smart Money Pro v6.1.2 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.1.1"></script>
-    <script src="js/activities.js?v=6.1.1"></script>
-    <script src="js/economy.js?v=6.1.1"></script>
-    <script src="js/ui.js?v=6.1.1"></script>
+    <script src="js/core.js?v=6.1.2"></script>
+    <script src="js/activities.js?v=6.1.2"></script>
+    <script src="js/economy.js?v=6.1.2"></script>
+    <script src="js/ui.js?v=6.1.2"></script>
 
     <script>
-        const adminMsgText = "ברוכים הבאים! כל הנתונים שלכם נשמרו. הודעת המנהל כעת משולבת עם הבית המקורי.";
+        const adminMsgText = "ברוכים הבאים אלכסיי! הגרסה עודכנה בהצלחה. כל הנתונים וההודעות מסונכרנים עכשיו.";
 
         function showStatus(msg, type = 'blue') {
             const bar = document.getElementById('status-bar');
@@ -110,22 +111,21 @@
             content.innerHTML = ""; 
 
             if (tabName === 'home') {
-                // 1. הוספת הודעת מנהל בראש העמוד
-                const adminDiv = document.createElement('div');
-                adminDiv.className = 'admin-box fade-in';
-                adminDiv.innerHTML = `📢 <b>עדכון מערכת:</b><br>${adminMsgText}`;
-                content.appendChild(adminDiv);
-
-                // 2. קריאה לפונקציה המקורית מ-activities.js כדי להחזיר את כל מה שנעלם
+                // 1. קודם כל נבנה את הבית המקורי
                 if (typeof drawHome === 'function') {
                     drawHome(content); 
                 } else {
-                    // גיבוי למקרה ש-drawHome לא מוגדרת
-                    const backup = document.createElement('div');
-                    backup.className = 'card';
-                    backup.innerHTML = `<h3>🏠 שלום אלכסיי</h3><p>הנתונים שלך נטענים...</p>`;
-                    content.appendChild(backup);
+                    content.innerHTML = `<div class="card"><h3>🏠 בית</h3><p>הנתונים בטעינה...</p></div>`;
                 }
+
+                // 2. עכשיו נוסיף את הודעת המנהל לראש העמוד (בלי למחוק את מה ש-drawHome עשתה)
+                const adminDiv = document.createElement('div');
+                adminDiv.className = 'admin-box fade-in';
+                adminDiv.innerHTML = `📢 <b>הודעת מנהל:</b><br>${adminMsgText}`;
+                
+                // prepend מכניס את האלמנט בתחילת ה-content (מעל הכל)
+                content.prepend(adminDiv);
+
             } 
             else if (tabName === 'work' && typeof drawWork === 'function') drawWork(content);
             else if (tabName === 'invest' && typeof drawInvest === 'function') drawInvest(content);
