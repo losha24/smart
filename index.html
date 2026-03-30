@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.1.9</title>
+    <title>Smart Money Pro | v6.2.0</title>
     
-    <link rel="manifest" href="manifest.json?v=6.1.9">
+    <link rel="manifest" href="manifest.json?v=6.2.0">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.1.9">
+    <link rel="stylesheet" href="style.css?v=6.2.0">
     <style>
         /* תיקון מרכוז למודאל ההתקנה */
         .modal-overlay {
@@ -19,16 +19,17 @@
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.9);
             z-index: 9999;
-            justify-content: center; /* מרכוז אופקי */
-            align-items: center;    /* מרכוז אנכי */
+            justify-content: center;
+            align-items: center;
         }
         .modal-card {
-            width: 90%;
+            width: 85%;
             max-width: 320px;
-            text-align: center; /* מרכוז טקסט פנימי */
-            padding: 25px;
+            text-align: center;
+            padding: 30px;
+            border: 1px solid var(--blue);
         }
     </style>
 </head>
@@ -73,8 +74,8 @@
 
     <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
         <div class="modal-card" onclick="event.stopPropagation()">
-            <div style="font-size: 3rem; margin-bottom: 10px;">📲</div>
-            <h3 style="margin-bottom: 15px;">התקנת האפליקציה</h3>
+            <div style="font-size: 3rem; margin-bottom: 15px;">📲</div>
+            <h3>התקנת האפליקציה</h3>
             <div id="android-instr">
                 <p>לחץ על <b>3 הנקודות</b> בדפדפן<br>ובחר ב-<b>"התקן אפליקציה"</b>.</p>
             </div>
@@ -86,28 +87,27 @@
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.1.9 | אלכסיי זבודיסקר
+        © 2026 Smart Money Pro v6.2.0 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.1.9"></script>
-    <script src="js/activities.js?v=6.1.9"></script>
-    <script src="js/economy.js?v=6.1.9"></script>
-    <script src="js/ui.js?v=6.1.9"></script>
+    <script src="js/core.js?v=6.2.0"></script>
+    <script src="js/activities.js?v=6.2.0"></script>
+    <script src="js/economy.js?v=6.2.0"></script>
+    <script src="js/ui.js?v=6.2.0"></script>
 
     <script>
-        const adminMessage = "ברוכים הבאים לגרסה 6.1.9! הוספנו מנגנון מתנה יומית וכפתור איפוס משחק במרכז השליטה.";
+        const adminMessage = "ברוכים הבאים לגרסה המעודכנת! כל הנתונים והכלים שלך מרוכזים כאן. בהצלחה בבניית האימפריה!";
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=6.1.9');
+                navigator.serviceWorker.register('sw.js?v=6.2.0');
             });
         }
 
-        // --- פונקציית מתנה יומית ---
         function claimDailyGift() {
             const now = Date.now();
             const lastGift = localStorage.getItem('lastDailyGift') || 0;
-            const cooldown = 24 * 60 * 60 * 1000; // 24 שעות
+            const cooldown = 24 * 60 * 60 * 1000;
 
             if (now - lastGift < cooldown) {
                 const hoursLeft = Math.ceil((cooldown - (now - lastGift)) / (1000 * 60 * 60));
@@ -115,7 +115,7 @@
                 return;
             }
 
-            const amount = Math.floor(Math.random() * 1000) + 500;
+            const amount = Math.floor(Math.random() * 2000) + 1000;
             money += amount;
             localStorage.setItem('lastDailyGift', now);
             saveGame();
@@ -123,9 +123,8 @@
             showStatus(`🎁 קיבלת מתנה יומית בסך ${amount}₪!`, 'green');
         }
 
-        // --- פונקציית איפוס משחק ---
         function resetGameWithConfirm() {
-            if (confirm("⚠️ האם אתה בטוח שברצונך לאפס את כל המשחק? כל הכסף והנכסים יימחקו!")) {
+            if (confirm("⚠️ האם אתה בטוח? כל ההתקדמות שלך תימחק לצמיתות!")) {
                 localStorage.clear();
                 location.reload();
             }
@@ -134,34 +133,54 @@
         function openTab(tabName) {
             const content = document.getElementById('content');
             document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
-            const btnId = 'btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
-            if(document.getElementById(btnId)) document.getElementById(btnId).classList.add('active');
+            const activeBtn = document.getElementById('btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            if(activeBtn) activeBtn.classList.add('active');
 
             content.innerHTML = ""; 
 
             if(tabName === 'home') {
                 content.innerHTML = `
                     <div class="card fade-in" style="border-right: 4px solid var(--purple);">
-                        <h3 style="margin-top:0; color:var(--purple); font-size: 16px;">📢 הודעת מנהל</h3>
-                        <p style="font-size: 14px;">${adminMessage}</p>
+                        <h3 style="margin:0; color:var(--purple); font-size: 16px;">📢 הודעת מנהל</h3>
+                        <p style="font-size: 14px; margin-top:5px;">${adminMessage}</p>
+                    </div>
+
+                    <div class="card fade-in">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:8px;">
+                            <span>רמה <span id="home-level">1</span></span>
+                            <span id="xp-text" style="color:var(--blue); font-weight:bold;">0/1000 XP</span>
+                        </div>
+                        <div class="progress-container" style="margin:0;">
+                            <div id="xp-bar" class="progress-bar xp-bar" style="width: 0%"></div>
+                        </div>
                     </div>
 
                     <div class="grid-2 fade-in">
-                        <div class="card" style="border: 1px solid var(--yellow); cursor: pointer; text-align:center;" onclick="claimDailyGift()">
-                            <div style="font-size: 1.5rem;">🎁</div>
+                        <div class="card" style="border: 1px solid var(--yellow); cursor: pointer; text-align:center; padding: 15px;" onclick="claimDailyGift()">
+                            <div style="font-size: 1.8rem;">🎁</div>
                             <div style="font-size: 12px; font-weight: bold; margin-top: 5px;">מתנה יומית</div>
                         </div>
-
-                        <div class="card" style="border: 1px solid var(--blue); background: rgba(56, 189, 248, 0.05); cursor: pointer; text-align:center;" onclick="document.getElementById('installModal').style.display='flex'">
-                            <div style="font-size: 1.5rem;">📲</div>
+                        <div class="card" style="border: 1px solid var(--blue); background: rgba(56, 189, 248, 0.05); cursor: pointer; text-align:center; padding: 15px;" onclick="document.getElementById('installModal').style.display='flex'">
+                            <div style="font-size: 1.8rem;">📲</div>
                             <div style="font-size: 12px; font-weight: bold; margin-top: 5px; color: var(--blue);">התקנת אפליקציה</div>
                         </div>
                     </div>
 
-                    <div class="card fade-in" style="border: 1px solid var(--red); text-align:center; padding: 10px; cursor: pointer;" onclick="resetGameWithConfirm()">
-                        <div style="color: var(--red); font-weight: bold; font-size: 13px;">⚠️ איפוס משחק</div>
+                    <div class="card fade-in" style="border-right: 4px solid var(--green);">
+                        <h4 style="margin:0 0 12px 0; font-size:15px;">📊 סיכום נכסים</h4>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-size:13px;">
+                            <div style="background:rgba(0,0,0,0.1); padding:8px; border-radius:8px;">🏢 עסקים: <b id="biz-count">0</b></div>
+                            <div style="background:rgba(0,0,0,0.1); padding:8px; border-radius:8px;">🏠 נדל"ן: <b id="estate-count">0</b></div>
+                            <div style="background:rgba(0,0,0,0.1); padding:8px; border-radius:8px;">🚗 רכבים: <b id="car-count">0</b></div>
+                            <div style="background:rgba(0,0,0,0.1); padding:8px; border-radius:8px;">💎 מניות: <b id="stock-count">0</b></div>
+                        </div>
+                    </div>
+
+                    <div class="card fade-in" style="border: 1px solid var(--red); text-align:center; padding: 8px; cursor: pointer; margin-top: 10px; opacity: 0.7;" onclick="resetGameWithConfirm()">
+                        <div style="color: var(--red); font-size: 11px; font-weight: bold;">⚠️ איפוס נתוני משחק</div>
                     </div>
                 `;
+                // קריאה לעדכון הנתונים ב-UI
                 if(typeof updateUI === 'function') updateUI();
             } 
             else if(tabName === 'work') drawWork(content);
