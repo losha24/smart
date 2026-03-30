@@ -42,7 +42,7 @@ body {
 /* לוגו עליון */
 .main-header { 
     background: var(--card); 
-    height: 50px; 
+    height: 70px; 
     display: flex; 
     justify-content: center; 
     align-items: center; 
@@ -50,7 +50,7 @@ body {
 }
 
 .header-logo-big { 
-    max-height: 30px; 
+    max-height: 55px; 
     cursor: pointer;
     transition: 0.2s;
 }
