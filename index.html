@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.0.6</title>
+    <title>Smart Money Pro | v6.1.3</title>
     
-    <link rel="manifest" href="manifest.json?v=6.0.6">
+    <link rel="manifest" href="manifest.json?v=6.1.3">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.0.6">
+    <link rel="stylesheet" href="style.css?v=6.1.3">
 </head>
 <body class="dark-theme">
     
@@ -25,7 +26,7 @@
         <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
     </div>
 
-    <div id="status-bar" class="status-msg" style="transition: all 0.3s ease; border: 1px solid transparent;"></div>
+    <div id="status-bar"></div>
 
     <nav class="topbar">
         <div class="nav-row">
@@ -66,29 +67,70 @@
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.0.6 | Alexey Zavodisker
+        © 2026 Smart Money Pro v6.1.3 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.0.6"></script>
-    <script src="js/activities.js?v=6.0.6"></script>
-    <script src="js/economy.js?v=6.0.6"></script>
-    <script src="js/ui.js?v=6.0.6"></script>
+    <script src="js/core.js?v=6.1.3"></script>
+    <script src="js/activities.js?v=6.1.3"></script>
+    <script src="js/economy.js?v=6.1.3"></script>
+    <script src="js/ui.js?v=6.1.3"></script>
 
     <script>
-        // רישום Service Worker ועדכון גרסה אגרסיבי
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=6.0.6').then(reg => {
-                    console.log('SW v6.0.6 Active');
-                    reg.update(); // בודק אם יש גרסה חדשה בשרת
+                navigator.serviceWorker.register('sw.js?v=6.1.3').then(reg => {
+                    reg.update(); 
                 }).catch(err => console.log('SW Reg Failed', err));
             });
         }
 
-        // פונקציה לסגירת מדריך ההתקנה
+        function openTab(tabName) {
+            const content = document.getElementById('content');
+            document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
+            
+            const btnId = 'btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+            const activeBtn = document.getElementById(btnId);
+            if(activeBtn) activeBtn.classList.add('active');
+
+            content.innerHTML = ""; 
+
+            if(tabName === 'home') {
+                content.innerHTML = `
+                    <div class="card fade-in">
+                        <h3>🏠 מרכז שליטה</h3>
+                        <p>שלום, האימפריה שלך מוכנה להמשך פעילות.</p>
+                    </div>
+
+                    <div class="grid-2 fade-in">
+                        <div class="card" style="border: 1px solid var(--yellow); cursor: pointer;" onclick="showStatus('🎁 מתנה יומית תהיה זמינה בקרוב!', 'yellow')">
+                            <div style="font-size: 1.5rem;">🎁</div>
+                            <div style="font-size: 12px; font-weight: bold; margin-top: 5px;">מתנה יומית</div>
+                        </div>
+
+                        <div class="card" style="border: 1px solid var(--blue); background: rgba(56, 189, 248, 0.05); cursor: pointer;" onclick="document.getElementById('installModal').style.display='flex'">
+                            <div style="font-size: 1.5rem;">📲</div>
+                            <div style="font-size: 12px; font-weight: bold; margin-top: 5px; color: var(--blue);">התקנת אפליקציה</div>
+                        </div>
+                    </div>`;
+            } 
+            else if(tabName === 'work') drawWork(content);
+            else if(tabName === 'invest') drawMarket(content);
+            else if(tabName === 'business') drawBusiness(content);
+            else if(tabName === 'tasks') drawTasks(content);
+            else if(tabName === 'estate') drawEstate(content);
+            else if(tabName === 'skills') drawSkills(content);
+            else if(tabName === 'bank') drawBank(content);
+            else if(tabName === 'cars') drawCars(content);
+            else if(tabName === 'market') drawMarket(content);
+        }
+
         function closeInstallGuide() {
             document.getElementById('installModal').style.display = 'none';
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            openTab('home');
+        });
     </script>
 </body>
 </html>
