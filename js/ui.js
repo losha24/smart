@@ -1,38 +1,41 @@
-/* Smart Money Pro - js/ui.js - v6.0.8 - Sync & Tabs Fix */
+/* Smart Money Pro - js/ui.js - v6.1.2 - Full Sync & 1000 XP */
 
 let deferredPrompt;
-let currentTab = 'home'; // מעקב אחרי הלשונית הפתוחה
+let currentTab = 'home'; 
 
-// תפיסת אירוע ההתקנה של ה-PWA
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
     renderInstallBtn();
 });
 
-// --- פונקציית רינדור (נקראת מה-Core 10 פעמים בשנייה) ---
+// --- פונקציית רינדור מהירה (20 פעמים בשנייה מה-Core) ---
 function renderUIUpdate() {
-    // עדכון אלמנטים בדף הבית אם הוא פתוח
     if (currentTab === 'home') {
         const passiveEl = document.getElementById('passive-display');
         const progressEl = document.getElementById('xp-progress-bar');
         const xpTextEl = document.getElementById('xp-text-detail');
+        const levelValEl = document.getElementById('home-level-val');
         
         if (passiveEl) passiveEl.innerText = passive.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "₪/ש";
         
         if (progressEl && xpTextEl) {
-            const progress = ((lifeXP % 5000) / 5000) * 100;
+            // עדכון ל-1000 XP כפי שסיכמנו
+            const progress = ((lifeXP % 1000) / 1000) * 100;
             progressEl.style.width = progress + "%";
-            xpTextEl.innerText = Math.floor(lifeXP % 5000).toLocaleString() + " / 5,000 XP";
+            xpTextEl.innerText = Math.floor(lifeXP % 1000).toLocaleString() + " / 1,000 XP";
+        }
+        
+        if (levelValEl) {
+            const level = Math.floor(lifeXP / 1000) + 1;
+            levelValEl.innerText = level;
         }
     }
 }
 
 // --- ניווט ראשי ---
 function openTab(t) {
-    currentTab = t; // עדכון הלשונית הנוכחית
-    
-    // עדכון כפתורי התפריט
+    currentTab = t; 
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
     const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
     const btn = document.getElementById(btnId);
@@ -61,16 +64,14 @@ function openTab(t) {
         
         c.style.opacity = "1";
         window.scrollTo(0,0);
-        
-        // קריאה לעדכון הבר העליון מה-Core
         if(typeof updateUI === 'function') updateUI();
     }, 120);
 }
 
-// --- ציור דף הבית (Dashboard) ---
+// --- ציור דף הבית ---
 function drawHome(c) {
-    const level = Math.floor(lifeXP / 5000) + 1;
-    const progress = ((lifeXP % 5000) / 5000) * 100;
+    const level = Math.floor(lifeXP / 1000) + 1;
+    const progress = ((lifeXP % 1000) / 1000) * 100;
 
     c.innerHTML = `
         <div class="card fade-in">
@@ -85,7 +86,7 @@ function drawHome(c) {
             <div class="card" style="background:rgba(255,255,255,0.03); margin-bottom:15px; padding:12px; border:1px solid var(--border);">
                 <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px;">
                     <span>רמת חיים <b id="home-level-val">${level}</b></span>
-                    <span id="xp-text-detail" style="opacity:0.8;">${Math.floor(lifeXP % 5000).toLocaleString()} / 5,000 XP</span>
+                    <span id="xp-text-detail" style="opacity:0.8;">${Math.floor(lifeXP % 1000).toLocaleString()} / 1,000 XP</span>
                 </div>
                 <div style="height:10px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
                     <div id="xp-progress-bar" style="width:${progress}%; height:100%; background:linear-gradient(90deg, var(--blue), #60a5fa); transition: width 0.5s ease;"></div>
@@ -112,7 +113,7 @@ function drawHome(c) {
                 <small style="opacity:0.6; display:block; margin-bottom:10px;">📦 הציוד שלי:</small>
                 <div id="inventory-list" style="display:flex; gap:10px; overflow-x:auto; min-height:55px; padding-bottom:5px; align-items:center;">
                     ${inventory.length > 0 
-                        ? inventory.map(item => `<div class="inv-item-icon">📦</div>`).join('') 
+                        ? inventory.map(item => `<div class="inv-item-icon">📦</div>`)
                         : '<span style="opacity:0.4; font-size:12px; font-style:italic;">אין פריטים במלאי...</span>'}
                 </div>
             </div>
@@ -125,13 +126,12 @@ function drawHome(c) {
     renderInstallBtn();
 }
 
-// --- ניהול התקנת PWA ---
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     if(!isStandalone && deferredPrompt) {
-        cont.innerHTML = `<button class="action" style="background:var(--blue); color:#fff; font-weight:bold;" onclick="triggerInstall()">📲 התקן כקיצור דרך</button>`;
+        cont.innerHTML = `<button class="action" style="background:var(--blue); color:#fff; font-weight:bold;" onclick="triggerInstall()">📲 התקן</button>`;
     } else { cont.innerHTML = ""; }
 }
 
@@ -143,7 +143,5 @@ async function triggerInstall() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => {
-        openTab('home');
-    }, 150);
+    setTimeout(() => { openTab('home'); }, 150);
 });
