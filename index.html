@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.0.6</title>
+    <title>Smart Money Pro | v6.1.0</title>
     
-    <link rel="manifest" href="manifest.json?v=6.0.6">
+    <link rel="manifest" href="manifest.json?v=6.1.0">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.0.6">
+    <link rel="stylesheet" href="style.css?v=6.1.0">
     <style>
         /* מרכוז חלון ההתקנה */
         .modal-overlay {
@@ -33,6 +33,16 @@
             border-radius: 15px;
             border: 1px solid var(--blue);
         }
+        /* עיצוב הודעת מנהל */
+        .admin-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-right: 4px solid var(--blue);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body class="dark-theme">
@@ -47,7 +57,7 @@
         <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
     </div>
 
-    <div id="status-bar" class="status-msg"></div>
+    <div id="status-bar" class="status-msg" style="transition: opacity 0.3s ease;"></div>
 
     <nav class="topbar">
         <div class="nav-row">
@@ -90,16 +100,29 @@
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.0.6 | אלכסיי זבודיסקר
+        © 2026 Smart Money Pro v6.1.0 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.0.6"></script>
-    <script src="js/activities.js?v=6.0.6"></script>
-    <script src="js/economy.js?v=6.0.6"></script>
-    <script src="js/ui.js?v=6.0.6"></script>
+    <script src="js/core.js?v=6.1.0"></script>
+    <script src="js/activities.js?v=6.1.0"></script>
+    <script src="js/economy.js?v=6.1.0"></script>
+    <script src="js/ui.js?v=6.1.0"></script>
 
     <script>
-        // פונקציית פתיחת טאבים מוודאת שכל הפונקציות קיימות
+        // הודעת מנהל הניתנת לעריכה
+        const adminMsgText = "ברוכים הבאים לגרסה v6.1.0! תוקנה מערכת ההודעות בקניית רכבים וכישורים. בהצלחה!";
+
+        // פונקציית הודעות הסטטוס (תוקן: עכשיו יציג אדום/ירוק)
+        function showStatus(msg, type = 'blue') {
+            const bar = document.getElementById('status-bar');
+            if (!bar) return;
+            const colors = { 'green': '#22c55e', 'red': '#ef4444', 'blue': '#3b82f6', 'yellow': '#eab308' };
+            bar.innerText = msg;
+            bar.style.backgroundColor = colors[type] || colors.blue;
+            bar.style.opacity = "1";
+            setTimeout(() => { bar.style.opacity = "0"; }, 3000);
+        }
+
         function openTab(tabName) {
             const content = document.getElementById('content');
             if (!content) return;
@@ -111,10 +134,23 @@
             content.innerHTML = ""; 
 
             if (tabName === 'home') {
-                if (typeof drawHome === 'function') drawHome(content);
-                else {
-                    content.innerHTML = `<div class="card"><h3>🏠 ברוך הבא, אלכסיי</h3><p>בחר פעילות מהתפריט למעלה כדי להתחיל.</p></div>`;
-                }
+                // דף בית עם הודעת מנהל מעל רמת החיים
+                content.innerHTML = `
+                    <div class="card fade-in">
+                        <div class="admin-box">📢 <b>הודעת מנהל:</b><br>${adminMsgText}</div>
+                        
+                        <h3>🏠 מרכז שליטה</h3>
+                        <div style="margin-bottom:15px;">
+                             <div style="display:flex; justify-content:space-between; font-size:12px;">
+                                <span>התקדמות לרמה הבאה</span>
+                                <span id="xp-text">0/1000</span>
+                             </div>
+                             <div class="progress-container"><div id="xp-bar" class="progress-bar xp-bar" style="width:0%"></div></div>
+                        </div>
+                        <p>שלום <b>אלכסיי</b>, הנתונים שלך מעודכנים בזמן אמת.</p>
+                    </div>
+                `;
+                if (typeof updateUI === 'function') updateUI();
             } 
             else if (tabName === 'work' && typeof drawWork === 'function') drawWork(content);
             else if (tabName === 'invest' && typeof drawInvest === 'function') drawInvest(content);
@@ -126,15 +162,12 @@
             else if (tabName === 'cars' && typeof drawCars === 'function') drawCars(content);
             else if (tabName === 'market' && typeof drawMarket === 'function') drawMarket(content);
             
-            // עדכון UI כללי אחרי מעבר טאב
             if (typeof updateUI === 'function') updateUI();
         }
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=6.0.6').then(reg => {
-                    reg.update();
-                });
+                navigator.serviceWorker.register('sw.js?v=6.1.0').then(reg => reg.update());
             });
         }
 
@@ -142,11 +175,8 @@
             document.getElementById('installModal').style.display = 'none';
         }
 
-        // טעינה ראשונית של דף הבית
         document.addEventListener('DOMContentLoaded', () => {
             openTab('home');
-            
-            // זיהוי אוטומטי של iOS להצגת הוראות מתאימות
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 document.getElementById('android-instr').style.display = 'none';
                 document.getElementById('ios-instr').style.display = 'block';
