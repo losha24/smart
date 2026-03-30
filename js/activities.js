@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v6.0.9 - Fast Passive Boost */
+/* Smart Money Pro - js/activities.js - v6.2.1 - Full Features & Estate */
 
 // --- מאגרי נתונים ---
 const jobList = [
@@ -12,6 +12,14 @@ const jobList = [
     { id: 'j8', name: 'מתכנת PWA', pay: 900, xp: 480, time: 20000, icon: '💻', req: 'תכנות' },
     { id: 'j9', name: 'מנהל רשת', pay: 1750, xp: 850, time: 25000, icon: '🌐', req: 'ניהול רשת' },
     { id: 'j10', name: 'ארכיטקט', pay: 3500, xp: 1500, time: 35000, icon: '🏛️', req: 'ניהול טכנולוגי' }
+];
+
+const estateList = [
+    { id: 'e1', name: 'מחסן להשכרה', price: 15000, passive: 120, icon: '📦' },
+    { id: 'e2', name: 'דירת סטודיו', price: 150000, passive: 950, icon: '🏠' },
+    { id: 'e3', name: 'חנות ברחוב', price: 450000, passive: 3200, icon: '🏪' },
+    { id: 'e4', name: 'בניין מגורים', price: 2500000, passive: 18500, icon: '🏢' },
+    { id: 'e5', name: 'מרכז מסחרי', price: 12000000, passive: 95000, icon: '🏗️' }
 ];
 
 const skillList = [
@@ -82,7 +90,6 @@ function startWork(id) {
         money += j.pay;
         lifeXP += j.xp;
         
-        // 🚀 עדכון: בונוס פסיבי גדל ל-15% מהשכר לקידום מהיר
         const passiveAdd = j.pay * 0.15; 
         passive += passiveAdd; 
 
@@ -97,6 +104,65 @@ function startWork(id) {
     }, actualTime);
 }
 
+// --- פונקציות נדל"ן (Estate) ---
+
+function drawEstate(c) {
+    let html = `<h3>🏠 השקעות נדל"ן</h3><div class="grid-2">`;
+    estateList.forEach(e => {
+        const count = inventory.filter(item => item === e.name).length;
+        html += `
+            <div class="card fade-in" style="text-align:center; border: 1px solid var(--border)">
+                <div style="font-size:30px; margin-bottom:5px;">${e.icon}</div>
+                <div style="font-size:13px; font-weight:bold;">${e.name}</div>
+                <div style="color:var(--green); font-size:11px; margin:5px 0;">+${e.passive}₪ / שעה</div>
+                <div style="font-size:10px; opacity:0.6; margin-bottom:10px;">בבעלותך: ${count}</div>
+                <button class="sys-btn" style="width:100%;" onclick="buyEstate('${e.id}')">
+                    ${e.price.toLocaleString()}₪
+                </button>
+            </div>`;
+    });
+    c.innerHTML = html + `</div>`;
+}
+
+function buyEstate(id) {
+    const e = estateList.find(x => x.id === id);
+    if (!e || money < e.price) return showMsg("אין מספיק כסף!", "var(--red)");
+
+    money -= e.price;
+    passive += e.passive;
+    inventory.push(e.name);
+    showMsg(`🏠 תתחדש! רכשת ${e.name}`, "var(--green)");
+    saveGame(); updateUI(); drawEstate(document.getElementById('content'));
+}
+
+// --- פונקציות בנק ---
+
+function drawBank(c) {
+    c.innerHTML = `
+        <div class="card fade-in" style="text-align:center;">
+            <h3>🏦 בנק הפועלים</h3>
+            <div class="card" style="background:rgba(0,0,0,0.2); margin-bottom:15px;">
+                <small>יתרה בבנק</small>
+                <h2 style="color:var(--blue); margin:5px 0;">${bank.toLocaleString()}₪</h2>
+            </div>
+            <div class="grid-2">
+                <button class="sys-btn" onclick="bankAction('dep')">הפקדה</button>
+                <button class="sys-btn" onclick="bankAction('wit')">משיכה</button>
+            </div>
+            <hr style="margin:20px 0; opacity:0.1;">
+            <div style="font-size:12px; color:var(--red);">חוב הלוואה: ${loan.toLocaleString()}₪</div>
+            <button class="action" style="margin-top:10px; background:#451a1a; color:white;" onclick="takeLoan()">קח הלוואה (50,000₪)</button>
+        </div>
+    `;
+}
+
+function takeLoan() {
+    loan += 50000;
+    money += 50000;
+    showMsg("🏦 לקחת הלוואה של 50,000₪. שים לב לריבית!", "var(--yellow)");
+    saveGame(); updateUI(); drawBank(document.getElementById('content'));
+}
+
 // --- פונקציות קזינו ---
 
 function drawTasks(c) {
@@ -104,7 +170,6 @@ function drawTasks(c) {
         <div class="card fade-in" style="text-align:center; padding:20px; border: 2px dashed var(--yellow);">
             <div style="font-size:50px; margin-bottom:10px;">🎰</div>
             <h3 style="color:var(--yellow); margin-top:0;">Smart-Luck Casino</h3>
-            <p style="font-size:12px; opacity:0.8;">הזן סכום להימור:</p>
             <input type="number" id="gamble-amt" placeholder="סכום הימור..." 
                 style="width:80%; padding:12px; margin-bottom:15px; border-radius:8px; text-align:center; background:rgba(0,0,0,0.3); color:white; border:1px solid var(--border);">
             <div id="casino-anim" style="height:30px; margin-bottom:15px; font-weight:bold;"></div>
@@ -115,32 +180,24 @@ function drawTasks(c) {
 function playCasino() {
     const input = document.getElementById('gamble-amt');
     const amt = parseInt(input.value);
-    
-    if(!amt || amt <= 0 || amt > money) {
-        return showMsg("סכום לא חוקי או חסר כסף", "var(--red)");
-    }
+    if(!amt || amt <= 0 || amt > money) return showMsg("סכום לא חוקי", "var(--red)");
 
     money -= amt;
     updateUI();
-    
     const res = document.getElementById('casino-anim');
-    res.innerText = "🎲 מסובב את הגלגל...";
+    res.innerText = "🎲 מסובב...";
     
     setTimeout(() => {
         if (Math.random() > 0.55) {
             const win = amt * 2;
             money += win;
             res.innerText = `💰 זכית ב-${win.toLocaleString()}₪!`;
-            res.style.color = "var(--green)";
-            showMsg(`💎 זכייה בקזינו: ${win.toLocaleString()}₪!`, "var(--yellow)");
+            showMsg(`💎 זכייה!`, "var(--yellow)");
         } else {
             res.innerText = "❌ הפסדת...";
-            res.style.color = "var(--red)";
-            showMsg(`💀 הפסדת ${amt.toLocaleString()}₪`, "var(--red)");
+            showMsg(`💀 הפסדת`, "var(--red)");
         }
-        input.value = '';
-        updateUI(); 
-        saveGame();
+        updateUI(); saveGame();
     }, 1000);
 }
 
@@ -166,10 +223,7 @@ function buySkill(name, price) {
     if (money >= price) {
         money -= price;
         skills.push(name);
-        showMsg(`📜 למדת: ${name}`, "var(--green)");
-        saveGame(); 
-        updateUI(); 
-        drawSkills(document.getElementById('content'));
+        saveGame(); updateUI(); drawSkills(document.getElementById('content'));
     } else { showMsg("אין מספיק כסף!", "var(--red)"); }
 }
 
@@ -181,7 +235,6 @@ function drawCars(c) {
             <div class="card fade-in" style="text-align:center; border: 1px solid ${has ? 'var(--blue)' : 'var(--border)'}">
                 <div style="font-size:26px; margin-bottom:5px;">${car.icon}</div>
                 <div style="font-size:12px; font-weight:bold;">${car.name}</div>
-                <small style="font-size:10px; opacity:0.7;">מהירות: x${car.speed}</small>
                 <button class="sys-btn" style="width:100%; margin-top:8px;" onclick="buyCar('${car.name}', ${car.price}, ${car.speed})" ${has ? 'disabled' : ''}>
                     ${has ? '🏎️ בחניה' : car.price.toLocaleString() + '₪'}
                 </button>
@@ -195,22 +248,21 @@ function buyCar(name, price, speed) {
         money -= price;
         cars.push(name);
         carSpeed = speed; 
-        showMsg(`🏎️ תתחדש על ה${name}!`, "var(--blue)");
-        saveGame(); 
-        updateUI(); 
-        drawCars(document.getElementById('content'));
+        saveGame(); updateUI(); drawCars(document.getElementById('content'));
     } else { showMsg("אין מספיק כסף!", "var(--red)"); }
 }
 
-// --- מתנה יומית ---
+// --- פונקציות חסרות למניעת קריסה ---
+function drawMarket(c) { c.innerHTML = "<h3>📈 שוק ההון</h3><p>בקרוב...</p>"; }
+function drawBusiness(c) { c.innerHTML = "<h3>💼 הקמת עסק</h3><p>בקרוב...</p>"; }
+function drawInvest(c) { c.innerHTML = "<h3>💰 השקעות</h3><p>בקרוב...</p>"; }
 
 function getDailyGift() {
     const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
-    if (now - lastGift > day) {
+    if (now - lastGift > 86400000) {
         money += 2000;
         lastGift = now;
-        showMsg(`🎁 מתנה יומית: 2,000₪`, "var(--yellow)");
+        showMsg(`🎁 קיבלת 2,000₪!`, "var(--yellow)");
         saveGame(); updateUI(); openTab('home');
-    } else { showMsg("כבר קיבלת מתנה היום", "var(--white)"); }
+    } else { showMsg("חזור מחר!", "var(--white)"); }
 }
