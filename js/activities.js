@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v6.0.8 - Full Restore */
+/* Smart Money Pro - js/activities.js - v6.0.9 - Fast Passive Boost */
 
 // --- מאגרי נתונים ---
 const jobList = [
@@ -82,10 +82,11 @@ function startWork(id) {
         money += j.pay;
         lifeXP += j.xp;
         
-        const passiveAdd = j.pay * 0.01;
+        // 🚀 עדכון: בונוס פסיבי גדל ל-15% מהשכר לקידום מהיר
+        const passiveAdd = j.pay * 0.15; 
         passive += passiveAdd; 
 
-        showMsg(`💰 +${j.pay}₪ | ✨ +${j.xp} XP | 📈 פסיבי: +${passiveAdd.toFixed(2)}`, "var(--green)");
+        showMsg(`💰 +${j.pay}₪ | ✨ +${j.xp} XP | 🚀 פסיבי: +${passiveAdd.toFixed(2)}`, "var(--green)");
         
         if(btn) btn.disabled = false;
         if(container) container.style.display = "none";
