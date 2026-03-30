@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.2.0</title>
+    <title>Smart Money Pro | v6.2.1</title>
     
-    <link rel="manifest" href="manifest.json?v=6.2.0">
+    <link rel="manifest" href="manifest.json?v=6.2.1">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.2.0">
+    <link rel="stylesheet" href="style.css?v=6.2.1">
     <style>
-        /* תיקון מרכוז למודאל ההתקנה */
+        /* מרכוז מוחלט של חלון ההתקנה */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -30,6 +30,9 @@
             text-align: center;
             padding: 30px;
             border: 1px solid var(--blue);
+            background: #1e293b;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -65,8 +68,8 @@
         </div>
         <div class="nav-row">
             <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
-            <button onclick="forceUpdate()" class="sys-btn">🔄 עדכון</button>
-            <button onclick="toggleTheme()" class="sys-btn">🌓 מצב</button>
+            <button onclick="forceUpdate()" class="sys-btn" title="רענון גרסה">🔄 עדכון</button>
+            <button onclick="toggleTheme()" class="sys-btn" title="מצב יום/לילה">🌓 מצב</button>
         </div>
     </nav>
 
@@ -75,35 +78,37 @@
     <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
         <div class="modal-card" onclick="event.stopPropagation()">
             <div style="font-size: 3rem; margin-bottom: 15px;">📲</div>
-            <h3>התקנת האפליקציה</h3>
-            <div id="android-instr">
+            <h3 style="color: #fff; margin-bottom: 10px;">התקנת האפליקציה</h3>
+            <div id="android-instr" style="color: #cbd5e1; font-size: 14px;">
                 <p>לחץ על <b>3 הנקודות</b> בדפדפן<br>ובחר ב-<b>"התקן אפליקציה"</b>.</p>
             </div>
-            <div id="ios-instr" style="display:none;">
+            <div id="ios-instr" style="display:none; color: #cbd5e1; font-size: 14px;">
                 <p>לחץ על כפתור ה-<b>שתף</b><br>ואז על <b>"הוסף למסך הבית"</b>.</p>
             </div>
-            <button class="action" onclick="closeInstallGuide()" style="background:var(--red); margin-top:20px; color:#fff; width: 100%;">סגור</button>
+            <button class="action" onclick="closeInstallGuide()" style="background:var(--red); margin-top:25px; color:#fff; width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold;">סגור</button>
         </div>
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.2.0 | אלכסיי זבודיסקר
+        © 2026 Smart Money Pro v6.2.1 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.2.0"></script>
-    <script src="js/activities.js?v=6.2.0"></script>
-    <script src="js/economy.js?v=6.2.0"></script>
-    <script src="js/ui.js?v=6.2.0"></script>
+    <script src="js/core.js?v=6.2.1"></script>
+    <script src="js/activities.js?v=6.2.1"></script>
+    <script src="js/economy.js?v=6.2.1"></script>
+    <script src="js/ui.js?v=6.2.1"></script>
 
     <script>
-        const adminMessage = "ברוכים הבאים לגרסה המעודכנת! כל הנתונים והכלים שלך מרוכזים כאן. בהצלחה בבניית האימפריה!";
+        // הודעת מנהל לעריכה עתידית
+        const adminMessage = "ברוכים הבאים ל-Smart Money Pro! תתחילו לעבוד, להשקיע בבורסה ולבנות את האימפריה שלכם. בהצלחה!";
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=6.2.0');
+                navigator.serviceWorker.register('sw.js?v=6.2.1').then(reg => reg.update());
             });
         }
 
+        // פונקציית מתנה יומית
         function claimDailyGift() {
             const now = Date.now();
             const lastGift = localStorage.getItem('lastDailyGift') || 0;
@@ -123,8 +128,9 @@
             showStatus(`🎁 קיבלת מתנה יומית בסך ${amount}₪!`, 'green');
         }
 
+        // פונקציית איפוס
         function resetGameWithConfirm() {
-            if (confirm("⚠️ האם אתה בטוח? כל ההתקדמות שלך תימחק לצמיתות!")) {
+            if (confirm("⚠️ אזהרה: כל הכסף, הנכסים והדרגות יימחקו לצמיתות. לאפס?")) {
                 localStorage.clear();
                 location.reload();
             }
@@ -142,7 +148,7 @@
                 content.innerHTML = `
                     <div class="card fade-in" style="border-right: 4px solid var(--purple);">
                         <h3 style="margin:0; color:var(--purple); font-size: 16px;">📢 הודעת מנהל</h3>
-                        <p style="font-size: 14px; margin-top:5px;">${adminMessage}</p>
+                        <p style="font-size: 14px; margin-top:8px;">${adminMessage}</p>
                     </div>
 
                     <div class="card fade-in">
@@ -162,29 +168,28 @@
                         </div>
                         <div class="card" style="border: 1px solid var(--blue); background: rgba(56, 189, 248, 0.05); cursor: pointer; text-align:center; padding: 15px;" onclick="document.getElementById('installModal').style.display='flex'">
                             <div style="font-size: 1.8rem;">📲</div>
-                            <div style="font-size: 12px; font-weight: bold; margin-top: 5px; color: var(--blue);">התקנת אפליקציה</div>
+                            <div style="font-size: 12px; font-weight: bold; margin-top: 5px; color: var(--blue);">התקנה</div>
                         </div>
                     </div>
 
                     <div class="card fade-in" style="border-right: 4px solid var(--green);">
-                        <h4 style="margin:0 0 12px 0; font-size:15px;">📊 סיכום נכסים</h4>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-size:13px;">
-                            <div style="background:rgba(0,0,0,0.1); padding:8px; border-radius:8px;">🏢 עסקים: <b id="biz-count">0</b></div>
-                            <div style="background:rgba(0,0,0,0.1); padding:8px; border-radius:8px;">🏠 נדל"ן: <b id="estate-count">0</b></div>
-                            <div style="background:rgba(0,0,0,0.1); padding:8px; border-radius:8px;">🚗 רכבים: <b id="car-count">0</b></div>
-                            <div style="background:rgba(0,0,0,0.1); padding:8px; border-radius:8px;">💎 מניות: <b id="stock-count">0</b></div>
+                        <h4 style="margin:0 0 12px 0; font-size:14px;">📊 סיכום נכסים</h4>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:12px;">
+                            <div style="background:rgba(0,0,0,0.15); padding:8px; border-radius:8px;">🏢 עסקים: <b id="biz-count">0</b></div>
+                            <div style="background:rgba(0,0,0,0.15); padding:8px; border-radius:8px;">🏠 נדל"ן: <b id="estate-count">0</b></div>
+                            <div style="background:rgba(0,0,0,0.15); padding:8px; border-radius:8px;">🚗 רכבים: <b id="car-count">0</b></div>
+                            <div style="background:rgba(0,0,0,0.15); padding:8px; border-radius:8px;">💎 מניות: <b id="stock-count">0</b></div>
                         </div>
                     </div>
 
-                    <div class="card fade-in" style="border: 1px solid var(--red); text-align:center; padding: 8px; cursor: pointer; margin-top: 10px; opacity: 0.7;" onclick="resetGameWithConfirm()">
-                        <div style="color: var(--red); font-size: 11px; font-weight: bold;">⚠️ איפוס נתוני משחק</div>
+                    <div class="card fade-in" style="border: 1px solid var(--red); text-align:center; padding: 10px; cursor: pointer; opacity: 0.8;" onclick="resetGameWithConfirm()">
+                        <div style="color: var(--red); font-size: 12px; font-weight: bold;">⚠️ איפוס כל נתוני המשחק</div>
                     </div>
                 `;
-                // קריאה לעדכון הנתונים ב-UI
                 if(typeof updateUI === 'function') updateUI();
             } 
             else if(tabName === 'work') drawWork(content);
-            else if(tabName === 'invest') drawMarket(content);
+            else if(tabName === 'invest') drawInvest(content); 
             else if(tabName === 'business') drawBusiness(content);
             else if(tabName === 'tasks') drawTasks(content);
             else if(tabName === 'estate') drawEstate(content);
