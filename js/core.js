@@ -1,6 +1,6 @@
-/* Smart Money Pro - js/core.js - v6.3.0 - Dynamic XP Scaling (25%) */
+/* Smart Money Pro - js/core.js - v6.3.2 - Optimized Passive Income & XP Sync */
 
-const VERSION = "6.3.0";
+const VERSION = "6.3.2";
 const SAVE_KEY = "smartMoneySave_v6_main";
 
 // --- משתנים גלובליים ---
@@ -24,14 +24,13 @@ let msgTimer;
 // --- מנוע חישוב רמות דינמי (25% קושי עולה) ---
 function getLevelData(xp) {
     let level = 1;
-    let xpForNext = 1000; // רמה 1 דורשת 1000 XP
+    let xpForNext = 1000; 
     let totalXPStack = 0;
 
-    // לולאה שמחשבת את הרמה לפי ה-XP המצטבר
     while (xp >= totalXPStack + xpForNext) {
         totalXPStack += xpForNext;
         level++;
-        xpForNext = Math.floor(xpForNext * 1.25); // כל רמה קשה ב-25%
+        xpForNext = Math.floor(xpForNext * 1.25); 
     }
 
     let xpInCurrentLevel = xp - totalXPStack;
@@ -65,7 +64,6 @@ function loadGame() {
             carSpeed = data.carSpeed ?? 1;
             totalEarned = data.totalEarned ?? 0;
             
-            // הגדרת הרמה מיד עם הטעינה לפי הנוסחה החדשה
             lastKnownLevel = getLevelData(lifeXP).level;
             
             if (data.lastSaveTime && passive > 0) {
@@ -119,21 +117,17 @@ function showMsg(txt, color = "var(--blue)") {
 
 // --- פונקציות מערכת ותצוגה ---
 function updateUI() {
-    const mEl = document.getElementById('money');
-    const bEl = document.getElementById('bank');
-    const lEl = document.getElementById('life-level-ui');
-
-    if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
-    if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
-    
-    // קבלת נתוני הרמה העדכניים
     const ld = getLevelData(lifeXP);
     
+    // שליחת הנתונים ל-ui.js שיטפל בתצוגה המהירה
+    if (typeof window.renderUIUpdate === 'function') {
+        window.renderUIUpdate(ld);
+    }
+    
+    // עדכון אלמנט הרמה הייעודי אם קיים
+    const lEl = document.getElementById('life-level-ui');
     if(lEl) lEl.innerText = ld.level;
 
-    // העברת נתוני הרמה ל-UI.js כדי לעדכן את ה-Progress Bar
-    if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate(ld);
-    
     checkLevelUp(ld.level);
 }
 
@@ -145,14 +139,6 @@ function checkLevelUp(currentLevel) {
         lastKnownLevel = currentLevel;
         updateUI();
     }
-}
-
-function toggleTheme() {
-    const isLight = document.body.classList.contains('light-theme');
-    const next = isLight ? 'dark' : 'light';
-    document.body.className = next + '-theme';
-    localStorage.setItem('theme', next);
-    showMsg(`עברת למצב ${next === 'light' ? 'יום' : 'לילה'}`, "var(--blue)");
 }
 
 function forceUpdate() {
@@ -168,27 +154,27 @@ function resetGame() {
     }
 }
 
-// --- מנועי זמן ---
+// --- מנוע זמן אמת (Ticks) ---
 setInterval(() => {
+    // עדכון הכנסה פסיבית
     if (passive > 0) {
-        const tickIncome = passive / 72000; 
+        const tickIncome = passive / 72000; // חלוקה לשעה בפרק זמן של 50ms
         money += tickIncome;
         totalEarned += tickIncome;
-        
-        const mEl = document.getElementById('money');
-        if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
+    }
 
-        if (typeof window.renderUIUpdate === 'function') {
-            const ld = getLevelData(lifeXP);
-            window.renderUIUpdate(ld);
-        }
+    // קריאה לעדכון ויזואלי מהיר ב-ui.js
+    if (typeof window.renderUIUpdate === 'function') {
+        const ld = getLevelData(lifeXP);
+        window.renderUIUpdate(ld);
     }
 }, 50); 
 
+// שמירה אוטומטית כל 15 שניות
 setInterval(saveGame, 15000);
 
 document.addEventListener("DOMContentLoaded", () => {
     loadGame();
     updateUI();
-    console.log(`Smart Money Engine v${VERSION} Loaded.`);
+    console.log(`Smart Money Engine v${VERSION} Active.`);
 });
