@@ -1,6 +1,6 @@
-/* Smart Money Pro - js/core.js - v6.2.2 - Anti-Cheat Leveling & Sync */
+/* Smart Money Pro - js/core.js - v6.3.0 - Dynamic XP Scaling (25%) */
 
-const VERSION = "6.2.2";
+const VERSION = "6.3.0";
 const SAVE_KEY = "smartMoneySave_v6_main";
 
 // --- משתנים גלובליים ---
@@ -17,9 +17,33 @@ let invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, 
 let carSpeed = 1;
 let totalEarned = 0;
 let lastSaveTime = Date.now();
-let lastKnownLevel = 0; // משתנה למניעת בונוס כפול ברענון
+let lastKnownLevel = 0; 
 
 let msgTimer; 
+
+// --- מנוע חישוב רמות דינמי (25% קושי עולה) ---
+function getLevelData(xp) {
+    let level = 1;
+    let xpForNext = 1000; // רמה 1 דורשת 1000 XP
+    let totalXPStack = 0;
+
+    // לולאה שמחשבת את הרמה לפי ה-XP המצטבר
+    while (xp >= totalXPStack + xpForNext) {
+        totalXPStack += xpForNext;
+        level++;
+        xpForNext = Math.floor(xpForNext * 1.25); // כל רמה קשה ב-25%
+    }
+
+    let xpInCurrentLevel = xp - totalXPStack;
+    let progressPercent = (xpInCurrentLevel / xpForNext) * 100;
+
+    return { 
+        level, 
+        xpInCurrentLevel, 
+        xpForNext, 
+        progressPercent 
+    };
+}
 
 // --- ניהול זיכרון ושמירה ---
 function loadGame() {
@@ -28,7 +52,6 @@ function loadGame() {
         if (saved) {
             const data = JSON.parse(saved);
             
-            // טעינת נתונים עם ערכי ברירת מחדל למקרה שחסר
             money = data.money ?? 1200;
             bank = data.bank ?? 0;
             loan = data.loan ?? 0;
@@ -42,15 +65,13 @@ function loadGame() {
             carSpeed = data.carSpeed ?? 1;
             totalEarned = data.totalEarned ?? 0;
             
-            // הגדרת הרמה הנוכחית מיד עם הטעינה כדי למנוע "קפיצה" מזויפת בבונוס
-            lastKnownLevel = Math.floor(lifeXP / 1000) + 1;
+            // הגדרת הרמה מיד עם הטעינה לפי הנוסחה החדשה
+            lastKnownLevel = getLevelData(lifeXP).level;
             
-            // חישוב הכנסה לא מקוונת (Offline Income)
             if (data.lastSaveTime && passive > 0) {
                 const now = Date.now();
-                let msPassed = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000); // הגבלה ל-12 שעות
-                const hoursPassed = msPassed / (1000 * 60 * 60);
-                const offlineEarnings = hoursPassed * passive;
+                let msPassed = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
+                const offlineEarnings = (msPassed / (1000 * 60 * 60)) * passive;
                 
                 if (offlineEarnings > 1) {
                     money += offlineEarnings;
@@ -61,16 +82,13 @@ function loadGame() {
                 }
             }
         } else {
-            lastKnownLevel = 1; // שחקן חדש מתחיל מרמה 1
+            lastKnownLevel = 1;
         }
         
-        // טעינת עיצוב (Theme)
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.body.className = savedTheme + '-theme';
         
-    } catch (e) { 
-        console.error("שגיאה בטעינת נתונים:", e); 
-    }
+    } catch (e) { console.error("שגיאה בטעינה:", e); }
 }
 
 function saveGame() {
@@ -83,7 +101,7 @@ function saveGame() {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
 
-// --- מערכת הודעות וסטטוס ---
+// --- מערכת הודעות ---
 function showMsg(txt, color = "var(--blue)") {
     const bar = document.getElementById('status-bar');
     if (!bar) return;
@@ -93,7 +111,6 @@ function showMsg(txt, color = "var(--blue)") {
     bar.style.transform = "translateY(0)";
     bar.style.color = color;
     bar.style.borderColor = color;
-    
     msgTimer = setTimeout(() => {
         bar.style.opacity = "0";
         bar.style.transform = "translateY(-5px)";
@@ -109,22 +126,18 @@ function updateUI() {
     if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
     if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
     
-    const currentLevel = Math.floor(lifeXP / 1000) + 1;
+    // קבלת נתוני הרמה העדכניים
+    const ld = getLevelData(lifeXP);
     
-    // קודם כל מעדכנים את ה-UI עם הרמה האמיתית
-    if(lEl) lEl.innerText = currentLevel;
+    if(lEl) lEl.innerText = ld.level;
 
-    // קריאה לפונקציית הרינדור ב-UI.js
-    if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate();
+    // העברת נתוני הרמה ל-UI.js כדי לעדכן את ה-Progress Bar
+    if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate(ld);
     
-    // בודקים אם מגיע בונוס על עליית רמה
-    checkLevelUp();
+    checkLevelUp(ld.level);
 }
 
-function checkLevelUp() {
-    const currentLevel = Math.floor(lifeXP / 1000) + 1;
-
-    // אם הרמה הנוכחית גבוהה מהרמה האחרונה שזיהינו (ורשמנו ב-lastKnownLevel)
+function checkLevelUp(currentLevel) {
     if (currentLevel > lastKnownLevel && lastKnownLevel > 0) {
         const bonus = currentLevel * 1000;
         money += bonus;
@@ -134,7 +147,6 @@ function checkLevelUp() {
     }
 }
 
-// --- שליטה בהגדרות ---
 function toggleTheme() {
     const isLight = document.body.classList.contains('light-theme');
     const next = isLight ? 'dark' : 'light';
@@ -150,18 +162,16 @@ function forceUpdate() {
 }
 
 function resetGame() {
-    if (confirm("⚠️ אזהרה: כל ההתקדמות תימחק לצמיתות. האם אתה בטוח?")) {
+    if (confirm("⚠️ אזהרה: כל ההתקדמות תימחק. האם אתה בטוח?")) {
         localStorage.removeItem(SAVE_KEY);
         location.reload();
     }
 }
 
-// --- מנועי זמן (Loops) ---
-
-// מנוע הכנסה פסיבית (מתעדכן כל 50ms)
+// --- מנועי זמן ---
 setInterval(() => {
     if (passive > 0) {
-        const tickIncome = passive / 72000; // חלוקת ההכנסה השעתית לטיקים של 50ms
+        const tickIncome = passive / 72000; 
         money += tickIncome;
         totalEarned += tickIncome;
         
@@ -169,17 +179,16 @@ setInterval(() => {
         if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
 
         if (typeof window.renderUIUpdate === 'function') {
-            window.renderUIUpdate();
+            const ld = getLevelData(lifeXP);
+            window.renderUIUpdate(ld);
         }
     }
 }, 50); 
 
-// שמירה אוטומטית כל 15 שניות
 setInterval(saveGame, 15000);
 
-// אתחול המשחק בטעינת הדף
 document.addEventListener("DOMContentLoaded", () => {
     loadGame();
     updateUI();
-    console.log(`Smart Money Engine v${VERSION} Loaded & Synced.`);
+    console.log(`Smart Money Engine v${VERSION} Loaded.`);
 });
