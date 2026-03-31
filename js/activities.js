@@ -1,6 +1,6 @@
-/* Smart Money Pro - js/activities.js - v6.6.5 - The Complete Empire Edition */
+/* Smart Money Pro - js/activities.js - v6.7.5 - The Ultimate Dashboard Update */
 
-// --- 1. מאגרי נתונים ---
+// --- 1. מאגרי נתונים (Data) ---
 const jobList = [
     { id: 'j1', name: 'מנקה', pay: 55, xp: 20, time: 3000, icon: '🧹' },
     { id: 'j2', name: 'שליח', pay: 95, xp: 45, time: 5000, icon: '🛵' },
@@ -55,12 +55,12 @@ const carList = [
     { name: 'פרארי', price: 1800000, speed: 8, icon: '🏎️' }
 ];
 
-// --- 2. פונקציות עזר וליבה ---
+// --- 2. פונקציות ליבה (Core) ---
 function messenger(text, type) {
     if (typeof showStatus === 'function') showStatus(text, type);
 }
 
-// עדכון בורסה חי
+// עדכון בורסה אוטומטי
 setInterval(() => {
     stockList.forEach(s => {
         const change = (Math.random() * 0.05) - 0.024;
@@ -68,16 +68,17 @@ setInterval(() => {
         if (s.price < 1) s.price = 1;
         s.trend = change;
     });
-    // רענון רק אם המשתמש מסתכל על הבורסה
     const content = document.getElementById('content');
     if (content && content.innerHTML.includes('📈 בורסה')) drawMarket(content);
 }, 3000);
 
-// --- 3. רינדור טאבים (UI) ---
+// --- 3. רינדור טאבים (UI Rendering) ---
 
 function drawHome(c) {
-    c.innerHTML = `
-        <div class="card fade-in" style="border-top: 4px solid var(--purple);">
+    const loanAmt = typeof loan !== 'undefined' ? loan : 0;
+    
+    let html = `
+        <div class="card fade-in" style="border-top: 4px solid var(--blue);">
             <h3>📊 מרכז שליטה</h3>
             <div class="grid-2">
                 <div class="stat-box">
@@ -89,9 +90,46 @@ function drawHome(c) {
                     <div style="font-weight:bold;">${inventory.length + skills.length}</div>
                 </div>
             </div>
+            
+            ${loanAmt > 0 ? `
+            <div style="background:rgba(239,68,68,0.1); border:1px solid var(--red); border-radius:8px; padding:10px; margin-top:10px; text-align:center;">
+                <small style="color:var(--red); display:block;">⚠️ חוב לבנק</small>
+                <b style="color:var(--red);">${loanAmt.toLocaleString()} ₪</b>
+            </div>` : ''}
+
             <button class="action" style="width:100%; margin-top:15px; background:var(--yellow); color:black;" onclick="getDailyGift()">🎁 קבל מתנה יומית</button>
         </div>
-    `;
+
+        <div class="card fade-in" style="margin-top:15px;">
+            <h3 style="font-size:16px; margin-bottom:10px;">📦 הציוד והנכסים שלי</h3>
+            <div id="my-assets" style="display:flex; flex-wrap:wrap; gap:8px;">`;
+
+    // הצגת רכבים
+    cars.forEach(carName => {
+        const item = carList.find(i => i.name === carName);
+        if(item) html += `<div class="asset-tag" style="border-color:var(--blue);">${item.icon} ${item.name}</div>`;
+    });
+
+    // הצגת כישורים
+    skills.forEach(skillName => {
+        const item = skillList.find(i => i.name === skillName);
+        if(item) html += `<div class="asset-tag" style="border-color:var(--purple);">${item.icon} ${item.name}</div>`;
+    });
+
+    // הצגת נדל"ן ועסקים
+    inventory.forEach(invName => {
+        const estate = estateList.find(i => i.name === invName);
+        const biz = businessList.find(i => i.id === invName);
+        if(estate) html += `<div class="asset-tag" style="border-color:var(--green);">${estate.icon} ${estate.name}</div>`;
+        if(biz) html += `<div class="asset-tag" style="border-color:var(--yellow);">${biz.icon} ${biz.name}</div>`;
+    });
+
+    if(cars.length === 0 && skills.length === 0 && inventory.length === 0) {
+        html += `<p style="font-size:12px; opacity:0.5; width:100%; text-align:center;">עדיין אין נכסים בבעלותך...</p>`;
+    }
+
+    html += `</div></div>`;
+    c.innerHTML = html;
 }
 
 function drawWork(c) {
@@ -122,11 +160,11 @@ function startWork(id) {
     const container = document.getElementById(`prog-cont-${j.id}`);
     const bar = document.getElementById(`bar-${j.id}`);
     const actualTime = j.time / (typeof carSpeed !== 'undefined' ? carSpeed : 1);
-
+    
     btn.disabled = true;
     container.style.display = "block";
     setTimeout(() => { bar.style.transition = `width ${actualTime}ms linear`; bar.style.width = "100%"; }, 50);
-
+    
     setTimeout(() => {
         money += j.pay; lifeXP += j.xp;
         messenger(`💰 +${j.pay}₪ | ✨ +${j.xp} XP`, "green");
