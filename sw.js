@@ -1,4 +1,4 @@
-/* Smart Money Pro - sw.js - v6.1.2 - Production Stable */
+/* Smart Money Pro - sw.js - v6.1.2/6.5.0 - Production Stable */
 
 const CACHE_NAME = 'smart-money-v6.1.2';
 const ASSETS = [
@@ -13,7 +13,7 @@ const ASSETS = [
   './js/activities.js'
 ];
 
-// התקנה: טעינת נכסי הליבה לזיכרון המקומי
+// התקנה: שמירת נכסי הליבה
 self.addEventListener('install', e => {
   console.log(`[SW] Installing v6.1.2...`);
   self.skipWaiting(); 
@@ -24,7 +24,7 @@ self.addEventListener('install', e => {
   );
 });
 
-// אקטיבציה: ניקוי יסודי של כל מה שאינו v6.1.2
+// אקטיבציה: מחיקת כל גרסה ישנה (v6.0.x ומטה)
 self.addEventListener('activate', e => {
   console.log(`[SW] Purging old caches...`);
   e.waitUntil(
@@ -41,16 +41,13 @@ self.addEventListener('activate', e => {
   return self.clients.claim(); 
 });
 
-// ניהול בקשות: Stale-While-Revalidate 
-// (מציג מהר מהקאש, ומעדכן ברקע מהרשת אם יש שינוי)
+// ניהול בקשות רשת
 self.addEventListener('fetch', e => {
-  // נתעלם מבקשות שהן לא GET (כמו פוסטים של Firebase אם יש)
   if (e.request.method !== 'GET') return;
 
   e.respondWith(
     caches.match(e.request).then(cachedResponse => {
       const fetchPromise = fetch(e.request).then(networkResponse => {
-        // אם התקבלה תשובה תקינה, נעדכן את הקאש
         if (networkResponse && networkResponse.status === 200) {
           const resClone = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
@@ -59,10 +56,9 @@ self.addEventListener('fetch', e => {
         }
         return networkResponse;
       }).catch(() => {
-        // במקרה של ניתוק מוחלט, caches.match כבר יחזיר את מה שיש
+        // אופליין - יחזיר מהקאש באופן אוטומטי דרך cachedResponse
       });
 
-      // מחזיר את הגרסה מהקאש מיד (למהירות), או מחכה לרשת אם אין בקאש
       return cachedResponse || fetchPromise;
     })
   );
