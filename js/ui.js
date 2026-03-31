@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.3.0 - Dynamic XP Scaling UI */
+/* Smart Money Pro - js/ui.js - v6.3.2 - Real-Time Sync & Smooth UI */
 
 let deferredPrompt;
 let currentTab = 'home'; 
@@ -9,44 +9,65 @@ window.addEventListener('beforeinstallprompt', (e) => {
     renderInstallBtn();
 });
 
-// --- עדכון ויזואלי מהיר (נקרא מה-Core ושולח אובייקט ld) ---
+/**
+ * עדכון ויזואלי מהיר - נקרא מה-Core בכל "טיק" (50ms)
+ * @param {Object} ld - אובייקט נתוני רמה: {level, xpInCurrentLevel, xpForNext, progressPercent}
+ */
 function renderUIUpdate(ld) {
-    // אם לא נשלח אובייקט ld מה-Core, ננסה לחשב אותו מקומית כגיבוי
-    if (!ld && typeof getLevelData === 'function') {
-        ld = getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0);
+    // 1. עדכון כסף וסטטיסטיקות גלובליות (מוצג בכל הטאבים)
+    const mEl = document.getElementById('money');
+    const bEl = document.getElementById('bank');
+    
+    if (mEl && typeof money !== 'undefined') {
+        // מציג מספר שלם עם פסיקים (למשל 1,200)
+        mEl.innerText = Math.floor(money).toLocaleString(); 
+    }
+    if (bEl && typeof bank !== 'undefined') {
+        bEl.innerText = Math.floor(bank).toLocaleString();
     }
 
-    if (currentTab === 'home' && ld) {
+    // 2. עדכונים ספציפיים לדף הבית
+    if (currentTab === 'home') {
         const passiveEl = document.getElementById('passive-display');
         const progressEl = document.getElementById('xp-progress-bar');
         const xpTextEl = document.getElementById('xp-text-detail');
         const levelValEl = document.getElementById('home-level-val');
         
-        // הצגת הכנסה פסיבית
+        // הצגת הכנסה פסיבית שעתית
         if (passiveEl) {
             const currentPassive = typeof passive !== 'undefined' ? passive : 0;
-            passiveEl.innerText = currentPassive.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " ₪/ש";
+            passiveEl.innerText = currentPassive.toLocaleString() + " ₪/ש";
         }
         
-        // עדכון בר התקדמות דינמי (לפי נוסחת 25% מה-Core)
-        if (progressEl) {
-            progressEl.style.width = ld.progressPercent + "%";
+        // אם לא הגיע ld מה-Core, נחשב אותו כגיבוי
+        if (!ld && typeof getLevelData === 'function') {
+            ld = getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0);
         }
-        
-        if (xpTextEl) {
-            xpTextEl.innerText = `${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP`;
-        }
-        
-        // עדכון מספר הרמה
-        if (levelValEl) {
-            levelValEl.innerText = ld.level;
+
+        if (ld) {
+            // עדכון פס התקדמות (Progress Bar)
+            if (progressEl) {
+                progressEl.style.width = ld.progressPercent + "%";
+            }
+            
+            // עדכון טקסט XP (למשל: 450 / 1,250 XP)
+            if (xpTextEl) {
+                xpTextEl.innerText = `${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP`;
+            }
+            
+            // עדכון מספר הרמה הגדול
+            if (levelValEl) {
+                levelValEl.innerText = ld.level;
+            }
         }
     }
 }
 
-// --- מערכת ניווט ---
+// --- מערכת ניווט בין טאבים ---
 function openTab(t) {
     currentTab = t; 
+    
+    // עדכון ויזואלי של הכפתור הפעיל בתפריט
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
     const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
     const btn = document.getElementById(btnId);
@@ -55,10 +76,12 @@ function openTab(t) {
     const c = document.getElementById("content"); 
     if(!c) return;
     
+    // אפקט פייד-אאוט קליל במעבר
     c.style.opacity = "0";
     
     setTimeout(() => {
         c.innerHTML = "";
+        // טעינת התוכן המתאים לפי הטאב שנבחר
         switch(t) {
             case 'home':       drawHome(c); break;
             case 'work':       if(typeof drawWork === 'function') drawWork(c); break;
@@ -76,13 +99,15 @@ function openTab(t) {
         
         c.style.opacity = "1";
         window.scrollTo(0,0);
+        
+        // עדכון ערכים מיידי לאחר הציור
         if(typeof updateUI === 'function') updateUI();
     }, 120);
 }
 
-// --- דף הבית ---
+// --- ציור דף הבית (Dashboard) ---
 function drawHome(c) {
-    // קבלת נתוני רמה מה-Core (דורש core.js v6.3.0)
+    // חישוב נתוני רמה התחלתיים לציור הראשוני
     const ld = (typeof getLevelData === 'function') 
                ? getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0) 
                : { level: 1, xpInCurrentLevel: 0, xpForNext: 1000, progressPercent: 0 };
@@ -103,7 +128,7 @@ function drawHome(c) {
                     <span id="xp-text-detail" style="opacity:0.8;">${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP</span>
                 </div>
                 <div style="height:10px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
-                    <div id="xp-progress-bar" style="width:${ld.progressPercent}%; height:100%; background:linear-gradient(90deg, var(--blue), #60a5fa); transition: width 0.3s ease;"></div>
+                    <div id="xp-progress-bar" style="width:${ld.progressPercent}%; height:100%; background:linear-gradient(90deg, var(--blue), #60a5fa); transition: width 0.5s ease;"></div>
                 </div>
             </div>
 
@@ -140,6 +165,7 @@ function drawHome(c) {
     renderInstallBtn();
 }
 
+// --- ניהול התקנת אפליקציה (PWA) ---
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
@@ -156,6 +182,7 @@ async function triggerInstall() {
     if (outcome === 'accepted') { deferredPrompt = null; renderInstallBtn(); }
 }
 
+// אתחול ראשוני של הדף
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => { openTab('home'); }, 150);
 });
