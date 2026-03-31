@@ -22,6 +22,7 @@ const estateList = [
     { id: 'e5', name: 'מרכז מסחרי', price: 12000000, passive: 95000, icon: '🏗️' }
 ];
 
+// --- נתוני עסקים (החדש!) ---
 const businessList = [
     { id: 'biz_falafel', name: 'דוכן פלאפל', price: 65000, passive: 550, icon: '🥙' },
     { id: 'biz_garage', name: 'מוסך רכב', price: 320000, passive: 3400, icon: '🔧' },
@@ -69,7 +70,7 @@ setInterval(() => {
     }
 }, 3000);
 
-// --- פונקציות תצוגה ועבודה ---
+// --- פונקציות עבודה ---
 
 function drawWork(c) {
     let html = `<h3>⚒️ מרכז תעסוקה</h3><div class="grid-2">`;
@@ -112,13 +113,17 @@ function startWork(id) {
     setTimeout(() => {
         money += j.pay;
         lifeXP += j.xp;
-        showMsg(`💰 +${j.pay}₪ | ✨ +${j.xp} XP`, "var(--green)");
+        const passiveAdd = j.pay * 0.15; 
+        passive += passiveAdd; 
+        showMsg(`💰 +${j.pay}₪ | ✨ +${j.xp} XP | 🚀 פסיבי: +${passiveAdd.toFixed(2)}`, "var(--green)");
         if(btn) btn.disabled = false;
         if(container) container.style.display = "none";
         if(bar) { bar.style.transition = "none"; bar.style.width = "0%"; }
         updateUI(); saveGame();
     }, actualTime);
 }
+
+// --- פונקציות נדל"ן (Estate) ---
 
 function drawEstate(c) {
     let html = `<h3>🏠 השקעות נדל"ן</h3><div class="grid-2">`;
@@ -147,6 +152,8 @@ function buyEstate(id) {
     showMsg(`🏠 תתחדש! רכשת ${e.name}`, "var(--green)");
     saveGame(); updateUI(); drawEstate(document.getElementById('content'));
 }
+
+// --- פונקציות הקמת עסק (החדש!) ---
 
 function drawBusiness(c) {
     let html = `<h3>💼 הקמת אימפריית עסקים</h3><div class="grid-1">`;
@@ -182,6 +189,8 @@ function buyBusiness(id, price, passAdd) {
         saveGame(); updateUI(); drawBusiness(document.getElementById('content'));
     } else { showMsg("אין מספיק כסף להשקעה!", "var(--red)"); }
 }
+
+// --- פונקציות בורסה (Market) ---
 
 function drawMarket(c) {
     let html = `<h3>📈 שוק ההון (Live)</h3><div class="grid-1">`;
@@ -228,6 +237,8 @@ function sellStock(id) {
     } else { showMsg("אין לך יחידות למכירה!", "var(--red)"); }
 }
 
+// --- פונקציות בנק ---
+
 function drawBank(c) {
     c.innerHTML = `
         <div class="card fade-in" style="text-align:center;">
@@ -247,6 +258,8 @@ function takeLoan() {
     showMsg("🏦 קיבלת הלוואה!", "var(--yellow)");
     saveGame(); updateUI(); drawBank(document.getElementById('content'));
 }
+
+// --- פונקציות קזינו ---
 
 function drawTasks(c) {
     c.innerHTML = `
@@ -272,6 +285,8 @@ function playCasino() {
         updateUI(); saveGame(); drawTasks(document.getElementById('content'));
     }, 800);
 }
+
+// --- פונקציות כישורים ורכבים ---
 
 function drawSkills(c) {
     let html = `<h3>🎓 הכשרה ולימודים</h3><div class="grid-2">`;
