@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.3.4 - Ultra-Fast Sync & Integer UI */
+/* Smart Money Pro - js/ui.js - v6.3.0 - Dynamic XP Scaling UI */
 
 let deferredPrompt;
 let currentTab = 'home'; 
@@ -9,63 +9,44 @@ window.addEventListener('beforeinstallprompt', (e) => {
     renderInstallBtn();
 });
 
-/**
- * עדכון ויזואלי מהיר - נקרא מה-Core בכל "טיק" (20ms)
- * @param {Object} ld - אובייקט נתוני רמה: {level, xpInCurrentLevel, xpForNext, progressPercent}
- */
+// --- עדכון ויזואלי מהיר (נקרא מה-Core ושולח אובייקט ld) ---
 function renderUIUpdate(ld) {
-    // 1. עדכון כסף וסטטיסטיקות גלובליות (בכל הטאבים)
-    const mEl = document.getElementById('money');
-    const bEl = document.getElementById('bank');
-    const lTopEl = document.getElementById('life-level-ui');
-    
-    if (mEl && typeof money !== 'undefined') {
-        // מציג מספר שלם בלבד (ללא נקודות) עם פסיקים
-        mEl.innerText = Math.floor(money).toLocaleString(); 
-    }
-    if (bEl && typeof bank !== 'undefined') {
-        bEl.innerText = Math.floor(bank).toLocaleString();
-    }
-    
-    // אם לא הגיע ld מה-Core, נחשב אותו כגיבוי
+    // אם לא נשלח אובייקט ld מה-Core, ננסה לחשב אותו מקומית כגיבוי
     if (!ld && typeof getLevelData === 'function') {
         ld = getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0);
     }
 
-    if (ld && lTopEl) {
-        lTopEl.innerText = ld.level;
-    }
-
-    // 2. עדכונים ספציפיים לדף הבית (רק כשהוא פתוח)
-    if (currentTab === 'home') {
+    if (currentTab === 'home' && ld) {
         const passiveEl = document.getElementById('passive-display');
         const progressEl = document.getElementById('xp-progress-bar');
         const xpTextEl = document.getElementById('xp-text-detail');
         const levelValEl = document.getElementById('home-level-val');
         
+        // הצגת הכנסה פסיבית
         if (passiveEl) {
             const currentPassive = typeof passive !== 'undefined' ? passive : 0;
-            passiveEl.innerText = Math.floor(currentPassive).toLocaleString() + " ₪/ש";
+            passiveEl.innerText = currentPassive.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " ₪/ש";
         }
         
-        if (ld) {
-            if (progressEl) {
-                progressEl.style.width = ld.progressPercent + "%";
-            }
-            if (xpTextEl) {
-                xpTextEl.innerText = `${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP`;
-            }
-            if (levelValEl) {
-                levelValEl.innerText = ld.level;
-            }
+        // עדכון בר התקדמות דינמי (לפי נוסחת 25% מה-Core)
+        if (progressEl) {
+            progressEl.style.width = ld.progressPercent + "%";
+        }
+        
+        if (xpTextEl) {
+            xpTextEl.innerText = `${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP`;
+        }
+        
+        // עדכון מספר הרמה
+        if (levelValEl) {
+            levelValEl.innerText = ld.level;
         }
     }
 }
 
-// --- מערכת ניווט בין טאבים ---
+// --- מערכת ניווט ---
 function openTab(t) {
     currentTab = t; 
-    
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
     const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
     const btn = document.getElementById(btnId);
@@ -95,14 +76,13 @@ function openTab(t) {
         
         c.style.opacity = "1";
         window.scrollTo(0,0);
-        
-        // עדכון ערכים מיידי
         if(typeof updateUI === 'function') updateUI();
     }, 120);
 }
 
-// --- ציור דף הבית (Dashboard) ---
+// --- דף הבית ---
 function drawHome(c) {
+    // קבלת נתוני רמה מה-Core (דורש core.js v6.3.0)
     const ld = (typeof getLevelData === 'function') 
                ? getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0) 
                : { level: 1, xpInCurrentLevel: 0, xpForNext: 1000, progressPercent: 0 };
@@ -130,11 +110,11 @@ function drawHome(c) {
             <div class="grid-2">
                 <div class="card" style="margin:0; padding:12px; text-align:center; border: 1px solid rgba(34, 197, 94, 0.2); background:rgba(34, 197, 94, 0.02);">
                     <small style="opacity:0.7; font-size:10px; display:block; margin-bottom:4px;">💰 הכנסה פסיבית</small>
-                    <b id="passive-display" style="color:var(--green); font-size:15px;">${Math.floor(typeof passive !== 'undefined' ? passive : 0).toLocaleString()} ₪/ש</b>
+                    <b id="passive-display" style="color:var(--green); font-size:15px;">${(typeof passive !== 'undefined' ? passive : 0).toLocaleString()} ₪/ש</b>
                 </div>
                 <div class="card" style="margin:0; padding:12px; text-align:center; border: 1px solid rgba(239, 68, 68, 0.2); background:rgba(239, 68, 68, 0.02);">
                     <small style="opacity:0.7; font-size:10px; display:block; margin-bottom:4px;">🏦 חוב לבנק</small>
-                    <b style="color:var(--red); font-size:15px;">${Math.floor(typeof loan !== 'undefined' ? loan : 0).toLocaleString()} ₪</b>
+                    <b style="color:var(--red); font-size:15px;">${(typeof loan !== 'undefined' ? loan : 0).toLocaleString()} ₪</b>
                 </div>
             </div>
 
@@ -147,7 +127,7 @@ function drawHome(c) {
                 <small style="opacity:0.6; display:block; margin-bottom:10px;">📦 הציוד שלי:</small>
                 <div id="inventory-list" style="display:flex; gap:10px; overflow-x:auto; min-height:55px; padding-bottom:5px; align-items:center;">
                     ${(typeof inventory !== 'undefined' && inventory.length > 0) 
-                        ? inventory.map(() => `<div class="inv-item-icon">📦</div>`).join('') 
+                        ? inventory.map(item => `<div class="inv-item-icon">📦</div>`).join('') 
                         : '<span style="opacity:0.4; font-size:12px; font-style:italic;">אין פריטים...</span>'}
                 </div>
             </div>
@@ -160,7 +140,6 @@ function drawHome(c) {
     renderInstallBtn();
 }
 
-// --- ניהול התקנת אפליקציה ---
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
