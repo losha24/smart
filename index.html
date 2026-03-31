@@ -3,37 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.8.0</title>
+    <title>Smart Money Pro | v6.1.2</title>
     
-    <link rel="manifest" href="manifest.json?v=6.8.0">
+    <link rel="manifest" href="manifest.json?v=6.1.2">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.8.0">
+    <link rel="stylesheet" href="style.css?v=6.1.2">
     <style>
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
         .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid var(--blue); }
         
-        /* עיצוב הודעת מנהל משופר */
         .admin-box {
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(59, 130, 246, 0.15);
             border-right: 4px solid var(--blue);
-            padding: 12px;
+            padding: 15px;
             border-radius: 10px;
             margin-bottom: 15px;
-            font-size: 13px;
+            font-size: 14px;
             color: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            line-height: 1.4;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 <body class="dark-theme">
     
     <header class="main-header">
-        <img src="logo.png" alt="Smart Money Pro" class="header-logo-big" onclick="openTab('home')">
+        <img src="logo.png" alt="Smart Money Pro" class="header-logo-big" onclick="openTab('home')" style="cursor:pointer;">
     </header>
 
     <div class="stats-bar-top">
@@ -42,7 +40,7 @@
         <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
     </div>
 
-    <div id="status-bar"></div>
+    <div id="status-bar" class="status-msg"></div>
 
     <nav class="topbar">
         <div class="nav-row">
@@ -51,7 +49,7 @@
             <button onclick="openTab('tasks')" id="btnTasks">🎰 קזינו</button>
         </div>
         <div class="nav-row">
-            <button onclick="openTab('market')" id="btnMarket">📈 בורסה</button>
+            <button onclick="openTab('invest')" id="btnInvest">📈 בורסה</button>
             <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
             <button onclick="openTab('estate')" id="btnEstate">🏠 נדל"ן</button>
         </div>
@@ -61,6 +59,7 @@
             <button onclick="openTab('cars')" id="btnCars">🚗 רכבים</button>
         </div>
         <div class="nav-row">
+            <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
             <button onclick="document.getElementById('installModal').style.display='flex'" class="sys-btn">📲</button>
             <button onclick="forceUpdate()" class="sys-btn">🔄</button>
             <button onclick="toggleTheme()" class="sys-btn">🌓</button>
@@ -79,26 +78,21 @@
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.8.0 | אולג זבודיסקר
+        © 2026 Smart Money Pro v6.1.2 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.8.0"></script>
-    <script src="js/activities.js?v=6.8.0"></script>
-    <script src="js/economy.js?v=6.8.0"></script>
-    <script src="js/ui.js?v=6.8.0"></script>
+    <script src="js/core.js?v=6.1.2"></script>
+    <script src="js/activities.js?v=6.1.2"></script>
+    <script src="js/economy.js?v=6.1.2"></script>
+    <script src="js/ui.js?v=6.1.2"></script>
 
     <script>
-        const adminMsgText = "ברוך הבא! המערכת סונכרנה בהצלחה לגרסה 6.8.0. כל הנכסים והחובות שלך מוצגים כעת במרכז השליטה.";
+        const adminMsgText = "הקרדיט עודכן בהצלחה! המערכת מוכנה לעבודה.";
 
         function showStatus(msg, type = 'blue') {
             const bar = document.getElementById('status-bar');
             if (!bar) return;
-            const colors = { 
-                'green': '#22c55e', 
-                'red': '#ef4444', 
-                'blue': '#3b82f6',
-                'yellow': '#f59e0b'
-            };
+            const colors = { 'green': '#22c55e', 'red': '#ef4444', 'blue': '#3b82f6' };
             bar.innerText = msg;
             bar.style.backgroundColor = colors[type] || colors.blue;
             bar.style.opacity = "1";
@@ -108,60 +102,48 @@
         function openTab(tabName) {
             const content = document.getElementById('content');
             if (!content) return;
-
-            // עדכון כפתור פעיל
             document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById('btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
-            if (activeBtn) activeBtn.classList.add('active');
+            const btnId = 'btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+            if (document.getElementById(btnId)) document.getElementById(btnId).classList.add('active');
 
             content.innerHTML = ""; 
-
-            // לוגיקת רינדור הטאבים
             if (tabName === 'home') {
-                if (typeof drawHome === 'function') {
-                    drawHome(content); 
-                }
-                
-                // הזרקת הודעת מנהל מעל מרכז השליטה
+                if (typeof drawHome === 'function') drawHome(content);
                 const adminDiv = document.createElement('div');
                 adminDiv.className = 'admin-box fade-in';
-                adminDiv.innerHTML = `📢 <b>הודעה:</b> ${adminMsgText}`;
+                adminDiv.innerHTML = `📢 <b>הודעת מנהל:</b><br>${adminMsgText}`;
                 content.prepend(adminDiv);
             } 
-            else if (tabName === 'work' && typeof drawWork === 'function') drawWork(content);
-            else if (tabName === 'market' && typeof drawMarket === 'function') drawMarket(content);
-            else if (tabName === 'business' && typeof drawBusiness === 'function') drawBusiness(content);
-            else if (tabName === 'tasks' && typeof drawTasks === 'function') drawTasks(content);
-            else if (tabName === 'estate' && typeof drawEstate === 'function') drawEstate(content);
-            else if (tabName === 'skills' && typeof drawSkills === 'function') drawSkills(content);
-            else if (tabName === 'bank' && typeof drawBank === 'function') drawBank(content);
-            else if (tabName === 'cars' && typeof drawCars === 'function') drawCars(content);
+            else if (tabName === 'work') drawWork(content);
+            else if (tabName === 'invest') drawInvest(content);
+            else if (tabName === 'business') drawBusiness(content);
+            else if (tabName === 'tasks') drawTasks(content);
+            else if (tabName === 'estate') drawEstate(content);
+            else if (tabName === 'skills') drawSkills(content);
+            else if (tabName === 'bank') drawBank(content);
+            else if (tabName === 'cars') drawCars(content);
+            else if (tabName === 'market') drawMarket(content);
             
             if (typeof updateUI === 'function') updateUI();
-            saveGame(); // שמירה בכל מעבר טאב ליתר ביטחון
         }
 
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+
+        function forceUpdate() { window.location.reload(true); }
         function closeInstallGuide() { document.getElementById('installModal').style.display = 'none'; }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // טעינת המשחק לפני פתיחת הטאב הראשון
-            if (typeof loadGame === 'function') loadGame();
-            
+            if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
             openTab('home');
-
-            // זיהוי מכשיר iOS להוראות התקנה
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 document.getElementById('android-instr').style.display = 'none';
                 document.getElementById('ios-instr').style.display = 'block';
             }
         });
-
-        // פונקציית עדכון כפוי לניקוי מטמון
-        function forceUpdate() {
-            if(confirm("לרענן את האפליקציה ולבדוק עדכונים?")) {
-                window.location.reload(true);
-            }
-        }
     </script>
 </body>
 </html>
