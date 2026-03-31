@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.1.3 - Final Sync */
+/* Smart Money Pro - js/ui.js - v6.3.0 - Dynamic XP Scaling UI */
 
 let deferredPrompt;
 let currentTab = 'home'; 
@@ -9,9 +9,14 @@ window.addEventListener('beforeinstallprompt', (e) => {
     renderInstallBtn();
 });
 
-// --- עדכון ויזואלי מהיר (נקרא מה-Core) ---
-function renderUIUpdate() {
-    if (currentTab === 'home') {
+// --- עדכון ויזואלי מהיר (נקרא מה-Core ושולח אובייקט ld) ---
+function renderUIUpdate(ld) {
+    // אם לא נשלח אובייקט ld מה-Core, ננסה לחשב אותו מקומית כגיבוי
+    if (!ld && typeof getLevelData === 'function') {
+        ld = getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0);
+    }
+
+    if (currentTab === 'home' && ld) {
         const passiveEl = document.getElementById('passive-display');
         const progressEl = document.getElementById('xp-progress-bar');
         const xpTextEl = document.getElementById('xp-text-detail');
@@ -23,18 +28,18 @@ function renderUIUpdate() {
             passiveEl.innerText = currentPassive.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " ₪/ש";
         }
         
-        // עדכון בר התקדמות (לפי 1000 XP לרמה)
-        if (progressEl && xpTextEl) {
-            const currentXP = typeof lifeXP !== 'undefined' ? lifeXP : 0;
-            const progress = ((currentXP % 1000) / 1000) * 100;
-            progressEl.style.width = progress + "%";
-            xpTextEl.innerText = Math.floor(currentXP % 1000).toLocaleString() + " / 1,000 XP";
+        // עדכון בר התקדמות דינמי (לפי נוסחת 25% מה-Core)
+        if (progressEl) {
+            progressEl.style.width = ld.progressPercent + "%";
+        }
+        
+        if (xpTextEl) {
+            xpTextEl.innerText = `${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP`;
         }
         
         // עדכון מספר הרמה
         if (levelValEl) {
-            const level = Math.floor((typeof lifeXP !== 'undefined' ? lifeXP : 0) / 1000) + 1;
-            levelValEl.innerText = level;
+            levelValEl.innerText = ld.level;
         }
     }
 }
@@ -77,9 +82,10 @@ function openTab(t) {
 
 // --- דף הבית ---
 function drawHome(c) {
-    const safeXP = typeof lifeXP !== 'undefined' ? lifeXP : 0;
-    const level = Math.floor(safeXP / 1000) + 1;
-    const progress = ((safeXP % 1000) / 1000) * 100;
+    // קבלת נתוני רמה מה-Core (דורש core.js v6.3.0)
+    const ld = (typeof getLevelData === 'function') 
+               ? getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0) 
+               : { level: 1, xpInCurrentLevel: 0, xpForNext: 1000, progressPercent: 0 };
 
     c.innerHTML = `
         <div class="card fade-in">
@@ -93,11 +99,11 @@ function drawHome(c) {
             
             <div class="card" style="background:rgba(255,255,255,0.03); margin-bottom:15px; padding:12px; border:1px solid var(--border);">
                 <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px;">
-                    <span>רמת חיים <b id="home-level-val">${level}</b></span>
-                    <span id="xp-text-detail" style="opacity:0.8;">${Math.floor(safeXP % 1000).toLocaleString()} / 1,000 XP</span>
+                    <span>רמת חיים <b id="home-level-val">${ld.level}</b></span>
+                    <span id="xp-text-detail" style="opacity:0.8;">${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP</span>
                 </div>
                 <div style="height:10px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
-                    <div id="xp-progress-bar" style="width:${progress}%; height:100%; background:linear-gradient(90deg, var(--blue), #60a5fa); transition: width 0.5s ease;"></div>
+                    <div id="xp-progress-bar" style="width:${ld.progressPercent}%; height:100%; background:linear-gradient(90deg, var(--blue), #60a5fa); transition: width 0.3s ease;"></div>
                 </div>
             </div>
 
@@ -126,8 +132,30 @@ function drawHome(c) {
                 </div>
             </div>
 
+            <div id="install-container" style="margin-top:20px;"></div>
+
             <button class="sys-btn" style="border:1px solid #451a1a; color:#ef4444; margin-top:25px; font-size:11px; padding:10px; width:100%;" onclick="resetGame()">🗑️ איפוס חשבון</button>
         </div>
     `;
     renderInstallBtn();
 }
+
+function renderInstallBtn() {
+    const cont = document.getElementById("install-container");
+    if(!cont) return;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if(!isStandalone && deferredPrompt) {
+        cont.innerHTML = `<button class="action" style="background:var(--blue); color:#fff; font-weight:bold; width:100%; padding:12px; border-radius:8px; border:none;" onclick="triggerInstall()">📲 התקן כאפליקציה (PWA)</button>`;
+    } else { cont.innerHTML = ""; }
+}
+
+async function triggerInstall() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') { deferredPrompt = null; renderInstallBtn(); }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => { openTab('home'); }, 150);
+});
