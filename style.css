@@ -1,4 +1,4 @@
-/* Smart Money Pro - style.css - v6.2.8 - Layout Fix */
+/* Smart Money Pro - style.css - v6.3.0 - Classic UI Restore */
 
 :root { 
     --bg: #0f172a; 
@@ -34,16 +34,16 @@ body {
 /* לוגו עליון */
 .main-header { 
     background: var(--card); 
-    height: 65px; 
+    height: 60px; 
     display: flex; 
     justify-content: center; 
     align-items: center; 
     border-bottom: 1px solid var(--border);
 }
 
-.header-logo-big { max-height: 45px; }
+.header-logo-big { max-height: 40px; cursor: pointer; }
 
-/* סטטיסטיקה עליונה */
+/* סטטיסטיקה עליונה - דביקה */
 .stats-bar-top { 
     display: flex; 
     justify-content: space-around; 
@@ -53,17 +53,34 @@ body {
     top: 0; 
     z-index: 2000; 
     border-bottom: 2px solid var(--blue); 
+    box-shadow: var(--shadow);
 }
 
 .stat-item { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 4px; }
 .stat-item span { color: var(--blue); }
 
-/* תפריט ניווט - חזר למקומו הטבעי למעלה */
+/* שורת סטטוס (Status Bar) - במקום התיבה הצפה */
+#status-bar { 
+    text-align: center; 
+    min-height: 40px; 
+    line-height: 40px; 
+    font-size: 13px; 
+    font-weight: 600; 
+    margin: 10px 15px;
+    background: rgba(56, 189, 248, 0.05); 
+    border: 1px solid var(--border);
+    border-radius: 12px; 
+    transition: all 0.3s ease; 
+    color: var(--blue);
+    opacity: 0; /* מופיע רק כשיש הודעה */
+}
+
+/* תפריט ניווט - זורם עם הדף (לא מקובע) */
 .topbar { 
-    padding: 10px 8px; 
+    padding: 8px; 
     background: var(--card); 
     border-bottom: 1px solid var(--border);
-    position: relative; /* ביטול ה-fixed שהוריד אותו למטה */
+    position: relative; 
     z-index: 1500;
 }
 
@@ -80,38 +97,13 @@ body {
     font-size: 11px; 
     font-weight: 700;
     cursor: pointer;
+    transition: 0.2s;
 }
 
 .topbar button.active { 
-    background: var(--blue); 
-    color: #0f172a; 
+    background: var(--blue) !important; 
+    color: #0f172a !important; 
     border-color: var(--blue);
-}
-
-/* תיבת הודעות Box - האלמנט היחיד שצף בתחתית */
-#msg { 
-    position: fixed; 
-    left: 50%; 
-    bottom: 30px; 
-    transform: translateX(-50%) translateY(20px); 
-    z-index: 30000; 
-    width: auto; 
-    min-width: 250px;
-    text-align: center; 
-    pointer-events: none; 
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.msg-box {
-    display: inline-block;
-    background: #1e293b;
-    border: 2px solid var(--blue);
-    padding: 12px 25px;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-    color: white;
-    font-weight: bold;
 }
 
 /* תוכן ראשי */
@@ -119,7 +111,7 @@ body {
     padding: 15px; 
     max-width: 500px; 
     margin: 0 auto; 
-    padding-bottom: 60px; /* מרווח רגיל */
+    padding-bottom: 40px; /* מרווח נקי בתחתית */
 }
 
 .card { 
@@ -128,6 +120,7 @@ body {
     padding: 15px; 
     margin-bottom: 15px; 
     border: 1px solid var(--border); 
+    box-shadow: var(--shadow);
 }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -141,18 +134,34 @@ body {
     background: var(--blue); 
     color: #0f172a; 
     font-weight: 800; 
+    font-size: 15px; 
     cursor: pointer; 
+    box-shadow: 0 4px 0px rgba(56, 189, 248, 0.2);
 }
 
-.action:active { transform: scale(0.98); }
+.action:active { transform: translateY(2px); box-shadow: none; }
 
-/* פסי התקדמות */
+/* פסי התקדמות (XP) */
 .progress-container { 
     background: rgba(0, 0, 0, 0.2); 
     border-radius: 20px; 
-    height: 10px; 
+    height: 12px; 
     overflow: hidden; 
     border: 1px solid var(--border);
+    margin: 10px 0;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), #60a5fa);
+    transition: width 0.5s ease;
+}
+
+/* מערכת נושאים (Themes) */
+.sys-btn { 
+    background: rgba(56, 189, 248, 0.05) !important; 
+    color: var(--blue) !important; 
+    border: 1px solid var(--blue) !important; 
 }
 
 .fade-in { animation: fadeIn 0.3s ease-out; }
