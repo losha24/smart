@@ -3,50 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.6.0</title>
+    <title>Smart Money Pro | v6.2.5</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="stylesheet" href="style.css?v=6.6.0">
+    <link rel="stylesheet" href="style.css?v=6.2.5">
     
     <style>
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
+        /* הגדרות בסיס למניעת קפיצות ב-UI */
+        body { margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; justify-content: center; align-items: center; }
         .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid var(--blue); }
         .topbar button.active { background: var(--blue) !important; color: #000 !important; font-weight: bold; }
         
-        /* עיצוב שורת ההודעות הצפה - מעל הכפתורים */
+        /* עוגן הודעות - עיצוב התיבה מוזרק מה-JS */
         #msg { 
+            position: fixed; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 30000; /* מעל הכל */
+            width: 90%; 
+            max-width: 380px; 
+            text-align: center; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
             pointer-events: none; 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            font-weight: bold;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            max-width: 90%;
-            position: fixed;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000;
-            padding: 12px 25px;
-            border-radius: 12px;
-            color: white;
-            text-align: center;
-            min-width: 280px;
-            /* שינוי מיקום לתחתית מעל הניווט */
-            bottom: 115px; 
             opacity: 0;
+            bottom: 110px;
         }
 
-        .invest-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        /* מרווח עבודה כדי שהתוכן לא ייבלע תחת ה-MSG */
+        /* אזור התוכן הראשי עם גלילה עצמאית */
         main#content {
-            padding-bottom: 140px;
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 160px; /* מרווח ביטחון לתפריט ולהודעות */
+            -webkit-overflow-scrolling: touch;
         }
+
+        .stats-bar-top { z-index: 1000; }
+        .topbar { z-index: 1500; }
     </style>
 </head>
 <body class="dark-theme">
@@ -98,56 +94,62 @@
         </div>
     </div>
 
-    <footer class="main-footer" style="padding-bottom: 40px; opacity: 0.6;">
+    <footer class="main-footer" style="padding: 20px 0 40px 0; opacity: 0.5; font-size: 11px;">
         © 2026 Smart Money Pro | אלכסיי זבודיסקר
     </footer>
 
     <script src="js/core.js?v=6.3.2"></script>
-    <script src="js/ui.js?v=6.2.0"></script>
+    <script src="js/ui.js?v=6.2.5"></script>
     <script src="js/activities.js?v=6.6.0"></script>
     <script src="js/economy.js?v=6.1.5"></script>
 
     <script>
+        /**
+         * ניווט בין טאבים
+         */
         function openTab(tabName) {
             const content = document.getElementById('content');
             if (!content) return;
 
+            // עדכון כפתור פעיל
             document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById('nav-' + tabName);
             if (activeBtn) activeBtn.classList.add('active');
 
             content.innerHTML = "";
-            window.scrollTo(0,0);
+            content.scrollTop = 0; // גלילה לראש התוכן בתוך ה-Main
 
             try {
-                if (tabName === 'home' && typeof drawHome === 'function') drawHome(content);
-                else if (tabName === 'work' && typeof drawWork === 'function') drawWork(content);
-                else if (tabName === 'invest' && typeof drawInvest === 'function') drawInvest(content);
-                else if (tabName === 'tasks' && typeof drawTasks === 'function') drawTasks(content);
-                else if (tabName === 'business' && typeof drawBusiness === 'function') drawBusiness(content);
-                else if (tabName === 'estate' && typeof drawEstate === 'function') drawEstate(content);
-                else if (tabName === 'skills' && typeof drawSkills === 'function') drawSkills(content);
-                else if (tabName === 'bank' && typeof drawBank === 'function') drawBank(content);
-                else if (tabName === 'cars' && typeof drawCars === 'function') drawCars(content);
-                else if (tabName === 'market' && typeof drawMarket === 'function') drawMarket(content);
-                else {
-                    content.innerHTML = `<div class="card" style="text-align:center;"><h3>🚧 בקרוב</h3><p>האזור בבנייה</p></div>`;
+                // קריאה לפונקציות הציור מתוך ui.js
+                const drawFunc = "draw" + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+                if (typeof window[drawFunc] === 'function') {
+                    window[drawFunc](content);
+                } else {
+                    content.innerHTML = `<div class="card" style="text-align:center;"><h3>🚧 בקרוב</h3><p>האזור "${tabName}" בבנייה</p></div>`;
                 }
 
+                // עדכון נתונים מיידי
                 if (typeof updateUI === 'function') updateUI();
             } catch (err) {
-                console.error("שגיאת טאב:", err);
-                content.innerHTML = `<div class="card" style="color:red;">שגיאה בטעינת הטאב: ${err.message}</div>`;
+                console.error("Tab Error:", err);
+                content.innerHTML = `<div class="card" style="color:red;">שגיאה: ${err.message}</div>`;
             }
         }
 
+        /**
+         * אתחול המשחק
+         */
         document.addEventListener('DOMContentLoaded', () => {
+            // טעינת נתונים
             if (typeof loadGame === 'function') loadGame();
             
+            // עדכון UI ראשוני
             setTimeout(() => {
+                if (typeof updateUI === 'function') updateUI();
                 openTab('home');
-            }, 350);
+            }, 300);
 
+            // זיהוי iOS
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 document.getElementById('android-instr').style.display = 'none';
                 document.getElementById('ios-instr').style.display = 'block';
