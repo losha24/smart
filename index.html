@@ -3,157 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.3.0</title>
+    <title>Smart Money Pro | v6.1.2</title>
     
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json?v=6.1.2">
     <meta name="theme-color" content="#0f172a">
-    <link rel="stylesheet" href="style.css?v=6.3.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="logo.png">
     
+    <link rel="stylesheet" href="style.css?v=6.1.2">
     <style>
-        /* החזרת העיצוב של 6.0.5 */
-        body { 
-            margin: 0; 
-            padding: 0; 
-            background: #0f172a; 
-            min-height: 100vh;
-            font-family: system-ui, -apple-system, sans-serif;
-            color: #f1f5f9;
-        }
-
-        /* שורת סטטוס חכמה - מתחת לכסף */
-        #status-bar { 
-            text-align: center; 
-            min-height: 40px; 
-            line-height: 40px; 
-            font-size: 13px; 
-            font-weight: 600; 
-            margin: 10px 15px;
-            background: rgba(56, 189, 248, 0.05); 
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px; 
-            transition: 0.3s; 
-            opacity: 0; /* מופיע רק כשיש הודעה */
-        }
-
-        /* תפריט ניווט - חוזר למעלה (לא Fixed) */
-        .topbar { 
-            position: relative; 
-            z-index: 1500; 
-            padding: 8px;
-            background: #1e293b;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .nav-row { display: flex; gap: 6px; margin-bottom: 6px; }
-        .topbar button { 
-            flex: 1; padding: 10px 2px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); 
-            background: rgba(255, 255, 255, 0.03); color: #f1f5f9; font-size: 11px; font-weight: 700;
-        }
-        .topbar button.active { background: #38bdf8 !important; color: #0f172a !important; }
-
-        /* מודאלים */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; justify-content: center; align-items: center; }
-        .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid #38bdf8; }
-
-        main#content {
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid var(--blue); }
+        
+        /* עיצוב הודעת מנהל משופר */
+        .admin-box {
+            background: rgba(59, 130, 246, 0.15);
+            border-right: 4px solid var(--blue);
             padding: 15px;
-            padding-bottom: 50px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-
-        .stats-bar-top { position: sticky; top: 0; z-index: 2000; background: #1e293b; padding: 12px 0; border-bottom: 2px solid #38bdf8; }
     </style>
 </head>
 <body class="dark-theme">
     
     <header class="main-header">
-        <img src="logo.png" alt="Smart Money Pro" class="header-logo-big" onclick="openTab('home')" style="cursor:pointer; max-height: 45px; display: block; margin: 10px auto;">
+        <img src="logo.png" alt="Smart Money Pro" class="header-logo-big" onclick="openTab('home')" style="cursor:pointer;">
     </header>
 
     <div class="stats-bar-top">
-        <div style="display: flex; justify-content: space-around;">
-            <div class="stat-item">💰 <span id="money">0</span>₪</div>
-            <div class="stat-item">🏦 <span id="bank">0</span>₪</div>
-            <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
-        </div>
+        <div class="stat-item">💰 <span id="money">0</span>₪</div>
+        <div class="stat-item">🏦 <span id="bank">0</span>₪</div>
+        <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
     </div>
 
-    <div id="status-bar">המערכת מוכנה</div>
+    <div id="status-bar" class="status-msg"></div>
 
     <nav class="topbar">
         <div class="nav-row">
-            <button onclick="openTab('home')" id="nav-home">🏠 בית</button>
-            <button onclick="openTab('work')" id="nav-work">⚒️ עבודות</button>
-            <button onclick="openTab('tasks')" id="nav-tasks">🎰 קזינו</button>
+            <button onclick="openTab('home')" id="btnHome" class="active">🏠 בית</button>
+            <button onclick="openTab('work')" id="btnWork">⚒️ עבודות</button>
+            <button onclick="openTab('tasks')" id="btnTasks">🎰 קזינו</button>
         </div>
         <div class="nav-row">
-            <button onclick="openTab('invest')" id="nav-invest">📈 בורסה</button>
-            <button onclick="openTab('business')" id="nav-business">🏢 עסקים</button>
-            <button onclick="openTab('estate')" id="nav-estate">🏠 נדל"ן</button>
+            <button onclick="openTab('invest')" id="btnInvest">📈 בורסה</button>
+            <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
+            <button onclick="openTab('estate')" id="btnEstate">🏠 נדל"ן</button>
         </div>
         <div class="nav-row">
-            <button onclick="openTab('skills')" id="nav-skills">🎓 כישורים</button>
-            <button onclick="openTab('bank')" id="nav-bank">🏦 בנק</button>
-            <button onclick="openTab('cars')" id="nav-cars">🚗 רכבים</button>
+            <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
+            <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
+            <button onclick="openTab('cars')" id="btnCars">🚗 רכבים</button>
         </div>
         <div class="nav-row">
-            <button onclick="openTab('market')" id="nav-market">🛒 שוק</button>
+            <button onclick="openTab('market')" id="btnMarket">🛒 שוק</button>
             <button onclick="document.getElementById('installModal').style.display='flex'" class="sys-btn">📲</button>
-            <button onclick="location.reload()" class="sys-btn">🔄</button>
+            <button onclick="forceUpdate()" class="sys-btn">🔄</button>
             <button onclick="toggleTheme()" class="sys-btn">🌓</button>
         </div>
     </nav>
 
-    <main id="content" class="container fade-in"></main>
+    <main id="content" class="fade-in container"></main>
 
-    <div id="installModal" class="modal-overlay" onclick="this.style.display='none'">
+    <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
         <div class="modal-card" onclick="event.stopPropagation()">
             <h3>📲 התקנה</h3>
             <p id="android-instr">לחץ על 3 הנקודות בתפריט ובחר "התקן אפליקציה".</p>
-            <button class="action" onclick="document.getElementById('installModal').style.display='none'" style="background:#ef4444; color:#fff; width:100%; border:none; padding:10px; border-radius:10px; margin-top:10px;">סגור</button>
+            <p id="ios-instr" style="display:none;">לחץ על "שתף" ואז "הוסף למסך הבית".</p>
+            <button class="action" onclick="closeInstallGuide()" style="background:var(--red); color:#fff; width:100%;">סגור</button>
         </div>
     </div>
 
-    <footer class="main-footer" style="text-align: center; padding: 20px; opacity: 0.3; font-size: 10px;">
-        © 2026 Smart Money Pro | אלכסיי זבודיסקר
+    <footer class="main-footer">
+        © 2026 Smart Money Pro v6.1.2 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.3.2"></script>
-    <script src="js/ui.js?v=6.3.0"></script>
-    <script src="js/activities.js?v=6.6.0"></script>
-    <script src="js/economy.js?v=6.1.5"></script>
+    <script src="js/core.js?v=6.1.2"></script>
+    <script src="js/activities.js?v=6.1.2"></script>
+    <script src="js/economy.js?v=6.1.2"></script>
+    <script src="js/ui.js?v=6.1.2"></script>
 
     <script>
+        const adminMsgText = "ברוכים הבאים אלכסיי! הגרסה עודכנה בהצלחה. כל הנתונים וההודעות מסונכרנים עכשיו.";
+
+        function showStatus(msg, type = 'blue') {
+            const bar = document.getElementById('status-bar');
+            if (!bar) return;
+            const colors = { 'green': '#22c55e', 'red': '#ef4444', 'blue': '#3b82f6' };
+            bar.innerText = msg;
+            bar.style.backgroundColor = colors[type] || colors.blue;
+            bar.style.opacity = "1";
+            setTimeout(() => { bar.style.opacity = "0"; }, 3000);
+        }
+
         function openTab(tabName) {
             const content = document.getElementById('content');
             if (!content) return;
 
-            // עדכון כפתור פעיל
             document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById('nav-' + tabName);
+            const activeBtn = document.getElementById('btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
             if (activeBtn) activeBtn.classList.add('active');
 
-            content.innerHTML = "";
-            window.scrollTo(0,0);
+            content.innerHTML = ""; 
 
-            try {
-                const drawFunc = "draw" + tabName.charAt(0).toUpperCase() + tabName.slice(1);
-                if (typeof window[drawFunc] === 'function') {
-                    window[drawFunc](content);
+            if (tabName === 'home') {
+                // 1. קודם כל נבנה את הבית המקורי
+                if (typeof drawHome === 'function') {
+                    drawHome(content); 
                 } else {
-                    content.innerHTML = `<div class="card" style="text-align:center;"><h3>🚧 בקרוב</h3><p>אזור זה בבנייה</p></div>`;
+                    content.innerHTML = `<div class="card"><h3>🏠 בית</h3><p>הנתונים בטעינה...</p></div>`;
                 }
-                if (typeof updateUI === 'function') updateUI();
-            } catch (err) {
-                console.error("Tab Error:", err);
-            }
+
+                // 2. עכשיו נוסיף את הודעת המנהל לראש העמוד (בלי למחוק את מה ש-drawHome עשתה)
+                const adminDiv = document.createElement('div');
+                adminDiv.className = 'admin-box fade-in';
+                adminDiv.innerHTML = `📢 <b>הודעת מנהל:</b><br>${adminMsgText}`;
+                
+                // prepend מכניס את האלמנט בתחילת ה-content (מעל הכל)
+                content.prepend(adminDiv);
+
+            } 
+            else if (tabName === 'work' && typeof drawWork === 'function') drawWork(content);
+            else if (tabName === 'invest' && typeof drawInvest === 'function') drawInvest(content);
+            else if (tabName === 'business' && typeof drawBusiness === 'function') drawBusiness(content);
+            else if (tabName === 'tasks' && typeof drawTasks === 'function') drawTasks(content);
+            else if (tabName === 'estate' && typeof drawEstate === 'function') drawEstate(content);
+            else if (tabName === 'skills' && typeof drawSkills === 'function') drawSkills(content);
+            else if (tabName === 'bank' && typeof drawBank === 'function') drawBank(content);
+            else if (tabName === 'cars' && typeof drawCars === 'function') drawCars(content);
+            else if (tabName === 'market' && typeof drawMarket === 'function') drawMarket(content);
+            
+            if (typeof updateUI === 'function') updateUI();
         }
 
+        function closeInstallGuide() { document.getElementById('installModal').style.display = 'none'; }
+
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof loadGame === 'function') loadGame();
-            setTimeout(() => {
-                if (typeof updateUI === 'function') updateUI();
-                openTab('home');
-            }, 300);
+            openTab('home');
+            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                document.getElementById('android-instr').style.display = 'none';
+                document.getElementById('ios-instr').style.display = 'block';
+            }
         });
     </script>
 </body>
