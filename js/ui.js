@@ -1,177 +1,122 @@
-/* Smart Money Pro - js/ui.js - v6.5.1 
-   FULL INTERFACE ENGINE - NO MISSING LINES
-*/
+/* Smart Money Pro - js/ui.js - v6.5.2 TURBO - FULL & FINAL */
 
-let currentTab = 'home';
-const adminMsgText = "שלום אלכסיי! המערכת מעודכנת לגרסה 6.5.1. כל הנתונים נשמרים בענן המקומי.";
-
-/**
- * ניהול החלפת טאבים וטעינת תוכן דינמי
- */
+// 1. ניהול מעבר בין טאבים (Navigation)
 function openTab(t) {
     currentTab = t;
     
-    // עדכון ויזואלי של הכפתור הפעיל ב-Topbar
-    document.querySelectorAll(".topbar button").forEach(btn => {
-        btn.classList.remove("active");
-    });
-    
-    const activeBtn = document.getElementById("btn" + t.charAt(0).toUpperCase() + t.slice(1));
-    if(activeBtn) activeBtn.classList.add("active");
+    // עדכון ויזואלי של הכפתור הפעיל בתפריט
+    document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
+    const btn = document.getElementById("btn" + t.charAt(0).toUpperCase() + t.slice(1));
+    if(btn) btn.classList.add("active");
     
     const container = document.getElementById("content");
-    if(!container) return;
-    
-    // ניקוי הקונטיינר לפני רינדור חדש
-    container.innerHTML = "";
-    
-    // ניתוב ללוגיקת הרינדור המתאימה (מפוזרת בין הקבצים)
-    if(t === 'home') drawHome(container);
-    else if(t === 'work') drawWork(container);
-    else if(t === 'business') drawBusiness(container);
-    else if(t === 'estate') drawEstate(container);
-    else if(t === 'market') drawMarket(container);
-    else if(t === 'bank') drawBank(container);
-    else if(t === 'invest') drawInvest(container);
-    else if(t === 'tasks') drawTasks(container);
-    else if(t === 'skills') drawSkills(container);
-    else if(t === 'cars') drawCars(container);
+    container.innerHTML = ""; // ניקוי המסך לפני רינדור חדש
 
-    // עדכון הנתונים הכלליים ב-UI
-    updateUI();
-    window.scrollTo(0,0);
+    // ניתוב לפונקציית הציור המתאימה (מוודא שכל הקבצים מחוברים)
+    switch(t) {
+        case 'home': drawHome(container); break;
+        case 'work': if(window.drawWork) drawWork(container); break;
+        case 'invest': if(window.drawInvest) drawInvest(container); break;
+        case 'bank': if(window.drawBank) drawBank(container); break;
+        case 'estate': if(window.drawEstate) drawEstate(container); break;
+        case 'business': if(window.drawBusiness) drawBusiness(container); break;
+        case 'cars': if(window.drawCars) drawCars(container); break;
+        case 'skills': if(window.drawSkills) drawSkills(container); break;
+        case 'market': if(window.drawMarket) drawMarket(container); break;
+        case 'tasks': if(window.drawCasino) drawCasino(container); break;
+        default: 
+            container.innerHTML = `<div class="card fade-in" style="text-align:center; padding:30px;">
+                <h3 style="color:var(--yellow);">בפיתוח...</h3>
+                <p>הטאב ${t} יהיה זמין בעדכון הבא.</p>
+            </div>`;
+    }
+    
+    updateUI(); // עדכון מספרים (כסף/רמה) מיד עם המעבר
 }
 
-/**
- * רינדור דף הבית המלא (Home Tab)
- */
+// 2. רינדור דף הבית (The Turbo Hero Card)
 function drawHome(c) {
     const ld = getLevelData(lifeXP);
-    
-    // חישוב כמות נכסים לפי סוגים (לצורך תצוגה סטטיסטית)
-    const estateCount = inventory.filter(i => i.type === 'estate').length;
-    const bizCount = inventory.filter(i => i.type === 'business').length;
-
     c.innerHTML = `
-        <div class="admin-box fade-in">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <div style="background:var(--blue); color:#000; padding:8px; border-radius:50%; font-size:20px;">📢</div>
-                <div>
-                    <b style="font-size:15px;">עדכון מערכת:</b><br>
-                    <span style="font-size:12px; opacity:0.85;">${adminMsgText}</span>
-                </div>
+        <div class="main-card-hero fade-in">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:24px; color:var(--blue);">לוח בקרה</h2>
+                <span style="color:var(--green); font-weight:900; font-size:12px; border:1px solid var(--green); padding:2px 8px; border-radius:10px;">LIVE</span>
             </div>
-        </div>
-
-        <div class="card fade-in">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
-                <div>
-                    <h2 style="margin:0; font-size:22px; color:var(--blue);">לוח בקרה</h2>
-                    <small style="opacity:0.6;">גרסת תוכנה: ${VERSION}</small>
-                </div>
-                <button onclick="getDailyGift()" class="sys-btn" style="background:var(--yellow); color:#000; border:none; padding:10px 15px; font-weight:bold;">
-                    🎁 מתנה יומית
-                </button>
-            </div>
-
-            <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span>רמה <b style="color:var(--purple); font-size:18px;">${ld.level}</b></span>
-                    <span style="font-size:12px;">${ld.xpInCurrentLevel.toLocaleString()} / ${ld.xpForNext.toLocaleString()} XP</span>
-                </div>
-                <div class="progress-container" style="height:12px;">
-                    <div id="xp-progress-bar" class="progress-bar xp-bar" style="width:${ld.progressPercent}%"></div>
-                </div>
+            
+            <div class="xp-container-big">
+                <div id="xp-progress-bar" class="xp-bar-fill" style="width:${ld.progressPercent}%"></div>
             </div>
 
             <div class="grid-2">
-                <div class="card" style="margin:0; border-right:4px solid var(--green); background:rgba(34,197,94,0.03);">
-                    <small style="opacity:0.7;">רווח לשעה</small><br>
-                    <b style="color:var(--green); font-size:18px;">+${Math.floor(passive).toLocaleString()} ₪</b>
+                <div>
+                    <small style="opacity:0.6; font-size:11px;">הכנסה פסיבית</small><br>
+                    <b style="color:var(--green); font-size:20px;">₪${Math.floor(passive).toLocaleString()}</b>
                 </div>
-                <div class="card" style="margin:0; border-right:4px solid var(--red); background:rgba(239,68,68,0.03);">
-                    <small style="opacity:0.7;">חובות לבנק</small><br>
-                    <b style="color:var(--red); font-size:18px;">${loan.toLocaleString()} ₪</b>
+                <div style="text-align:left;">
+                    <small style="opacity:0.6; font-size:11px;">רמת קריירה</small><br>
+                    <b style="color:var(--blue); font-size:20px;">Lvl ${ld.level}</b>
                 </div>
             </div>
         </div>
 
         <div class="card fade-in">
-            <h3 style="margin-top:0; font-size:16px; border-bottom:1px solid var(--border); padding-bottom:8px;">📦 המלאי שלך</h3>
-            
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-                <div style="font-size:12px; background:rgba(255,255,255,0.05); padding:8px; border-radius:8px;">
-                    🏠 נדל"ן: <b>${estateCount}</b>
-                </div>
-                <div style="font-size:12px; background:rgba(255,255,255,0.05); padding:8px; border-radius:8px;">
-                    🏢 עסקים: <b>${bizCount}</b>
-                </div>
-            </div>
-
-            <div id="inventory-grid" style="display:flex; flex-wrap:wrap; gap:10px;">
-                ${inventory.length === 0 ? '<div style="width:100%; text-align:center; opacity:0.3; padding:20px;">התיק ריק...</div>' : ''}
-                ${inventory.map(item => `
-                    <div class="inv-item" title="${item.name}" style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:10px; font-size:24px; position:relative;">
-                        ${item.icon}
-                    </div>
-                `).join('')}
+            <h3 style="margin:0 0 15px 0; font-size:15px; border-bottom:1px solid var(--border); padding-bottom:8px;">📦 מחסן נכסים</h3>
+            <div class="inv-grid">
+                ${inventory.map(i => `<div class="inv-slot" title="${i.name}">${i.icon}</div>`).join('')}
+                ${new Array(Math.max(0, 8 - inventory.length)).fill('<div class="inv-slot" style="opacity:0.05;">?</div>').join('')}
             </div>
         </div>
-
-        <div class="card fade-in" style="opacity:0.8; font-size:12px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                <span>סך הכל הרווחת בקריירה:</span>
-                <b style="color:var(--blue);">${totalEarned.toLocaleString()} ₪</b>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-                <span>מהירות עבודה נוכחית:</span>
-                <b style="color:var(--yellow);">x${carSpeed}</b>
-            </div>
-        </div>
+        
+        <button class="action" onclick="getDailyGift()" style="background:var(--yellow); color:#000; box-shadow: 0 4px 15px rgba(255,223,0,0.3); margin-top:10px;">🎁 קבל מענק יומי</button>
     `;
 }
 
-/**
- * עדכון ויזואלי של פסי התקדמות בזמן אמת (נקרא מה-core.js)
- */
-function renderUIUpdate(ld) {
-    if(currentTab === 'home') {
-        const xpBar = document.getElementById('xp-progress-bar');
-        if(xpBar) xpBar.style.width = ld.progressPercent + "%";
+// 3. לוגיקת מתנה יומית (היה חסר בקוד שלך)
+function getDailyGift() {
+    const gift = 5000 + (getLevelData(lifeXP).level * 1000);
+    money += gift;
+    showMsg(`🎁 קיבלת מתנה יומית בסך ₪${gift.toLocaleString()}!`, "var(--green)");
+    saveGame();
+    updateUI();
+}
+
+// 4. ניהול מודאלים (Modals)
+function openModal(title, html) {
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-body').innerHTML = html;
+    document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('modal-overlay').style.display = 'none';
+}
+
+// 5. שמירה וטעינה אוטומטית (Persistence)
+function saveGame() {
+    const data = { money, bank, lifeXP, passive, inventory, carSpeed, lastKnownLevel };
+    localStorage.setItem('smartMoneySave_v652', JSON.stringify(data));
+}
+
+function loadGame() {
+    const saved = localStorage.getItem('smartMoneySave_v652');
+    if (saved) {
+        const d = JSON.parse(saved);
+        money = d.money || 1500;
+        bank = d.bank || 0;
+        lifeXP = d.lifeXP || 0;
+        passive = d.passive || 0;
+        inventory = d.inventory || [];
+        carSpeed = d.carSpeed || 1;
+        lastKnownLevel = d.lastKnownLevel || 1;
     }
 }
 
-/**
- * מערכת הודעות (Toast Notifications)
- */
-function showMsg(msg, color = "var(--blue)") {
-    const bar = document.getElementById('status-bar');
-    if(!bar) return;
-    
-    // ביטול אנימציה קודמת אם קיימת
-    bar.style.transition = 'none';
-    bar.style.opacity = '0';
-    bar.style.transform = 'translateY(-10px)';
-    
-    setTimeout(() => {
-        bar.innerText = msg;
-        bar.style.color = color;
-        bar.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-        bar.style.opacity = '1';
-        bar.style.transform = 'translateY(0)';
-    }, 10);
-    
-    // הסתרה אוטומטית
-    setTimeout(() => {
-        bar.style.opacity = '0';
-        bar.style.transform = 'translateY(-10px)';
-    }, 4000);
-}
-
-// אתחול הממשק עם עליית הדף
+// 6. אתחול המערכת
 document.addEventListener("DOMContentLoaded", () => {
-    // השהייה קלה כדי לוודא ש-core סיים לטעון מה-localStorage
-    setTimeout(() => {
-        openTab('home');
-    }, 150);
+    loadGame(); // טעינת נתונים קודמים
+    openTab('home'); // פתיחת דף הבית
+    
+    // שמירה אוטומטית כל 30 שניות
+    setInterval(saveGame, 30000);
 });
