@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.1.8 - Final Update */
+/* Smart Money Pro - js/ui.js - v6.2.0 - Final UI Update */
 
 let deferredPrompt;
 let adminMessage = localStorage.getItem('admin_msg') || "ברוכים הבאים אלכסיי! המערכת מוכנה.";
@@ -9,7 +9,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 /**
- * שורת עדכונים צפה (Status Bar)
+ * שורת עדכונים צפה (Status Bar) - מעל הכפתורים למטה
  */
 function showMsg(text, color = "var(--blue)") {
     const msgEl = document.getElementById('msg');
@@ -18,19 +18,24 @@ function showMsg(text, color = "var(--blue)") {
     msgEl.innerText = text;
     msgEl.style.background = color;
     msgEl.style.opacity = "1";
-    msgEl.style.top = "85px"; // ממוקם מתחת לסטטוס בר העליון
+    msgEl.style.bottom = "120px"; // מיקום מעל שורת הכפתורים
+    msgEl.style.top = "auto"; // ביטול הגדרה קודמת אם הייתה
 
     setTimeout(() => {
         msgEl.style.opacity = "0";
-        msgEl.style.top = "70px";
+        msgEl.style.bottom = "110px";
     }, 3000);
 }
 
 /**
- * פונקציית הבית
+ * פונקציית הבית - מציגה אינוונטרי מלא (רכבים, כישורים, נדל"ן)
  */
 function drawHome(c) {
     if (!c) return;
+    
+    // וודא עדכון אינוונטרי לפני הציור
+    if (typeof updateGlobalInventory === 'function') updateGlobalInventory();
+
     const xpValue = (typeof lifeXP !== 'undefined') ? lifeXP : 0;
     const passiveVal = (typeof passive !== 'undefined') ? passive : 0;
     let ld = { level: 1, progressPercent: 0, nextXP: 1000 };
@@ -83,21 +88,6 @@ function drawHome(c) {
 }
 
 /**
- * עיצוב בורסה - 2 בשורה
- */
-function drawInvest(c) {
-    if (!c) return;
-    c.innerHTML = `
-        <div class="fade-in">
-            <h2 style="text-align:center; color:var(--blue); margin-bottom:15px;">📈 בורסה ומסחר</h2>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                ${typeof renderInvestments === 'function' ? renderInvestments() : '<p>טוען נכסים...</p>'}
-            </div>
-        </div>
-    `;
-}
-
-/**
  * מתנה כל 4 שעות
  */
 function getDailyGift() {
@@ -114,58 +104,36 @@ function getDailyGift() {
     }
 
     if (typeof money !== 'undefined') {
-        const prize = 5000 + (typeof lifeXP !== 'undefined' ? lifeXP : 0);
+        const prize = 5000 + (typeof lifeXP !== 'undefined' ? Math.floor(lifeXP / 2) : 0);
         money += prize;
-        lifeXP = (typeof lifeXP !== 'undefined' ? lifeXP : 0) + 250;
+        lifeXP = (typeof lifeXP !== 'undefined' ? lifeXP : 0) + 300;
         localStorage.setItem('last_gift_time', now);
         updateUI();
-        showMsg(`🎁 קיבלת ₪${prize.toLocaleString()} ו-250 XP!`, "var(--green)");
+        showMsg(`🎁 קיבלת ₪${prize.toLocaleString()} ו-300 XP!`, "var(--green)");
         if (typeof saveGame === 'function') saveGame();
     }
 }
 
 /**
- * כישורים (הוספת 5 כישורים חדשים)
+ * הצגת איקונים של אינוונטרי בבית
  */
-function drawSkills(c) {
-    if (!c) return;
-    // רשימת הכישורים המורחבת
-    const skillList = [
-        { id: 's1', name: 'ניהול זמן', icon: '⏱️', desc: 'מעלה XP ב-10%' },
-        { id: 's2', name: 'שיווק דיגיטלי', icon: '📱', desc: 'בונוס לעסקים' },
-        { id: 's3', name: 'תכנות PWA', icon: '💻', desc: 'פתיחת עבודות הייטק' },
-        { id: 's4', name: 'ניתוח טכני', icon: '📊', desc: 'הנחה בבורסה' },
-        { id: 's5', name: 'משא ומתן', icon: '🤝', desc: 'הנחה בנדל"ן' }
-    ];
-
-    c.innerHTML = `
-        <div class="fade-in">
-            <h2 style="text-align:center; color:var(--blue);">🎓 פיתוח כישורים</h2>
-            <div style="display:grid; gap:10px; margin-top:15px;">
-                ${skillList.map(s => `
-                    <div class="card" style="display:flex; align-items:center; gap:15px; padding:12px;">
-                        <div style="font-size:25px;">${s.icon}</div>
-                        <div style="flex:1;">
-                            <div style="font-weight:bold;">${s.name}</div>
-                            <small style="opacity:0.6;">${s.desc}</small>
-                        </div>
-                        <button class="action" style="padding:5px 15px; font-size:12px; background:var(--blue); color:black;" onclick="upgradeSkill('${s.id}')">שדרג</button>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-}
-
 function renderInventoryIcons() {
     const inv = (typeof inventory !== 'undefined' && Array.isArray(inventory)) ? inventory : [];
-    if (inv.length === 0) return '<span style="grid-column: 1/6; font-size:11px; opacity:0.4; text-align:center;">ריק...</span>';
+    if (inv.length === 0) return '<span style="grid-column: 1/6; font-size:11px; opacity:0.4; text-align:center;">אין נכסים...</span>';
+    
     return inv.map(item => {
         const icon = (typeof item === 'object') ? (item.icon || '📦') : '📦';
-        return `<div class="inv-item-slot" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; display:flex; justify-content:center; align-items:center; aspect-ratio:1/1; font-size:22px;">${icon}</div>`;
+        const name = (typeof item === 'object') ? item.name : '';
+        return `
+            <div class="inv-item-slot" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; display:flex; justify-content:center; align-items:center; aspect-ratio:1/1; font-size:22px;" title="${name}">
+                ${icon}
+            </div>`;
     }).join('');
 }
 
+/**
+ * עדכון ה-UI הכללי
+ */
 function updateUI() {
     try {
         const m = (typeof money !== 'undefined') ? money : 0;
@@ -175,26 +143,42 @@ function updateUI() {
         let ld = { level: 1, progressPercent: 0, nextXP: 1000 };
         if (typeof getLevelData === 'function') ld = getLevelData(xp) || ld;
         
-        if(document.getElementById('money')) document.getElementById('money').innerText = Math.floor(m).toLocaleString();
-        if(document.getElementById('bank')) document.getElementById('bank').innerText = Math.floor(b).toLocaleString();
-        if(document.getElementById('life-level-ui')) document.getElementById('life-level-ui').innerText = ld.level;
+        // עדכון כסף ובנק
+        const moneyEl = document.getElementById('money');
+        const bankEl = document.getElementById('bank');
+        if(moneyEl) moneyEl.innerText = Math.floor(m).toLocaleString();
+        if(bankEl) bankEl.innerText = Math.floor(b).toLocaleString();
+        
+        // עדכון דרגה
+        const levelUI = document.getElementById('life-level-ui');
+        if(levelUI) levelUI.innerText = ld.level;
 
+        // עדכון בר XP (אם אנחנו בדף הבית)
         const bar = document.getElementById('xp-progress-bar');
         if(bar) bar.style.width = ld.progressPercent + "%";
         
         const xpTxt = document.getElementById('xp-text-detail');
         if(xpTxt) xpTxt.innerText = `${Math.floor(xp).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP`;
-    } catch(err) {}
+        
+    } catch(err) {
+        console.error("UI Update Error:", err);
+    }
 }
 
+/**
+ * הודעת מנהל
+ */
 function editAdminMsg() {
-    const pass = prompt("סיסמה:");
+    const pass = prompt("סיסמה לשנוי הודעה:");
     if (pass === "1234") {
-        const msg = prompt("הודעה חדשה:", adminMessage);
+        const msg = prompt("הכנס הודעה חדשה:", adminMessage);
         if (msg) {
             adminMessage = msg;
             localStorage.setItem('admin_msg', msg);
             if(document.getElementById('admin-text')) document.getElementById('admin-text').innerText = msg;
+            showMsg("הודעת מנהל עודכנה", "var(--blue)");
         }
+    } else if(pass !== null) {
+        showMsg("סיסמה שגויה", "var(--red)");
     }
 }
