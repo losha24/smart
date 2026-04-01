@@ -1,11 +1,10 @@
-/* Smart Money Pro - js/economy.js - v6.1.5 - Final Production */
+/* Smart Money Pro - js/economy.js - v6.3.2 - Final Production */
 
-// --- 1. מערכת הבנק והלוואות (כולל ניהול חוב) ---
+// --- 1. מערכת הבנק והלוואות ---
 function drawBank(c) {
     if(!c) return;
     
-    // חישוב ריבית קלה בזמן אמת לתצוגה
-    const debtWarning = loan > 0 ? `<p style="color:var(--red); font-size:11px;">⚠️ שים לב: החוב גדל ב-0.01% בכל דקה</p>` : "";
+    const debtWarning = (typeof loan !== 'undefined' && loan > 0) ? `<p style="color:var(--red); font-size:11px;">⚠️ שים לב: החוב גדל ב-0.01% בכל דקה</p>` : "";
 
     c.innerHTML = `
     <div class="card fade-in">
@@ -15,11 +14,11 @@ function drawBank(c) {
         <div class="grid-2">
             <div class="card" style="margin:0; text-align:center; padding:15px; border:1px solid var(--blue);">
                 <small>יתרה בבנק</small><br>
-                <b style="font-size:18px; color:var(--blue);">${Math.floor(bank).toLocaleString()}₪</b>
+                <b style="font-size:18px; color:var(--blue);">${Math.floor(typeof bank !== 'undefined' ? bank : 0).toLocaleString()}₪</b>
             </div>
             <div class="card" style="margin:0; text-align:center; padding:15px; border:1px solid var(--red);">
                 <small>חוב קיים</small><br>
-                <b style="font-size:18px; color:var(--red);">${Math.floor(loan).toLocaleString()}₪</b>
+                <b style="font-size:18px; color:var(--red);">${Math.floor(typeof loan !== 'undefined' ? loan : 0).toLocaleString()}₪</b>
             </div>
         </div>
         
@@ -40,7 +39,8 @@ function drawBank(c) {
 
 function bankAction(type) {
     const input = document.getElementById('bank-amt');
-    const val = parseInt(input.value);
+    if (!input) return;
+    const val = parseInt(input.value) || 0;
 
     if(type === 'dep') {
         if(val > 0 && money >= val) { money -= val; bank += val; showMsg("הפקדה בוצעה", "var(--green)"); }
@@ -53,7 +53,7 @@ function bankAction(type) {
     else if(type === 'loan') {
         const amt = parseInt(prompt("סכום הלוואה (עד 100,000₪):", "10000"));
         if(amt > 0 && amt <= 100000) {
-            loan += (amt * 1.15); // ריבית התחלתית
+            loan = (typeof loan !== 'undefined' ? loan : 0) + (amt * 1.15);
             money += amt;
             showMsg(`הלוואה אושרה: +${amt}₪`, "var(--yellow)");
         }
@@ -67,10 +67,12 @@ function bankAction(type) {
     }
     
     input.value = "";
-    updateUI(); saveGame(); drawBank(document.getElementById('content'));
+    updateUI(); 
+    if(typeof saveGame === 'function') saveGame(); 
+    drawBank(document.getElementById('content'));
 }
 
-// --- 2. אימפריית עסקים (10 רמות) ---
+// --- 2. אימפריית עסקים ---
 function drawBusiness(c) {
     const bizPool = [
         {n:"דוכן קפה", c:25000, p:1200, i:"☕"}, {n:"קיוסק", c:75000, p:4200, i:"🏪"},
@@ -82,7 +84,7 @@ function drawBusiness(c) {
     renderGrid(c, "🏢 אימפריית עסקים", bizPool, 'business');
 }
 
-// --- 3. נדל"ן להשקעה (10 רמות) ---
+// --- 3. נדל"ן להשקעה ---
 function drawEstate(c) {
     const estPool = [
         {n:"מחסן", c:150000, p:8500, i:"📦"}, {n:"דירת 2 חדרים", c:550000, p:32000, i:"🏢"},
@@ -125,17 +127,24 @@ function renderGrid(c, title, pool, type) {
 }
 
 function executeBuy(type, name, cost, value, icon) {
-    if(money >= cost) {
+    if(typeof money !== 'undefined' && money >= cost) {
         money -= cost;
-        if(type === 'business' || type === 'estate') passive += value;
+        
+        if(type === 'business' || type === 'estate') {
+            passive = (typeof passive !== 'undefined' ? passive : 0) + value;
+        }
         else if(type === 'market') {
-            lifeXP += value;
+            lifeXP = (typeof lifeXP !== 'undefined' ? lifeXP : 0) + value;
             if(typeof checkLevelUp === 'function') checkLevelUp();
         }
         
-        if(typeof inventory !== 'undefined') inventory.push({name: name, icon: icon, type: type});
+        if(typeof inventory !== 'undefined') {
+            inventory.push({name: name, icon: icon, type: type});
+        }
+        
         showMsg(`רכשת ${name}! ${icon}`, "var(--green)");
-        updateUI(); saveGame();
+        updateUI(); 
+        if(typeof saveGame === 'function') saveGame();
         
         const cont = document.getElementById('content');
         if(type === 'business') drawBusiness(cont);
@@ -146,9 +155,9 @@ function executeBuy(type, name, cost, value, icon) {
     }
 }
 
-// לוגיקה להגדלת חוב פסיבית (ריבית דריבית) - להריץ ב-Core
+// לוגיקה להגדלת חוב פסיבית
 setInterval(() => {
     if(typeof loan !== 'undefined' && loan > 0) {
-        loan += (loan * 0.0001); // הגדלת חוב איטית מאוד בכל כמה שניות
+        loan += (loan * 0.0001); 
     }
 }, 10000);
