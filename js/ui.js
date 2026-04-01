@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.2.0 - Final UI Update */
+/* Smart Money Pro - js/ui.js - v6.2.5 - XP System & Box Messages */
 
 let deferredPrompt;
 let adminMessage = localStorage.getItem('admin_msg') || "ברוכים הבאים אלכסיי! המערכת מוכנה.";
@@ -9,17 +9,44 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 /**
- * שורת עדכונים צפה (Status Bar) - מעל הכפתורים למטה
+ * מערכת XP דינמית - מוודא שכל רמה דורשת יותר מהקודמת
+ */
+function getLevelData(totalXp) {
+    let level = 1;
+    let xpNeededForNext = 1000; // רמה 1 דורשת 1000
+    let tempXp = totalXp;
+
+    // נוסחה: כל רמה עולה ב-25% קושי + 500 נקודות בסיס
+    while (tempXp >= xpNeededForNext) {
+        tempXp -= xpNeededForNext;
+        level++;
+        xpNeededForNext = Math.floor(xpNeededForNext * 1.25) + 500;
+    }
+
+    let progress = (tempXp / xpNeededForNext) * 100;
+    return {
+        level: level,
+        progressPercent: progress,
+        nextXP: xpNeededForNext,
+        currentXpInLevel: tempXp
+    };
+}
+
+/**
+ * שורת הודעות בתוך תיבה (Style גרסה ישנה) - מעל הכפתורים
  */
 function showMsg(text, color = "var(--blue)") {
     const msgEl = document.getElementById('msg');
     if (!msgEl) return;
     
-    msgEl.innerText = text;
-    msgEl.style.background = color;
+    // עיצוב התיבה הסגורה
+    msgEl.innerHTML = `
+        <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid ${color}; padding: 12px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.6); display: inline-block; min-width: 250px;">
+            <span style="color: white; font-size: 14px; font-weight: bold;">${text}</span>
+        </div>`;
+    
     msgEl.style.opacity = "1";
-    msgEl.style.bottom = "120px"; // מיקום מעל שורת הכפתורים
-    msgEl.style.top = "auto"; // ביטול הגדרה קודמת אם הייתה
+    msgEl.style.bottom = "125px"; // גובה מעל ה-Nav
 
     setTimeout(() => {
         msgEl.style.opacity = "0";
@@ -28,22 +55,18 @@ function showMsg(text, color = "var(--blue)") {
 }
 
 /**
- * פונקציית הבית - מציגה אינוונטרי מלא (רכבים, כישורים, נדל"ן)
+ * פונקציית הבית
  */
 function drawHome(c) {
     if (!c) return;
     
-    // וודא עדכון אינוונטרי לפני הציור
     if (typeof updateGlobalInventory === 'function') updateGlobalInventory();
 
     const xpValue = (typeof lifeXP !== 'undefined') ? lifeXP : 0;
-    const passiveVal = (typeof passive !== 'undefined') ? passive : 0;
-    let ld = { level: 1, progressPercent: 0, nextXP: 1000 };
+    const passiveVal = (typeof money !== 'undefined') ? (money * 0.001) : 0; // דוגמה לחישוב פסיבי מתוך הקיים
     
-    if (typeof getLevelData === 'function') {
-        try { ld = getLevelData(xpValue) || ld; } catch(e) {}
-    }
-    const nXP = (ld && ld.nextXP) ? ld.nextXP.toLocaleString() : "1,000";
+    // שליפת נתוני רמה מהמערכת החדשה
+    const ld = getLevelData(xpValue);
 
     c.innerHTML = `
         <div class="dashboard fade-in">
@@ -60,7 +83,7 @@ function drawHome(c) {
                         <div id="home-level-val" style="font-size:24px; font-weight:900; color:var(--blue);">LEVEL ${ld.level}</div>
                     </div>
                     <div style="text-align:left;">
-                        <span style="font-size:11px; opacity:0.7;">הכנסה פסיבית</span>
+                        <span style="font-size:11px; opacity:0.7;">בונוס נוכחי</span>
                         <div id="passive-home-val" style="font-size:16px; font-weight:bold; color:var(--green);">₪${Math.floor(passiveVal).toLocaleString()}</div>
                     </div>
                 </div>
@@ -68,7 +91,7 @@ function drawHome(c) {
                     <div id="xp-progress-bar" style="width:${ld.progressPercent}%; height:100%; background:var(--blue); transition:0.5s;"></div>
                 </div>
                 <div id="xp-text-detail" style="font-size:10px; text-align:center; margin-top:6px; opacity:0.6;">
-                    ${Math.floor(xpValue).toLocaleString()} / ${nXP} XP
+                    ${Math.floor(ld.currentXpInLevel).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP לרמה הבאה
                 </div>
             </div>
 
@@ -93,7 +116,7 @@ function drawHome(c) {
 function getDailyGift() {
     const lastGift = localStorage.getItem('last_gift_time') || 0;
     const now = Date.now();
-    const cooldown = 4 * 60 * 60 * 1000; // 4 שעות
+    const cooldown = 4 * 60 * 60 * 1000;
 
     if (now - lastGift < cooldown) {
         const diff = cooldown - (now - lastGift);
@@ -115,7 +138,7 @@ function getDailyGift() {
 }
 
 /**
- * הצגת איקונים של אינוונטרי בבית
+ * איקונים באינוונטרי
  */
 function renderInventoryIcons() {
     const inv = (typeof inventory !== 'undefined' && Array.isArray(inventory)) ? inventory : [];
@@ -123,16 +146,12 @@ function renderInventoryIcons() {
     
     return inv.map(item => {
         const icon = (typeof item === 'object') ? (item.icon || '📦') : '📦';
-        const name = (typeof item === 'object') ? item.name : '';
-        return `
-            <div class="inv-item-slot" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; display:flex; justify-content:center; align-items:center; aspect-ratio:1/1; font-size:22px;" title="${name}">
-                ${icon}
-            </div>`;
+        return `<div class="inv-item-slot" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; display:flex; justify-content:center; align-items:center; aspect-ratio:1/1; font-size:22px;">${icon}</div>`;
     }).join('');
 }
 
 /**
- * עדכון ה-UI הכללי
+ * עדכון UI כללי
  */
 function updateUI() {
     try {
@@ -140,29 +159,19 @@ function updateUI() {
         const b = (typeof bank !== 'undefined') ? bank : 0;
         const xp = (typeof lifeXP !== 'undefined') ? lifeXP : 0;
         
-        let ld = { level: 1, progressPercent: 0, nextXP: 1000 };
-        if (typeof getLevelData === 'function') ld = getLevelData(xp) || ld;
+        const ld = getLevelData(xp);
         
-        // עדכון כסף ובנק
-        const moneyEl = document.getElementById('money');
-        const bankEl = document.getElementById('bank');
-        if(moneyEl) moneyEl.innerText = Math.floor(m).toLocaleString();
-        if(bankEl) bankEl.innerText = Math.floor(b).toLocaleString();
-        
-        // עדכון דרגה
-        const levelUI = document.getElementById('life-level-ui');
-        if(levelUI) levelUI.innerText = ld.level;
+        if(document.getElementById('money')) document.getElementById('money').innerText = Math.floor(m).toLocaleString();
+        if(document.getElementById('bank')) document.getElementById('bank').innerText = Math.floor(b).toLocaleString();
+        if(document.getElementById('life-level-ui')) document.getElementById('life-level-ui').innerText = ld.level;
 
-        // עדכון בר XP (אם אנחנו בדף הבית)
         const bar = document.getElementById('xp-progress-bar');
         if(bar) bar.style.width = ld.progressPercent + "%";
         
         const xpTxt = document.getElementById('xp-text-detail');
-        if(xpTxt) xpTxt.innerText = `${Math.floor(xp).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP`;
+        if(xpTxt) xpTxt.innerText = `${Math.floor(ld.currentXpInLevel).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP לרמה הבאה`;
         
-    } catch(err) {
-        console.error("UI Update Error:", err);
-    }
+    } catch(err) {}
 }
 
 /**
