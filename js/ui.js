@@ -1,14 +1,14 @@
-/* Smart Money Pro - js/ui.js - v6.1.3 - Final Stable */
+/* Smart Money Pro - js/ui.js - v6.1.4 - Fixed for Home Loading */
 
 let deferredPrompt;
 // טעינת הודעת מנהל מהזיכרון או ברירת מחדל
-let adminMessage = localStorage.getItem('admin_msg') || "ברוכים הבאים למרכז השליטה! המשיכו לצבור נכסים ו-XP.";
+let adminMessage = localStorage.getItem('admin_msg') || "ברוכים הבאים אלכסיי! המערכת מסונכרנת ומוכנה לצבירת נכסים.";
 
 // האזנה להתקנת אפליקציה (PWA)
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    if(typeof renderInstallBtn === 'function') renderInstallBtn();
+    renderInstallBtn();
 });
 
 /**
@@ -19,18 +19,22 @@ function drawHome(c) {
     
     // הגנה: וודא שנתוני הרמה קיימים
     const xpValue = (typeof lifeXP !== 'undefined') ? lifeXP : 0;
-    const ld = (typeof getLevelData === 'function') ? getLevelData(xpValue) : { level: 1, progressPercent: 0, nextXP: 1000 };
+    let ld = { level: 1, progressPercent: 0, nextXP: 1000 };
+    
+    if (typeof getLevelData === 'function') {
+        ld = getLevelData(xpValue);
+    }
 
     c.innerHTML = `
         <div class="dashboard fade-in">
             
-            <div class="card" style="border-right: 4px solid var(--purple); position: relative; background: rgba(168, 85, 247, 0.05);">
+            <div class="card" style="border-right: 4px solid var(--purple); position: relative; background: rgba(168, 85, 247, 0.05); margin-bottom:15px;">
                 <small style="color:var(--purple); font-weight:bold; display:block; margin-bottom:5px;">📢 הודעת מנהל</small>
                 <p id="admin-text" style="font-size:13px; margin:0; line-height:1.4; color:var(--text); white-space: pre-wrap;">${adminMessage}</p>
                 <button onclick="editAdminMsg()" style="position:absolute; left:10px; top:10px; background:none; border:none; color:var(--blue); font-size:14px; cursor:pointer; opacity:0.6;">✏️</button>
             </div>
 
-            <div class="card profile-card" style="margin-top:15px;">
+            <div class="card profile-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <span style="font-size:11px; opacity:0.7;">דרגת משתמש</span>
@@ -43,7 +47,7 @@ function drawHome(c) {
                 </div>
                 
                 <div class="progress-container" style="margin-top:12px; height:12px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden;">
-                    <div id="xp-progress-bar" class="progress-bar xp-bar" style="width:${ld.progressPercent}%; height:100%; transition: width 0.5s;"></div>
+                    <div id="xp-progress-bar" class="progress-bar xp-bar" style="width:${ld.progressPercent}%; height:100%; background:var(--blue); transition: width 0.5s;"></div>
                 </div>
                 <div id="xp-text-detail" style="font-size:10px; text-align:center; margin-top:6px; opacity:0.6; letter-spacing:0.5px;">
                     ${Math.floor(xpValue).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP
@@ -60,64 +64,64 @@ function drawHome(c) {
             </div>
 
             <div class="grid-2" style="margin-top:15px;">
-                <button class="action" onclick="saveGame()" style="background:#1e293b; color:var(--blue); border:1px solid var(--blue); padding:12px;">💾 שמור משחק</button>
-                <button class="action" onclick="if(typeof getDailyGift === 'function') getDailyGift()" style="background:var(--purple); color:#fff; padding:12px;">🎁 בונוס יומי</button>
+                <button class="action" onclick="saveGame()" style="background:#1e293b; color:var(--blue); border:1px solid var(--blue); padding:12px; border-radius:8px;">💾 שמור</button>
+                <button class="action" onclick="if(typeof getDailyGift === 'function') getDailyGift()" style="background:var(--purple); color:#fff; padding:12px; border-radius:8px;">🎁 בונוס</button>
             </div>
 
             <div id="install-container" style="margin-top:15px;"></div>
             
-            <button class="sys-btn" style="border:1px solid #451a1a; color:#ef4444; margin-top:20px; font-size:10px; padding:8px; width:100%; opacity:0.5; cursor:pointer;" onclick="resetGame()">🗑️ איפוס נתונים</button>
+            <button class="sys-btn" style="border:1px solid #451a1a; color:#ef4444; margin-top:30px; font-size:10px; padding:8px; width:100%; opacity:0.5;" onclick="if(confirm('לאפס את כל התקדמות המשחק?')) resetGame()">🗑️ איפוס נתונים</button>
         </div>
     `;
     renderInstallBtn();
 }
 
+/**
+ * רינדור אייקונים של האינוונטרי עם הגנה מפני קריסה
+ */
 function renderInventoryIcons() {
-    // בדיקה שהמערך קיים
-    const inv = (typeof inventory !== 'undefined') ? inventory : [];
+    const inv = (typeof inventory !== 'undefined' && Array.isArray(inventory)) ? inventory : [];
+    
     if (inv.length === 0) {
         return '<span style="grid-column: 1/6; font-size:11px; opacity:0.4; text-align:center; padding:10px;">אין פריטים בבעלותך...</span>';
     }
     
-    return inv.map(item => `
-        <div class="inv-item-slot" style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; display:flex; justify-content:center; align-items:center; aspect-ratio:1/1; font-size:22px;" title="${item.name || ''}">
-            ${item.icon || '📦'}
-        </div>
-    `).join('');
+    return inv.map(item => {
+        // תמיכה גם בפורמט טקסט ישן וגם באובייקטים חדשים
+        const icon = (typeof item === 'object' && item !== null) ? (item.icon || '📦') : '📦';
+        const name = (typeof item === 'object' && item !== null) ? (item.name || 'פריט') : item;
+        
+        return `
+            <div class="inv-item-slot" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; display:flex; justify-content:center; align-items:center; aspect-ratio:1/1; font-size:22px;" title="${name}">
+                ${icon}
+            </div>
+        `;
+    }).join('');
 }
 
-function editAdminMsg() {
-    const pass = prompt("הכנס סיסמת מנהל:");
-    if (pass === "1234") {
-        const newMsg = prompt("הקלד הודעה חדשה:", adminMessage);
-        if (newMsg !== null && newMsg.trim() !== "") {
-            adminMessage = newMsg;
-            localStorage.setItem('admin_msg', newMsg);
-            const msgEl = document.getElementById('admin-text');
-            if (msgEl) msgEl.innerText = newMsg;
-            if (typeof showMsg === 'function') showMsg("הודעה עודכנה!", "var(--green)");
-        }
-    } else if (pass !== null) {
-        alert("סיסמה שגויה!");
-    }
-}
-
+/**
+ * עדכון ה-UI הכללי (מסונכרן עם index.html)
+ */
 function updateUI() {
-    // מניעת שגיאות אם משתנים לא הוגדרו עדיין
     const m = (typeof money !== 'undefined') ? money : 0;
+    const b = (typeof bank !== 'undefined') ? bank : 0;
     const p = (typeof passive !== 'undefined') ? passive : 0;
     const xp = (typeof lifeXP !== 'undefined') ? lifeXP : 0;
     
-    const ld = (typeof getLevelData === 'function') ? getLevelData(xp) : { level: 1, progressPercent: 0, nextXP: 1000 };
+    let ld = { level: 1, progressPercent: 0, nextXP: 1000 };
+    if (typeof getLevelData === 'function') ld = getLevelData(xp);
     
-    // עדכון בר עליון
+    // עדכון אלמנטים בבר העליון של ה-index
     const mEl = document.getElementById('money');
     if(mEl) mEl.innerText = Math.floor(m).toLocaleString();
     
-    const pEl = document.getElementById('passive-display');
-    if(pEl) pEl.innerText = Math.floor(p).toLocaleString() + " ₪/ש";
+    const bEl = document.getElementById('bank');
+    if(bEl) bEl.innerText = Math.floor(b).toLocaleString();
 
-    // עדכון מרכז שליטה
+    const lEl = document.getElementById('life-level-ui');
+    if(lEl) lEl.innerText = ld.level;
+
+    // עדכון נתונים בתוך טאב הבית (אם הוא מוצג)
     const homePassive = document.getElementById('passive-home-val');
     if(homePassive) homePassive.innerText = "₪" + Math.floor(p).toLocaleString();
     
@@ -131,12 +135,34 @@ function updateUI() {
     if(lvlVal) lvlVal.innerText = `LEVEL ${ld.level}`;
 }
 
+/**
+ * עריכת הודעת מנהל (סיסמה: 1234)
+ */
+function editAdminMsg() {
+    const pass = prompt("הכנס סיסמת מנהל:");
+    if (pass === "1234") {
+        const newMsg = prompt("הקלד הודעה חדשה:", adminMessage);
+        if (newMsg !== null && newMsg.trim() !== "") {
+            adminMessage = newMsg;
+            localStorage.setItem('admin_msg', newMsg);
+            const msgEl = document.getElementById('admin-text');
+            if (msgEl) msgEl.innerText = newMsg;
+            if (typeof showMsg === 'function') showMsg("הודעת מערכת עודכנה!", "var(--green)");
+        }
+    } else if (pass !== null) {
+        alert("סיסמה שגויה!");
+    }
+}
+
+/**
+ * ניהול כפתור התקנה (PWA)
+ */
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     if(!isStandalone && deferredPrompt) {
-        cont.innerHTML = `<button class="action" style="background:var(--blue); color:#0f172a; font-weight:bold;" onclick="triggerInstall()">📲 התקן כאפליקציה</button>`;
+        cont.innerHTML = `<button class="action" style="background:var(--blue); color:#000; font-weight:bold; width:100%;" onclick="triggerInstall()">📲 התקן כאפליקציה</button>`;
     } else {
         cont.innerHTML = "";
     }
