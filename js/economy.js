@@ -1,29 +1,32 @@
-/* Smart Money Pro - js/economy.js - v6.5.1
-   Merged Economy Engine: Bank, Stocks, Estate, Business & Market
-*/
+/* Smart Money Pro - economy.js - v6.5.2 TURBO - FULL & FINAL */
 
-// --- 1. מערכת הבנק (הפקדות, משיכות והלוואות) ---
+// --- 1. מערכת הבנק (Bank) ---
 function drawBank(c) {
     if(!c) return;
     c.innerHTML = `
     <div class="card fade-in">
-        <h3 style="margin:0 0 15px 0;">🏦 בנק הפועלים</h3>
+        <h3 style="margin:0 0 15px 0;">🏦 בנק הפועלים - ניהול עו"ש</h3>
         <div class="grid-2" style="margin-bottom:15px;">
-            <div class="card" style="margin:0; text-align:center; border:1px solid var(--blue); background: rgba(56, 189, 248, 0.05);">
-                <small>בחשבון</small><br><b id="bank-display">${Math.floor(bank).toLocaleString()}₪</b>
+            <div class="card" style="margin:0; text-align:center; border:1px solid var(--blue); background: rgba(0, 210, 255, 0.05);">
+                <small style="opacity:0.7;">יתרה בבנק</small><br>
+                <b id="bank-display" style="font-size:18px; color:var(--blue);">₪${Math.floor(bank).toLocaleString()}</b>
             </div>
-            <div class="card" style="margin:0; text-align:center; border:1px solid var(--red); background: rgba(239, 68, 68, 0.05);">
-                <small>חוב</small><br><b>${loan.toLocaleString()}₪</b>
+            <div class="card" style="margin:0; text-align:center; border:1px solid var(--red); background: rgba(255, 49, 49, 0.05);">
+                <small style="opacity:0.7;">חוב הלוואות</small><br>
+                <b style="font-size:18px; color:var(--red);">₪${(loan || 0).toLocaleString()}</b>
             </div>
         </div>
-        <input type="number" id="bank-amt" placeholder="הזן סכום..." 
+        
+        <input type="number" id="bank-amt" placeholder="הזן סכום לפעולה..." 
                style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:#000; color:#fff; margin-bottom:15px; text-align:center; font-size:18px;">
+        
         <div class="grid-2">
-            <button class="action" onclick="bankOp('dep')" style="background:var(--green); color:white;">הפקד 📥</button>
-            <button class="action" onclick="bankOp('wd')" style="background:var(--blue); color:white;">משוך 📤</button>
+            <button class="action" onclick="bankOp('dep')" style="background:var(--green); color:black; font-size:14px;">הפקדה 📥</button>
+            <button class="action" onclick="bankOp('wd')" style="background:var(--blue); color:black; font-size:14px;">משיכה 📤</button>
         </div>
-        <button class="sys-btn" style="width:100%; margin-top:15px; color:var(--yellow); border-color:var(--yellow); padding:10px;" 
-                onclick="takeLoan()">בקש הלוואה דחופה (10,000₪)</button>
+        
+        <button class="sys-btn" style="width:100%; margin-top:15px; color:var(--yellow); border:1px solid var(--yellow); padding:12px; background:transparent; border-radius:10px; font-weight:bold;" 
+                onclick="takeLoan()">💰 בקש הלוואה מיידית (₪10,000)</button>
     </div>`;
 }
 
@@ -36,17 +39,13 @@ function bankOp(type) {
             money -= amt;
             bank += amt;
             showMsg("הפקדה בוצעה בהצלחה", "var(--green)");
-        } else {
-            showMsg("אין לך מספיק מזומן בקופה", "var(--red)");
-        }
+        } else showMsg("אין לך מספיק מזומן פנוי", "var(--red)");
     } else {
         if (bank >= amt) {
             bank -= amt;
             money += amt;
             showMsg("משיכה בוצעה בהצלחה", "var(--blue)");
-        } else {
-            showMsg("אין מספיק כסף בחשבון הבנק", "var(--red)");
-        }
+        } else showMsg("אין מספיק יתרה בבנק", "var(--red)");
     }
     updateUI();
     saveGame();
@@ -54,6 +53,7 @@ function bankOp(type) {
 }
 
 function takeLoan() {
+    if (typeof loan === 'undefined') window.loan = 0;
     loan += 10000;
     money += 10000;
     showMsg("הלוואה אושרה והועברה למזומן", "var(--yellow)");
@@ -62,30 +62,32 @@ function takeLoan() {
     drawBank(document.getElementById('content'));
 }
 
-// --- 2. בורסה (מניות דינמיות) ---
-const stocks = [
+// --- 2. בורסה דינמית (Stocks) ---
+const stockMarket = [
     { id: 'AAPL', name: 'Apple Inc', price: 180 },
-    { id: 'TSLA', name: 'Tesla', price: 240 },
-    { id: 'NVDA', name: 'NVIDIA', price: 450 },
+    { id: 'TSLA', name: 'Tesla Motor', price: 240 },
+    { id: 'NVDA', name: 'NVIDIA AI', price: 450 },
     { id: 'BTC',  name: 'Bitcoin', price: 68000 },
-    { id: 'ELAL', name: 'אל-על', price: 25 }
+    { id: 'ELAL', name: 'אל-על נתיבים', price: 25 }
 ];
 
 function drawInvest(c) {
     if(!c) return;
-    let html = `<h3>📈 מסחר במניות וקריפטו</h3><div class="grid-1">`;
-    stocks.forEach(s => {
+    let html = `<h3>📈 בורסת ניירות ערך</h3><div class="grid-1">`;
+    stockMarket.forEach(s => {
+        if (typeof invOwned === 'undefined') window.invOwned = {};
         const owned = invOwned[s.id] || 0;
-        // תנודתיות מחירים בכל טעינה
-        const currentPrice = Math.floor(s.price * (0.92 + Math.random() * 0.16));
+        // תנודתיות מחירים רנדומלית בטורבו
+        const currentPrice = Math.floor(s.price * (0.85 + Math.random() * 0.3));
+        
         html += `
         <div class="card fade-in" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-                <b style="font-size:16px;">${s.name}</b><br>
-                <small style="opacity:0.6;">בבעלותך: ${owned.toLocaleString()}</small>
+                <b style="font-size:16px; color:var(--text);">${s.name}</b><br>
+                <small style="opacity:0.6;">בבעלותך: ${owned}</small>
             </div>
-            <div style="text-align:center; font-weight:bold; color:var(--yellow); font-size:16px;">
-                ${currentPrice.toLocaleString()}₪
+            <div style="text-align:center; font-weight:900; color:var(--yellow); font-size:18px;">
+                ₪${currentPrice.toLocaleString()}
             </div>
             <div style="display:flex; gap:8px;">
                 <button class="sys-btn" onclick="stockOp('buy','${s.id}',${currentPrice})">קנה</button>
@@ -101,122 +103,85 @@ function stockOp(type, id, price) {
         if (money >= price) {
             money -= price;
             invOwned[id] = (invOwned[id] || 0) + 1;
-            showMsg(`קנית יחידה של ${id}`, "var(--green)");
+            showMsg(`רכשת מניית ${id}`, "var(--green)");
         } else showMsg("חסר מזומן לקנייה", "var(--red)");
     } else {
         if (invOwned[id] > 0) {
             money += price;
             invOwned[id]--;
-            showMsg(`מכרת יחידה של ${id}`, "var(--yellow)");
-        } else showMsg("אין לך יחידות למכירה", "var(--red)");
+            showMsg(`מכרת מניית ${id}`, "var(--yellow)");
+        } else showMsg("אין לך מניות למכירה", "var(--red)");
     }
     updateUI();
     saveGame();
     drawInvest(document.getElementById('content'));
 }
 
-// --- 3. נדל"ן (הכנסה פסיבית גבוהה) ---
+// --- 3. מנגנון רכישה מאוחד (נדל"ן, עסקים ושוק) ---
 function drawEstate(c) {
-    if(!c) return;
-    const estPool = [
+    const list = [
         {n:"דירת סטודיו", c:250000, p:800, i:"🏢"}, 
-        {n:"דירת 3 חדרים", c:550000, p:1800, i:"🏠"}, 
         {n:"דירת גן", c:900000, p:3500, i:"🏡"}, 
-        {n:"בית פרטי", c:1200000, p:5000, i:"🏘️"},
-        {n:"פנטהאוז יוקרתי", c:2800000, p:12000, i:"🏙️"},
-        {n:"אחוזה כפרית", c:8500000, p:40000, i:"🏰"}
+        {n:"פנטהאוז", c:2800000, p:12000, i:"🏙️"},
+        {n:"אחוזה", c:8500000, p:40000, i:"🏰"}
     ];
-
-    let html = `<h3>🏠 נכסי נדל"ן</h3><div class="grid-2">`;
-    estPool.forEach(item => {
-        html += `
-        <div class="card fade-in" style="text-align:center;">
-            <div style="font-size:35px; margin-bottom:8px;">${item.i}</div>
-            <b style="display:block; min-height:40px;">${item.n}</b>
-            <div style="color:var(--green); font-weight:bold; margin-bottom:12px;">+${item.p.toLocaleString()}₪/ש</div>
-            <button class="sys-btn" style="width:100%; font-size:12px;" onclick="executeBuy('estate','${item.n}',${item.c},${item.p},'${item.i}')">
-                ${item.c.toLocaleString()}₪
-            </button>
-        </div>`;
-    });
-    c.innerHTML = html + `</div>`;
+    renderEconomyTab(c, "🏠 נכסי נדל\"ן", list, 'estate');
 }
 
-// --- 4. עסקים (הכנסה פסיבית בינונית) ---
 function drawBusiness(c) {
-    if(!c) return;
-    const bzPool = [
+    const list = [
         {n:"דוכן קפה", c:15000, p:45, i:"☕"}, 
-        {n:"קיוסק", c:45000, p:120, i:"🏪"}, 
         {n:"פיצריה", c:250000, p:850, i:"🍕"}, 
-        {n:"מוסך מורשה", c:1200000, p:4200, i:"🔧"}, 
-        {n:"קניון אזורי", c:25000000, p:95000, i:"🏢"}
+        {n:"מוסך", c:1200000, p:4200, i:"🔧"}, 
+        {n:"קניון", c:25000000, p:95000, i:"🏢"}
     ];
-
-    let html = `<h3>🏢 השקעה בעסקים</h3><div class="grid-2">`;
-    bzPool.forEach(item => {
-        html += `
-        <div class="card fade-in" style="text-align:center;">
-            <div style="font-size:35px; margin-bottom:8px;">${item.i}</div>
-            <b style="display:block; min-height:40px;">${item.n}</b>
-            <div style="color:var(--green); font-weight:bold; margin-bottom:12px;">+${item.p.toLocaleString()}₪/ש</div>
-            <button class="sys-btn" style="width:100%; font-size:12px;" onclick="executeBuy('business','${item.n}',${item.c},${item.p},'${item.i}')">
-                ${item.c.toLocaleString()}₪
-            </button>
-        </div>`;
-    });
-    c.innerHTML = html + `</div>`;
+    renderEconomyTab(c, "🏢 השקעה בעסקים", list, 'business');
 }
 
-// --- 5. שוק מוצרי יוקרה (מעלה XP ורמה) ---
 function drawMarket(c) {
-    if(!c) return;
-    const mkPool = [
-        {n:"אייפון 15 פרו", c:6200, p:300, i:"📱"}, 
-        {n:"מחשב גיימינג", c:18000, p:850, i:"💻"}, 
-        {n:"שעון רולקס", c:135000, p:6000, i:"⌚"}, 
-        {n:"בריכת שחייה", c:220000, p:11000, i:"🏊"}, 
+    const list = [
+        {n:"אייפון 15", c:6200, p:300, i:"📱"}, 
+        {n:"רולקס", c:135000, p:6000, i:"⌚"}, 
         {n:"פסל זהב", c:450000, p:25000, i:"🗿"}
     ];
+    renderEconomyTab(c, "🛒 מוצרי פרימיום", list, 'market');
+}
 
-    let html = `<h3>🛒 מוצרי פרימיום</h3><div class="grid-2">`;
-    mkPool.forEach(item => {
+function renderEconomyTab(c, title, pool, type) {
+    let html = `<h3>${title}</h3><div class="grid-2">`;
+    pool.forEach(item => {
+        const valLabel = type === 'market' ? `+${item.p.toLocaleString()} XP` : `+₪${item.p.toLocaleString()}/ש`;
         html += `
-        <div class="card fade-in" style="text-align:center;">
+        <div class="card fade-in" style="text-align:center; border:1px solid var(--border);">
             <div style="font-size:35px; margin-bottom:8px;">${item.i}</div>
             <b style="display:block; min-height:40px;">${item.n}</b>
-            <div style="color:var(--purple); font-weight:bold; margin-bottom:12px;">+${item.p.toLocaleString()} XP</div>
-            <button class="sys-btn" style="width:100%; font-size:12px;" onclick="executeBuy('market','${item.n}',${item.c},${item.p},'${item.i}')">
-                ${item.c.toLocaleString()}₪
+            <div style="color:${type === 'market' ? 'var(--purple)' : 'var(--green)'}; font-weight:bold; margin-bottom:12px;">${valLabel}</div>
+            <button class="sys-btn" style="width:100%;" onclick="executeBuy('${type}','${item.n}',${item.c},${item.p},'${item.i}')">
+                ₪${item.c.toLocaleString()}
             </button>
         </div>`;
     });
-    c.innerHTML = html + `</div>`;
+    c.innerHTML = html + "</div>";
 }
 
-// --- 6. מנגנון רכישה מאוחד ---
 function executeBuy(type, name, cost, value, icon) {
     if(money >= cost) {
         money -= cost;
-        
         if(type === 'business' || type === 'estate') {
-            passive += value; // מגדיל הכנסה לשעה
-            showMsg(`מזל טוב! ה${name} יכניס לך ${value}₪ בכל שעה`, "var(--green)");
+            passive += value; 
+            showMsg(`ההכנסה הפסיבית עלתה ב-₪${value.toLocaleString()}!`, "var(--green)");
         } else if(type === 'market') {
-            lifeXP += value; // מעלה רמה ישירות
-            showMsg(`תתחדש על ה${name}! קיבלת ${value} XP`, "var(--purple)");
+            lifeXP += value; 
+            showMsg(`תתחדש! קיבלת ${value.toLocaleString()} XP`, "var(--purple)");
         }
-        
-        inventory.push({name: name, icon: icon, type: type});
+        inventory.push({name, icon, type});
         updateUI();
         saveGame();
         
-        // רענון אוטומטי של הטאב הפעיל
-        const content = document.getElementById("content");
-        if(type === 'business') drawBusiness(content);
-        else if(type === 'estate') drawEstate(content);
-        else if(type === 'market') drawMarket(content);
-    } else {
-        showMsg("אין לך מספיק כסף פנוי לרכישה הזו", "var(--red)");
-    }
+        // רענון הטאב הנוכחי
+        const cont = document.getElementById("content");
+        if(type === 'business') drawBusiness(cont);
+        else if(type === 'estate') drawEstate(cont);
+        else if(type === 'market') drawMarket(cont);
+    } else showMsg("אין לך מספיק מזומן פנוי!", "var(--red)");
 }
