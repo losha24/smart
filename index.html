@@ -3,28 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.2.6</title>
+    <title>Smart Money Pro | v6.2.7</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="stylesheet" href="style.css?v=6.2.6">
+    <link rel="stylesheet" href="style.css?v=6.2.7">
     
     <style>
-        /* החזרת תצוגה טבעית - זרימה מלמעלה */
         body { 
             margin: 0; 
             padding: 0; 
             background: #0f172a; 
             min-height: 100vh;
-            display: block; /* מבטל את ה-Flex הממרכז */
+            display: block; 
+            font-family: system-ui, -apple-system, sans-serif;
         }
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20000; justify-content: center; align-items: center; }
         .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid var(--blue); }
         .topbar button.active { background: var(--blue) !important; color: #000 !important; font-weight: bold; }
         
-        /* עוגן הודעות ה-Box מעל התפריט */
+        /* תיבת ההודעות - מיקום קבוע מעל הניווט */
         #msg { 
             position: fixed; 
             left: 50%; 
@@ -33,21 +33,34 @@
             width: 90%; 
             max-width: 380px; 
             text-align: center; 
-            transition: all 0.3s ease-in-out; 
             pointer-events: none; 
             opacity: 0;
-            bottom: 120px; /* מעט מעל שורות הכפתורים */
+            bottom: 125px; /* גובה מעל שורות הכפתורים */
+            transition: all 0.3s ease;
         }
 
-        /* מרווח עבודה כדי שהתוכן לא ייבלע תחת הניווט */
+        /* עיצוב התיבה עצמה (מיועד להזרקה מה-JS) */
+        .msg-box {
+            display: inline-block;
+            background: #1e293b;
+            border: 2px solid var(--blue);
+            padding: 12px 24px;
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            min-width: 200px;
+        }
+
         main#content {
             display: block;
             width: 100%;
             padding-top: 10px;
-            padding-bottom: 180px; /* מרווח ביטחון לגלילה */
+            padding-bottom: 220px; /* מרווח כדי שהתוכן לא יתנגש בתיבה */
         }
 
-        .stats-bar-top { position: sticky; top: 0; z-index: 1000; background: #0f172a; }
+        .stats-bar-top { position: sticky; top: 0; z-index: 1000; background: #0f172a; padding: 10px 0; }
         .topbar { z-index: 1500; }
     </style>
 </head>
@@ -105,7 +118,7 @@
     </footer>
 
     <script src="js/core.js?v=6.3.2"></script>
-    <script src="js/ui.js?v=6.2.5"></script>
+    <script src="js/ui.js?v=6.2.7"></script>
     <script src="js/activities.js?v=6.6.0"></script>
     <script src="js/economy.js?v=6.1.5"></script>
 
@@ -119,7 +132,7 @@
             if (activeBtn) activeBtn.classList.add('active');
 
             content.innerHTML = "";
-            window.scrollTo(0,0); // חוזר לראש הדף בכל החלפת טאב
+            window.scrollTo(0,0);
 
             try {
                 const drawFunc = "draw" + tabName.charAt(0).toUpperCase() + tabName.slice(1);
@@ -128,7 +141,6 @@
                 } else {
                     content.innerHTML = `<div class="card" style="text-align:center;"><h3>🚧 בקרוב</h3><p>האזור בבנייה</p></div>`;
                 }
-
                 if (typeof updateUI === 'function') updateUI();
             } catch (err) {
                 console.error("Tab Error:", err);
@@ -137,16 +149,10 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof loadGame === 'function') loadGame();
-            
             setTimeout(() => {
                 if (typeof updateUI === 'function') updateUI();
                 openTab('home');
             }, 300);
-
-            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                document.getElementById('android-instr').style.display = 'none';
-                document.getElementById('ios-instr').style.display = 'block';
-            }
         });
     </script>
 </body>
