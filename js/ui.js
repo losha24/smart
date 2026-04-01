@@ -1,10 +1,8 @@
-/* Smart Money Pro - js/ui.js - v6.1.4 - Fixed for Home Loading */
+/* Smart Money Pro - js/ui.js - v6.1.6 - Anti-Crash Final */
 
 let deferredPrompt;
-// טעינת הודעת מנהל מהזיכרון או ברירת מחדל
-let adminMessage = localStorage.getItem('admin_msg') || "ברוכים הבאים אלכסיי! המערכת מסונכרנת ומוכנה לצבירת נכסים.";
+let adminMessage = localStorage.getItem('admin_msg') || "ברוכים הבאים אלכסיי! המערכת מסונכרנת ומוכנה.";
 
-// האזנה להתקנת אפליקציה (PWA)
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -17,13 +15,24 @@ window.addEventListener('beforeinstallprompt', (e) => {
 function drawHome(c) {
     if (!c) return;
     
-    // הגנה: וודא שנתוני הרמה קיימים
+    // הגנה על משתני יסוד
     const xpValue = (typeof lifeXP !== 'undefined') ? lifeXP : 0;
+    const passiveVal = (typeof passive !== 'undefined') ? passive : 0;
+    
+    // אובייקט ברירת מחדל למקרה של שגיאה בחישוב הרמה
     let ld = { level: 1, progressPercent: 0, nextXP: 1000 };
     
     if (typeof getLevelData === 'function') {
-        ld = getLevelData(xpValue);
+        try {
+            const calculatedLd = getLevelData(xpValue);
+            if (calculatedLd) ld = calculatedLd;
+        } catch(e) {
+            console.error("Level Calculation Error:", e);
+        }
     }
+
+    // וידוא ש-nextXP קיים לפני שימוש ב-toLocaleString כדי למנוע את השגיאה שראית
+    const nextXPDisplay = (ld && ld.nextXP) ? ld.nextXP.toLocaleString() : "1,000";
 
     c.innerHTML = `
         <div class="dashboard fade-in">
@@ -42,7 +51,7 @@ function drawHome(c) {
                     </div>
                     <div style="text-align:left;">
                         <span style="font-size:11px; opacity:0.7;">הכנסה פסיבית</span>
-                        <div id="passive-home-val" style="font-size:16px; font-weight:bold; color:var(--green);">₪${Math.floor(typeof passive !== 'undefined' ? passive : 0).toLocaleString()}</div>
+                        <div id="passive-home-val" style="font-size:16px; font-weight:bold; color:var(--green);">₪${Math.floor(passiveVal).toLocaleString()}</div>
                     </div>
                 </div>
                 
@@ -50,7 +59,7 @@ function drawHome(c) {
                     <div id="xp-progress-bar" class="progress-bar xp-bar" style="width:${ld.progressPercent}%; height:100%; background:var(--blue); transition: width 0.5s;"></div>
                 </div>
                 <div id="xp-text-detail" style="font-size:10px; text-align:center; margin-top:6px; opacity:0.6; letter-spacing:0.5px;">
-                    ${Math.floor(xpValue).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP
+                    ${Math.floor(xpValue).toLocaleString()} / ${nextXPDisplay} XP
                 </div>
             </div>
 
@@ -70,27 +79,19 @@ function drawHome(c) {
 
             <div id="install-container" style="margin-top:15px;"></div>
             
-            <button class="sys-btn" style="border:1px solid #451a1a; color:#ef4444; margin-top:30px; font-size:10px; padding:8px; width:100%; opacity:0.5;" onclick="if(confirm('לאפס את כל התקדמות המשחק?')) resetGame()">🗑️ איפוס נתונים</button>
+            <button class="sys-btn" style="border:1px solid #451a1a; color:#ef4444; margin-top:30px; font-size:10px; padding:8px; width:100%; opacity:0.5;" onclick="if(confirm('לאפס נתונים?')) resetGame()">🗑️ איפוס נתונים</button>
         </div>
     `;
     renderInstallBtn();
 }
 
-/**
- * רינדור אייקונים של האינוונטרי עם הגנה מפני קריסה
- */
 function renderInventoryIcons() {
     const inv = (typeof inventory !== 'undefined' && Array.isArray(inventory)) ? inventory : [];
-    
-    if (inv.length === 0) {
-        return '<span style="grid-column: 1/6; font-size:11px; opacity:0.4; text-align:center; padding:10px;">אין פריטים בבעלותך...</span>';
-    }
+    if (inv.length === 0) return '<span style="grid-column: 1/6; font-size:11px; opacity:0.4; text-align:center; padding:10px;">אין פריטים...</span>';
     
     return inv.map(item => {
-        // תמיכה גם בפורמט טקסט ישן וגם באובייקטים חדשים
         const icon = (typeof item === 'object' && item !== null) ? (item.icon || '📦') : '📦';
         const name = (typeof item === 'object' && item !== null) ? (item.name || 'פריט') : item;
-        
         return `
             <div class="inv-item-slot" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; display:flex; justify-content:center; align-items:center; aspect-ratio:1/1; font-size:22px;" title="${name}">
                 ${icon}
@@ -99,73 +100,63 @@ function renderInventoryIcons() {
     }).join('');
 }
 
-/**
- * עדכון ה-UI הכללי (מסונכרן עם index.html)
- */
 function updateUI() {
-    const m = (typeof money !== 'undefined') ? money : 0;
-    const b = (typeof bank !== 'undefined') ? bank : 0;
-    const p = (typeof passive !== 'undefined') ? passive : 0;
-    const xp = (typeof lifeXP !== 'undefined') ? lifeXP : 0;
-    
-    let ld = { level: 1, progressPercent: 0, nextXP: 1000 };
-    if (typeof getLevelData === 'function') ld = getLevelData(xp);
-    
-    // עדכון אלמנטים בבר העליון של ה-index
-    const mEl = document.getElementById('money');
-    if(mEl) mEl.innerText = Math.floor(m).toLocaleString();
-    
-    const bEl = document.getElementById('bank');
-    if(bEl) bEl.innerText = Math.floor(b).toLocaleString();
+    try {
+        const m = (typeof money !== 'undefined') ? money : 0;
+        const b = (typeof bank !== 'undefined') ? bank : 0;
+        const p = (typeof passive !== 'undefined') ? passive : 0;
+        const xp = (typeof lifeXP !== 'undefined') ? lifeXP : 0;
+        
+        let ld = { level: 1, progressPercent: 0, nextXP: 1000 };
+        if (typeof getLevelData === 'function') ld = getLevelData(xp) || ld;
+        
+        const mEl = document.getElementById('money');
+        if(mEl) mEl.innerText = Math.floor(m).toLocaleString();
+        
+        const bEl = document.getElementById('bank');
+        if(bEl) bEl.innerText = Math.floor(b).toLocaleString();
 
-    const lEl = document.getElementById('life-level-ui');
-    if(lEl) lEl.innerText = ld.level;
+        const lEl = document.getElementById('life-level-ui');
+        if(lEl) lEl.innerText = ld.level;
 
-    // עדכון נתונים בתוך טאב הבית (אם הוא מוצג)
-    const homePassive = document.getElementById('passive-home-val');
-    if(homePassive) homePassive.innerText = "₪" + Math.floor(p).toLocaleString();
-    
-    const bar = document.getElementById('xp-progress-bar');
-    if(bar) bar.style.width = ld.progressPercent + "%";
-    
-    const xpTxt = document.getElementById('xp-text-detail');
-    if(xpTxt) xpTxt.innerText = `${Math.floor(xp).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP`;
+        const homePassive = document.getElementById('passive-home-val');
+        if(homePassive) homePassive.innerText = "₪" + Math.floor(p).toLocaleString();
+        
+        const bar = document.getElementById('xp-progress-bar');
+        if(bar) bar.style.width = ld.progressPercent + "%";
+        
+        const xpTxt = document.getElementById('xp-text-detail');
+        if(xpTxt) {
+            const nXP = ld.nextXP ? ld.nextXP.toLocaleString() : "1,000";
+            xpTxt.innerText = `${Math.floor(xp).toLocaleString()} / ${nXP} XP`;
+        }
 
-    const lvlVal = document.getElementById('home-level-val');
-    if(lvlVal) lvlVal.innerText = `LEVEL ${ld.level}`;
+        const lvlVal = document.getElementById('home-level-val');
+        if(lvlVal) lvlVal.innerText = `LEVEL ${ld.level}`;
+    } catch(err) {
+        console.warn("UI update suppressed error:", err);
+    }
 }
 
-/**
- * עריכת הודעת מנהל (סיסמה: 1234)
- */
 function editAdminMsg() {
-    const pass = prompt("הכנס סיסמת מנהל:");
+    const pass = prompt("סיסמת מנהל:");
     if (pass === "1234") {
-        const newMsg = prompt("הקלד הודעה חדשה:", adminMessage);
-        if (newMsg !== null && newMsg.trim() !== "") {
+        const newMsg = prompt("הודעה חדשה:", adminMessage);
+        if (newMsg) {
             adminMessage = newMsg;
             localStorage.setItem('admin_msg', newMsg);
             const msgEl = document.getElementById('admin-text');
             if (msgEl) msgEl.innerText = newMsg;
-            if (typeof showMsg === 'function') showMsg("הודעת מערכת עודכנה!", "var(--green)");
         }
-    } else if (pass !== null) {
-        alert("סיסמה שגויה!");
     }
 }
 
-/**
- * ניהול כפתור התקנה (PWA)
- */
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if(!isStandalone && deferredPrompt) {
-        cont.innerHTML = `<button class="action" style="background:var(--blue); color:#000; font-weight:bold; width:100%;" onclick="triggerInstall()">📲 התקן כאפליקציה</button>`;
-    } else {
-        cont.innerHTML = "";
-    }
+    if(deferredPrompt) {
+        cont.innerHTML = `<button class="action" style="background:var(--blue); color:#000; font-weight:bold; width:100%;" onclick="triggerInstall()">📲 התקן אפליקציה</button>`;
+    } else cont.innerHTML = "";
 }
 
 async function triggerInstall() {
