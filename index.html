@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.1.5</title>
+    <title>Smart Money Pro | v6.1.8</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="stylesheet" href="style.css?v=6.1.5">
+    <link rel="stylesheet" href="style.css?v=6.1.8">
     
     <style>
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
@@ -18,10 +18,18 @@
         /* עיצוב שורת ההודעות הצפה */
         #msg { 
             pointer-events: none; 
-            transition: all 0.4s ease; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            max-width: 90%;
+        }
+
+        /* מניעת שבירת מילים בבורסה */
+        .invest-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
     </style>
 </head>
@@ -37,7 +45,7 @@
         <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
     </div>
 
-    <div id="msg" class="status-msg" style="opacity: 0; position: fixed; top: 75px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 12px 25px; border-radius: 12px; color: white; text-align: center; min-width: 260px;"></div>
+    <div id="msg" class="status-msg" style="opacity: 0; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 12px 25px; border-radius: 12px; color: white; text-align: center; min-width: 260px;"></div>
 
     <nav class="topbar">
         <div class="nav-row">
@@ -79,7 +87,7 @@
     </footer>
 
     <script src="js/core.js?v=6.3.2"></script>
-    <script src="js/ui.js?v=6.1.4"></script>
+    <script src="js/ui.js?v=6.1.8"></script>
     <script src="js/activities.js?v=6.5.2"></script>
     <script src="js/economy.js?v=6.1.5"></script>
 
@@ -88,7 +96,7 @@
             const content = document.getElementById('content');
             if (!content) return;
 
-            // עדכון כפתור פעיל
+            // סימון כפתור פעיל
             document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById('nav-' + tabName);
             if (activeBtn) activeBtn.classList.add('active');
@@ -97,7 +105,7 @@
             window.scrollTo(0,0);
 
             try {
-                // ניתוב לפונקציות מה-UI וה-Activities
+                // ניתוב לפונקציות הציור המעודכנות ב-ui.js
                 if (tabName === 'home' && typeof drawHome === 'function') drawHome(content);
                 else if (tabName === 'work' && typeof drawWork === 'function') drawWork(content);
                 else if (tabName === 'invest' && typeof drawInvest === 'function') drawInvest(content);
@@ -112,23 +120,24 @@
                     content.innerHTML = `<div class="card" style="text-align:center;"><h3>🚧 בקרוב</h3><p>האזור בבנייה</p></div>`;
                 }
 
-                // עדכון המספרים ב-UI
+                // עדכון מיידי של הנתונים בתצוגה
                 if (typeof updateUI === 'function') updateUI();
             } catch (err) {
-                console.error("Tab Error:", err);
+                console.error("שגיאת טאב:", err);
+                content.innerHTML = `<div class="card" style="color:red;">שגיאה בטעינת הטאב: ${err.message}</div>`;
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // טעינת המשחק מה-Core
+            // טעינת הנתונים מהשרת/LocalStorage
             if (typeof loadGame === 'function') loadGame();
             
-            // השהיה קטנה כדי לוודא שכל המשתנים מוכנים בזיכרון
+            // זמן המתנה קצר כדי לוודא שכל קבצי ה-JS "התעוררו"
             setTimeout(() => {
                 openTab('home');
-            }, 300);
+            }, 350);
 
-            // זיהוי אייפון
+            // זיהוי מכשיר אפל להוראות התקנה
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 document.getElementById('android-instr').style.display = 'none';
                 document.getElementById('ios-instr').style.display = 'block';
