@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.2.5 - XP System & Box Messages */
+/* Smart Money Pro - js/ui.js - v6.2.7 - XP System & Box Messages */
 
 let deferredPrompt;
 let adminMessage = localStorage.getItem('admin_msg') || "ברוכים הבאים אלכסיי! המערכת מוכנה.";
@@ -9,14 +9,14 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 /**
- * מערכת XP דינמית - מוודא שכל רמה דורשת יותר מהקודמת
+ * מערכת XP דינמית - כל רמה דורשת יותר מהקודמת (נוסחה אקספוננציאלית)
  */
 function getLevelData(totalXp) {
     let level = 1;
-    let xpNeededForNext = 1000; // רמה 1 דורשת 1000
-    let tempXp = totalXp;
+    let xpNeededForNext = 1000; // בסיס רמה 1
+    let tempXp = totalXp || 0;
 
-    // נוסחה: כל רמה עולה ב-25% קושי + 500 נקודות בסיס
+    // נוסחה: כל רמה עולה ב-25% קושי + 500 נקודות קבועות
     while (tempXp >= xpNeededForNext) {
         tempXp -= xpNeededForNext;
         level++;
@@ -33,85 +33,93 @@ function getLevelData(totalXp) {
 }
 
 /**
- * שורת הודעות בתוך תיבה (Style גרסה ישנה) - מעל הכפתורים
+ * הצגת הודעה בתוך תיבה מעל בר הכפתורים (Box Style)
  */
 function showMsg(text, color = "var(--blue)") {
     const msgEl = document.getElementById('msg');
     if (!msgEl) return;
     
-    // עיצוב התיבה הסגורה
+    // הזרקת התיבה המעוצבת לפי ה-CSS באינדקס
     msgEl.innerHTML = `
-        <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid ${color}; padding: 12px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.6); display: inline-block; min-width: 250px;">
-            <span style="color: white; font-size: 14px; font-weight: bold;">${text}</span>
+        <div class="msg-box" style="border-color: ${color};">
+            ${text}
         </div>`;
     
+    // הצגת התיבה עם אפקט
     msgEl.style.opacity = "1";
-    msgEl.style.bottom = "125px"; // גובה מעל ה-Nav
+    msgEl.style.transform = "translateX(-50%) translateY(0)";
 
+    // הסתרה לאחר 3 שניות
     setTimeout(() => {
         msgEl.style.opacity = "0";
-        msgEl.style.bottom = "110px";
+        msgEl.style.transform = "translateX(-50%) translateY(15px)";
     }, 3000);
 }
 
 /**
- * פונקציית הבית
+ * ציור דף הבית
  */
 function drawHome(c) {
     if (!c) return;
     
+    // סנכרון אינוונטרי אם קיים
     if (typeof updateGlobalInventory === 'function') updateGlobalInventory();
 
     const xpValue = (typeof lifeXP !== 'undefined') ? lifeXP : 0;
-    const passiveVal = (typeof money !== 'undefined') ? (money * 0.001) : 0; // דוגמה לחישוב פסיבי מתוך הקיים
+    const currentMoney = (typeof money !== 'undefined') ? money : 0;
     
-    // שליפת נתוני רמה מהמערכת החדשה
+    // חישוב נתוני רמה
     const ld = getLevelData(xpValue);
 
     c.innerHTML = `
         <div class="dashboard fade-in">
             <div class="card" style="border-right: 4px solid var(--purple); background: rgba(168, 85, 247, 0.05); margin-bottom:15px; position:relative;">
                 <small style="color:var(--purple); font-weight:bold;">📢 עדכונים</small>
-                <p id="admin-text" style="margin:5px 0 0 0; font-size:13px;">${adminMessage}</p>
-                <button onclick="editAdminMsg()" style="position:absolute; left:10px; top:10px; background:none; border:none; color:var(--blue); font-size:12px; opacity:0.5;">✏️</button>
+                <p id="admin-text" style="margin:5px 0 0 0; font-size:13px; font-weight:500;">${adminMessage}</p>
+                <button class="sys-btn" onclick="editAdminMsg()" style="position:absolute; left:10px; top:10px; padding:5px; font-size:12px; opacity:0.6;">✏️</button>
             </div>
 
-            <div class="card profile-card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="card profile-card" style="background: linear-gradient(145deg, #1e293b, #111827);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:15px;">
                     <div>
-                        <span style="font-size:11px; opacity:0.7;">דרגה</span>
-                        <div id="home-level-val" style="font-size:24px; font-weight:900; color:var(--blue);">LEVEL ${ld.level}</div>
+                        <span style="font-size:12px; opacity:0.6; display:block; margin-bottom:2px;">דרגת המשתמש</span>
+                        <div style="font-size:28px; font-weight:900; color:var(--blue); letter-spacing:1px;">LEVEL ${ld.level}</div>
                     </div>
                     <div style="text-align:left;">
-                        <span style="font-size:11px; opacity:0.7;">בונוס נוכחי</span>
-                        <div id="passive-home-val" style="font-size:16px; font-weight:bold; color:var(--green);">₪${Math.floor(passiveVal).toLocaleString()}</div>
+                        <span style="font-size:11px; opacity:0.6;">התקדמות כללית</span>
+                        <div style="font-size:14px; font-weight:bold; color:var(--green);">${Math.floor(ld.progressPercent)}%</div>
                     </div>
                 </div>
-                <div class="progress-container" style="margin-top:12px; height:10px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden;">
-                    <div id="xp-progress-bar" style="width:${ld.progressPercent}%; height:100%; background:var(--blue); transition:0.5s;"></div>
+                
+                <div class="progress-container" style="height:12px; background:rgba(0,0,0,0.3); border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
+                    <div id="xp-progress-bar" style="width:${ld.progressPercent}%; height:100%; background: linear-gradient(90deg, var(--blue), #60a5fa); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"></div>
                 </div>
-                <div id="xp-text-detail" style="font-size:10px; text-align:center; margin-top:6px; opacity:0.6;">
-                    ${Math.floor(ld.currentXpInLevel).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP לרמה הבאה
+                
+                <div id="xp-text-detail" style="font-size:11px; text-align:center; margin-top:8px; opacity:0.7; font-family:monospace;">
+                    ${Math.floor(ld.currentXpInLevel).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP
                 </div>
             </div>
 
             <div class="card" style="margin-top:15px;">
-                <h4 style="margin:0 0 12px 0; font-size:14px; color:var(--yellow);">📦 נכסים וציוד</h4>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 style="margin:0; font-size:14px; color:var(--yellow);">📦 נכסים וציוד</h4>
+                    <small style="opacity:0.5;">${(typeof inventory !== 'undefined') ? inventory.length : 0} פריטים</small>
+                </div>
                 <div id="inventory-list" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px;">
                     ${renderInventoryIcons()}
                 </div>
             </div>
 
-            <div class="grid-2" style="margin-top:15px;">
-                <button class="action" onclick="saveGame()" style="background:#1e293b; color:var(--blue); border:1px solid var(--blue); padding:15px;">💾 שמור</button>
-                <button class="action" onclick="getDailyGift()" style="background:var(--purple); color:#fff; padding:15px;">🎁 מתנה</button>
+            <div class="grid-2" style="margin-top:15px; gap:12px;">
+                <button class="action" onclick="saveGame()" style="background:#1e293b; color:var(--blue); border:1px solid var(--blue); padding:15px; font-weight:bold;">💾 שמור התקדמות</button>
+                <button class="action daily-btn" onclick="getDailyGift()" style="background:var(--purple); color:#fff; padding:15px; font-weight:bold; box-shadow:0 4px 12px rgba(168,85,247,0.3);">🎁 מתנה יומית</button>
             </div>
         </div>
     `;
 }
 
 /**
- * מתנה כל 4 שעות
+ * קבלת מתנה (כל 4 שעות)
  */
 function getDailyGift() {
     const lastGift = localStorage.getItem('last_gift_time') || 0;
@@ -122,36 +130,40 @@ function getDailyGift() {
         const diff = cooldown - (now - lastGift);
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        showMsg(`המתנה תהיה זמינה בעוד ${hours}ש' ו-${mins}ד'`, "var(--red)");
+        showMsg(`⏳ המתנה תהיה זמינה בעוד ${hours}ש' ו-${mins}ד'`, "var(--red)");
         return;
     }
 
     if (typeof money !== 'undefined') {
-        const prize = 5000 + (typeof lifeXP !== 'undefined' ? Math.floor(lifeXP / 2) : 0);
-        money += prize;
-        lifeXP = (typeof lifeXP !== 'undefined' ? lifeXP : 0) + 300;
+        const basePrize = 5000;
+        const levelBonus = (typeof lifeXP !== 'undefined' ? Math.floor(lifeXP / 3) : 0);
+        const finalPrize = basePrize + levelBonus;
+        
+        money += finalPrize;
+        lifeXP = (typeof lifeXP !== 'undefined' ? lifeXP : 0) + 350;
+        
         localStorage.setItem('last_gift_time', now);
         updateUI();
-        showMsg(`🎁 קיבלת ₪${prize.toLocaleString()} ו-300 XP!`, "var(--green)");
+        showMsg(`🎁 קיבלת ₪${finalPrize.toLocaleString()} ובונוס XP!`, "var(--green)");
         if (typeof saveGame === 'function') saveGame();
     }
 }
 
 /**
- * איקונים באינוונטרי
+ * רינדור איקונים לאינוונטרי
  */
 function renderInventoryIcons() {
     const inv = (typeof inventory !== 'undefined' && Array.isArray(inventory)) ? inventory : [];
-    if (inv.length === 0) return '<span style="grid-column: 1/6; font-size:11px; opacity:0.4; text-align:center;">אין נכסים...</span>';
+    if (inv.length === 0) return '<span style="grid-column: 1/6; font-size:11px; opacity:0.3; text-align:center; padding:10px;">אין נכסים כרגע</span>';
     
-    return inv.map(item => {
+    return inv.slice(0, 10).map(item => { // מציג עד 10 ראשונים בבית
         const icon = (typeof item === 'object') ? (item.icon || '📦') : '📦';
-        return `<div class="inv-item-slot" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; display:flex; justify-content:center; align-items:center; aspect-ratio:1/1; font-size:22px;">${icon}</div>`;
+        return `<div class="inv-item-slot" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; display:flex; justify-content:center; align-items:center; aspect-ratio:1/1; font-size:20px;">${icon}</div>`;
     }).join('');
 }
 
 /**
- * עדכון UI כללי
+ * עדכון UI כללי (סנכרון אלמנטים קבועים)
  */
 function updateUI() {
     try {
@@ -161,33 +173,43 @@ function updateUI() {
         
         const ld = getLevelData(xp);
         
-        if(document.getElementById('money')) document.getElementById('money').innerText = Math.floor(m).toLocaleString();
-        if(document.getElementById('bank')) document.getElementById('bank').innerText = Math.floor(b).toLocaleString();
-        if(document.getElementById('life-level-ui')) document.getElementById('life-level-ui').innerText = ld.level;
+        // עדכון טקסטים
+        const moneyEl = document.getElementById('money');
+        const bankEl = document.getElementById('bank');
+        const levelEl = document.getElementById('life-level-ui');
+        
+        if(moneyEl) moneyEl.innerText = Math.floor(m).toLocaleString();
+        if(bankEl) bankEl.innerText = Math.floor(b).toLocaleString();
+        if(levelEl) levelEl.innerText = ld.level;
 
+        // עדכון בר התקדמות אם קיים בדף הבית
         const bar = document.getElementById('xp-progress-bar');
-        if(bar) bar.style.width = ld.progressPercent + "%";
-        
         const xpTxt = document.getElementById('xp-text-detail');
-        if(xpTxt) xpTxt.innerText = `${Math.floor(ld.currentXpInLevel).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP לרמה הבאה`;
+        const levelValHome = document.getElementById('home-level-val');
+
+        if(bar) bar.style.width = ld.progressPercent + "%";
+        if(xpTxt) xpTxt.innerText = `${Math.floor(ld.currentXpInLevel).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP`;
+        if(levelValHome) levelValHome.innerText = `LEVEL ${ld.level}`;
         
-    } catch(err) {}
+    } catch(err) {
+        console.warn("UI Update missing elements:", err);
+    }
 }
 
 /**
- * הודעת מנהל
+ * עריכת הודעת מנהל
  */
 function editAdminMsg() {
     const pass = prompt("סיסמה לשנוי הודעה:");
     if (pass === "1234") {
         const msg = prompt("הכנס הודעה חדשה:", adminMessage);
-        if (msg) {
-            adminMessage = msg;
-            localStorage.setItem('admin_msg', msg);
-            if(document.getElementById('admin-text')) document.getElementById('admin-text').innerText = msg;
-            showMsg("הודעת מנהל עודכנה", "var(--blue)");
+        if (msg !== null) {
+            adminMessage = msg || "ברוכים הבאים!";
+            localStorage.setItem('admin_msg', adminMessage);
+            if(document.getElementById('admin-text')) document.getElementById('admin-text').innerText = adminMessage;
+            showMsg("הודעת מנהל עודכנה בהצלחה", "var(--blue)");
         }
     } else if(pass !== null) {
-        showMsg("סיסמה שגויה", "var(--red)");
+        showMsg("גישה נדחתה: סיסמה שגויה", "var(--red)");
     }
 }
