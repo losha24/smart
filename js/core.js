@@ -1,35 +1,36 @@
-/* Smart Money Pro - core.js - v6.5.2 TURBO FINAL */
+/* Smart Money Pro - core.js - v7.0.0 FULL */
 let money = 1500;
 let bank = 0;
 let lifeXP = 0;
 let passive = 0;
 let carSpeed = 1;
 let inventory = [];
-let lastSaveTime = Date.now(); // שמירת זמן היציאה
+let lastSaveTime = Date.now();
+let lastDailyGift = 0;
 
-// מנוע טורבו - מעדכן 20 פעם בשנייה (כל 50ms)
+// מנוע עדכון (זרימת כסף פסיבית)
 setInterval(() => {
     if (passive > 0) {
-        // הוספת הכנסה פסיבית בכל טיק (חלקי 72,000 כדי להגיע לשעה)
-        money += (passive / 72000);
+        money += (passive / 72000); 
     }
     updateUI();
 }, 50);
 
 function updateUI() {
-    const ids = {
+    const ld = getLevelData(lifeXP);
+    const elements = {
         'money': Math.floor(money).toLocaleString(),
         'bank': Math.floor(bank).toLocaleString(),
-        'level-display': getLevelData(lifeXP).level,
+        'level-num': ld.level,
+        'passive-val': Math.floor(passive).toLocaleString(),
         'home-money-display': "₪" + Math.floor(money).toLocaleString()
     };
 
-    for (let id in ids) {
+    for (let id in elements) {
         let el = document.getElementById(id);
-        if (el) el.innerText = ids[id];
+        if (el) el.innerText = elements[id];
     }
 
-    let ld = getLevelData(lifeXP);
     let xpb = document.getElementById('xp-progress-bar');
     if (xpb) xpb.style.width = ld.progressPercent + "%";
 }
@@ -42,44 +43,9 @@ function getLevelData(xp) {
     return { level, progressPercent: progress };
 }
 
-function showMsg(txt, color = "var(--blue)") {
-    const sb = document.getElementById('status-bar');
-    if (sb) {
-        sb.innerText = txt;
-        sb.style.color = color;
-        sb.style.opacity = "1";
-        setTimeout(() => sb.style.opacity = "0", 3000);
-    }
-}
-
-// מערכת הכנסה במצב אופליין (עד 24 שעות)
-function calculateOfflineEarnings() {
-    if (passive <= 0) return;
-
-    let now = Date.now();
-    let diffMs = now - lastSaveTime; // כמה זמן עבר במילי-שניות
-    let diffSec = diffMs / 1000;
-    let diffHours = diffSec / 3600;
-
-    // מגבלה ל-24 שעות מקסימום
-    if (diffHours > 24) diffHours = 24;
-
-    if (diffHours > 0.01) { // רק אם עבר יותר מחצי דקה בערך
-        let earnings = diffHours * passive;
-        money += earnings;
-        
-        // נציג הודעה למשתמש כשנכנסים
-        setTimeout(() => {
-            showMsg(`בזמן שלא היית, העסקים הניבו: ₪${Math.floor(earnings).toLocaleString()}`, "var(--green)");
-        }, 1500);
-    }
-}
-
 function saveGame() {
-    lastSaveTime = Date.now(); // עדכון זמן השמירה האחרון
-    const data = { 
-        money, bank, lifeXP, passive, carSpeed, inventory, lastSaveTime 
-    };
+    lastSaveTime = Date.now();
+    const data = { money, bank, lifeXP, passive, carSpeed, inventory, lastSaveTime, lastDailyGift };
     localStorage.setItem('smartMoneySave', JSON.stringify(data));
 }
 
@@ -94,18 +60,42 @@ function loadGame() {
         carSpeed = d.carSpeed || 1;
         inventory = d.inventory || [];
         lastSaveTime = d.lastSaveTime || Date.now();
+        lastDailyGift = d.lastDailyGift || 0;
         
-        // חישוב הכסף שנצבר בזמן שהיית בחוץ
-        calculateOfflineEarnings();
+        // חישוב רווח אופליין
+        let diffHours = (Date.now() - lastSaveTime) / 3600000;
+        if (diffHours > 0.01 && passive > 0) {
+            let earnings = Math.min(diffHours, 24) * passive;
+            money += earnings;
+            setTimeout(() => showMsg(`בזמן שישנת: +₪${Math.floor(earnings).toLocaleString()}`, "var(--green)"), 1500);
+        }
     }
 }
 
-function resetGame() {
-    if (confirm("אלכסיי, למחוק את כל הנתונים ולהתחיל מחדש?")) {
-        localStorage.clear();
-        location.reload();
-    }
+function showMsg(txt, color) {
+    const msg = document.getElementById('msg');
+    if (!msg) return;
+    msg.innerText = txt;
+    msg.style.background = color;
+    msg.style.bottom = "20px";
+    setTimeout(() => { msg.style.bottom = "-100px"; }, 3000);
 }
 
-// שמירה אוטומטית כל 30 שניות כדי שלא יאבד כסף
-setInterval(saveGame, 30000);
+// מערכת התקנה PWA
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'block';
+});
+
+function handleInstall() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+            deferredPrompt = null;
+            document.getElementById('install-btn').style.display = 'none';
+        });
+    }
+}
