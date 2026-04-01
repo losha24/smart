@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.1.8</title>
+    <title>Smart Money Pro | v6.6.0</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="stylesheet" href="style.css?v=6.1.8">
+    <link rel="stylesheet" href="style.css?v=6.6.0">
     
     <style>
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
         .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid var(--blue); }
         .topbar button.active { background: var(--blue) !important; color: #000 !important; font-weight: bold; }
         
-        /* עיצוב שורת ההודעות הצפה */
+        /* עיצוב שורת ההודעות הצפה - מעל הכפתורים */
         #msg { 
             pointer-events: none; 
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
@@ -23,13 +23,29 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
             max-width: 90%;
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            padding: 12px 25px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+            min-width: 280px;
+            /* שינוי מיקום לתחתית מעל הניווט */
+            bottom: 115px; 
+            opacity: 0;
         }
 
-        /* מניעת שבירת מילים בבורסה */
         .invest-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
+        }
+
+        /* מרווח עבודה כדי שהתוכן לא ייבלע תחת ה-MSG */
+        main#content {
+            padding-bottom: 140px;
         }
     </style>
 </head>
@@ -45,7 +61,7 @@
         <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
     </div>
 
-    <div id="msg" class="status-msg" style="opacity: 0; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 12px 25px; border-radius: 12px; color: white; text-align: center; min-width: 260px;"></div>
+    <div id="msg"></div>
 
     <nav class="topbar">
         <div class="nav-row">
@@ -87,8 +103,8 @@
     </footer>
 
     <script src="js/core.js?v=6.3.2"></script>
-    <script src="js/ui.js?v=6.1.8"></script>
-    <script src="js/activities.js?v=6.5.2"></script>
+    <script src="js/ui.js?v=6.2.0"></script>
+    <script src="js/activities.js?v=6.6.0"></script>
     <script src="js/economy.js?v=6.1.5"></script>
 
     <script>
@@ -96,7 +112,6 @@
             const content = document.getElementById('content');
             if (!content) return;
 
-            // סימון כפתור פעיל
             document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById('nav-' + tabName);
             if (activeBtn) activeBtn.classList.add('active');
@@ -105,7 +120,6 @@
             window.scrollTo(0,0);
 
             try {
-                // ניתוב לפונקציות הציור המעודכנות ב-ui.js
                 if (tabName === 'home' && typeof drawHome === 'function') drawHome(content);
                 else if (tabName === 'work' && typeof drawWork === 'function') drawWork(content);
                 else if (tabName === 'invest' && typeof drawInvest === 'function') drawInvest(content);
@@ -120,7 +134,6 @@
                     content.innerHTML = `<div class="card" style="text-align:center;"><h3>🚧 בקרוב</h3><p>האזור בבנייה</p></div>`;
                 }
 
-                // עדכון מיידי של הנתונים בתצוגה
                 if (typeof updateUI === 'function') updateUI();
             } catch (err) {
                 console.error("שגיאת טאב:", err);
@@ -129,15 +142,12 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // טעינת הנתונים מהשרת/LocalStorage
             if (typeof loadGame === 'function') loadGame();
             
-            // זמן המתנה קצר כדי לוודא שכל קבצי ה-JS "התעוררו"
             setTimeout(() => {
                 openTab('home');
             }, 350);
 
-            // זיהוי מכשיר אפל להוראות התקנה
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 document.getElementById('android-instr').style.display = 'none';
                 document.getElementById('ios-instr').style.display = 'block';
