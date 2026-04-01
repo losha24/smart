@@ -1,4 +1,3 @@
-/* Smart Money Pro - core.js - v7.0.0 FULL */
 let money = 1500;
 let bank = 0;
 let lifeXP = 0;
@@ -8,7 +7,7 @@ let inventory = [];
 let lastSaveTime = Date.now();
 let lastDailyGift = 0;
 
-// מנוע עדכון (זרימת כסף פסיבית)
+// עדכון בזמן אמת (20 פעמים בשנייה)
 setInterval(() => {
     if (passive > 0) {
         money += (passive / 72000); 
@@ -18,12 +17,13 @@ setInterval(() => {
 
 function updateUI() {
     const ld = getLevelData(lifeXP);
+    
     const elements = {
         'money': Math.floor(money).toLocaleString(),
         'bank': Math.floor(bank).toLocaleString(),
-        'level-num': ld.level,
         'passive-val': Math.floor(passive).toLocaleString(),
-        'home-money-display': "₪" + Math.floor(money).toLocaleString()
+        'level-num': ld.level,
+        'xp-detail': `${Math.floor(lifeXP).toLocaleString()} / ${ld.nextXP.toLocaleString()} XP`
     };
 
     for (let id in elements) {
@@ -40,7 +40,21 @@ function getLevelData(xp) {
     let nextXP = Math.pow(level, 2) * 100;
     let prevXP = Math.pow(level - 1, 2) * 100;
     let progress = ((xp - prevXP) / (nextXP - prevXP)) * 100;
-    return { level, progressPercent: progress };
+    return { level, nextXP, progressPercent: progress };
+}
+
+function calculateOffline() {
+    const now = Date.now();
+    const diffSeconds = (now - lastSaveTime) / 1000;
+    // אם עברו יותר מ-10 שניות, חשב רווח אופליין (עד 24 שעות מקסימום)
+    if (diffSeconds > 10 && passive > 0) {
+        const hours = Math.min(diffSeconds / 3600, 24);
+        const earned = hours * passive;
+        money += earned;
+        if(earned > 1) {
+            setTimeout(() => showMsg(`רווח אופליין: +₪${Math.floor(earned).toLocaleString()}`, "var(--green)"), 1000);
+        }
+    }
 }
 
 function saveGame() {
@@ -61,14 +75,7 @@ function loadGame() {
         inventory = d.inventory || [];
         lastSaveTime = d.lastSaveTime || Date.now();
         lastDailyGift = d.lastDailyGift || 0;
-        
-        // חישוב רווח אופליין
-        let diffHours = (Date.now() - lastSaveTime) / 3600000;
-        if (diffHours > 0.01 && passive > 0) {
-            let earnings = Math.min(diffHours, 24) * passive;
-            money += earnings;
-            setTimeout(() => showMsg(`בזמן שישנת: +₪${Math.floor(earnings).toLocaleString()}`, "var(--green)"), 1500);
-        }
+        calculateOffline();
     }
 }
 
@@ -81,21 +88,4 @@ function showMsg(txt, color) {
     setTimeout(() => { msg.style.bottom = "-100px"; }, 3000);
 }
 
-// מערכת התקנה PWA
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const btn = document.getElementById('install-btn');
-    if (btn) btn.style.display = 'block';
-});
-
-function handleInstall() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => {
-            deferredPrompt = null;
-            document.getElementById('install-btn').style.display = 'none';
-        });
-    }
-}
+setInterval(saveGame, 30000);
