@@ -1,4 +1,4 @@
-/* Smart Money Pro - style.css - v6.0.5 - Modern Progress & UI Sync */
+/* Smart Money Pro - style.css - v6.2.7 - Final UI Sync */
 
 :root { 
     --bg: #0f172a; 
@@ -13,7 +13,6 @@
     --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* ערכת נושא בהירה */
 .light-theme { 
     --bg: #f8fafc; 
     --card: #ffffff; 
@@ -37,12 +36,13 @@ body {
     transition: background 0.3s ease, color 0.3s ease;
     overflow-x: hidden;
     min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom); /* תמיכה באייפון */
 }
 
 /* לוגו עליון */
 .main-header { 
     background: var(--card); 
-    height: 70px; 
+    height: 65px; 
     display: flex; 
     justify-content: center; 
     align-items: center; 
@@ -50,7 +50,7 @@ body {
 }
 
 .header-logo-big { 
-    max-height: 55px; 
+    max-height: 45px; 
     cursor: pointer;
     transition: 0.2s;
 }
@@ -71,26 +71,17 @@ body {
 .stat-item { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 4px; }
 .stat-item span { color: var(--blue); font-variant-numeric: tabular-nums; }
 
-/* שורת סטטוס חכמה */
-#status-bar { 
-    text-align: center; 
-    min-height: 38px; 
-    line-height: 38px; 
-    font-size: 13px; 
-    font-weight: 600; 
-    opacity: 0; 
-    transition: 0.3s; 
-    margin: 8px 15px;
-    background: rgba(56, 189, 248, 0.1);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-}
-
-/* תפריט ניווט */
+/* תפריט ניווט תחתון - מקובע למטה */
 .topbar { 
-    padding: 8px; 
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 8px env(safe-area-inset-bottom); 
     background: var(--card); 
-    border-bottom: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    z-index: 10000; /* מתחת להודעות, מעל התוכן */
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.2);
 }
 
 .nav-row { 
@@ -99,6 +90,8 @@ body {
     margin-bottom: 6px; 
     width: 100%; 
 }
+
+.nav-row:last-child { margin-bottom: 0; }
 
 .topbar button { 
     flex: 1; 
@@ -111,7 +104,7 @@ body {
     font-size: 11px; 
     font-weight: 700;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s;
     white-space: nowrap;
 }
 
@@ -119,6 +112,7 @@ body {
     background: var(--blue); 
     color: #0f172a; 
     border-color: var(--blue);
+    transform: translateY(-2px);
 }
 
 /* תוכן ראשי */
@@ -126,7 +120,7 @@ body {
     padding: 15px; 
     max-width: 500px; 
     margin: 0 auto; 
-    padding-bottom: 40px; 
+    padding-bottom: 220px; /* מרווח כדי שהתפריט והתיבה לא יסתירו תוכן */
 }
 
 .card { 
@@ -145,24 +139,15 @@ body {
     gap: 12px; 
 }
 
-.grid-2 .card {
-    margin-bottom: 0;
-    padding: 12px;
-    text-align: center;
-}
-
-/* כפתורי מערכת */
+/* כפתורי מערכת קטנים */
 .sys-btn { 
-    background: rgba(56, 189, 248, 0.1); 
-    color: var(--blue); 
-    border: 1px solid var(--blue); 
-    padding: 8px 12px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: bold;
-    cursor: pointer;
+    background: rgba(56, 189, 248, 0.05) !important; 
+    color: var(--blue) !important; 
+    border: 1px solid var(--blue) !important; 
+    font-size: 14px !important;
 }
 
+/* כפתורי פעולה גדולים */
 .action { 
     width: 100%; 
     padding: 16px; 
@@ -174,55 +159,35 @@ body {
     font-size: 15px; 
     cursor: pointer; 
     transition: 0.2s;
+    box-shadow: 0 4px 0px rgba(56, 189, 248, 0.3);
 }
 
-.action:disabled { opacity: 0.5; cursor: not-allowed; }
-.action:active:not(:disabled) { transform: scale(0.96); }
+.action:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
 
-/* פסי התקדמות משופרים */
+/* פסי התקדמות */
 .progress-container { 
     background: rgba(0, 0, 0, 0.2); 
     border-radius: 20px; 
     height: 10px; 
-    margin: 10px 0; 
     overflow: hidden; 
     border: 1px solid var(--border);
 }
 
-.progress-bar { 
-    height: 100%; 
-    background: var(--blue); 
-    transition: width 0.3s ease; 
+/* אינוונטרי */
+.inv-item-slot {
+    transition: 0.2s;
 }
-
-.xp-bar { background: linear-gradient(90deg, var(--blue), var(--purple)) !important; }
-
-/* רשימת מלאי (Inventory) אופקית */
-#inventory-list {
-    scrollbar-width: none; /* Firefox */
-}
-#inventory-list::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
-}
+.inv-item-slot:active { transform: scale(0.9); }
 
 /* אנימציות */
-.fade-in { animation: fadeIn 0.4s ease-out; }
+.fade-in { animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn { 
-    from { opacity: 0; transform: translateY(10px); } 
-    to { opacity: 1; transform: translateY(0); } 
+    from { opacity: 0; } 
+    to { opacity: 1; } 
 }
 
-/* התאמה למובייל */
+/* מובייל קטן */
 @media (max-width: 360px) {
     .topbar button { font-size: 10px; padding: 8px 1px; }
     .stat-item { font-size: 11px; }
-    .grid-2 { gap: 8px; }
-}
-
-footer.main-footer {
-    text-align: center;
-    padding: 20px;
-    font-size: 10px;
-    opacity: 0.4;
-    color: var(--text);
 }
