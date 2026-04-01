@@ -1,8 +1,6 @@
-/* Smart Money Pro - js/activities.js - v6.5.1 
-   FULL SYSTEM: Jobs, Casino, Cars, Skills & Daily Rewards
-*/
+/* Smart Money Pro - js/activities.js - v6.5.2 TURBO - ALIGNED WITH CORE */
 
-// --- 1. מאגר נתונים מרכזי (Jobs & Skills) ---
+// --- 1. מאגרי נתונים ---
 const jobList = [
     { id: 'j1', name: 'מנקה רחובות', pay: 65, xp: 25, time: 3000, icon: '🧹', req: null },
     { id: 'j2', name: 'שליח פיצה', pay: 95, xp: 40, time: 5000, icon: '🍕', req: null },
@@ -35,20 +33,19 @@ const carList = [
     { id: 'c6', name: 'מטוס פרטי', price: 15000000, speed: 6.0, icon: '🛩️' }
 ];
 
-// --- 2. תצוגת עבודות (Work Tab) ---
+// --- 2. עבודה (Work) ---
 function drawWork(c) {
-    if(!c) return;
     let html = `<h3>⚒️ מרכז תעסוקה</h3><div class="grid-2">`;
     jobList.forEach(j => {
-        const hasSkill = !j.req || skills.includes(j.req);
+        // בדיקת דרישות מתוך ה-Inventory הכללי של הטורבו
+        const hasSkill = !j.req || inventory.some(i => i.name === j.req);
         const opacity = hasSkill ? 1 : 0.5;
-        const lockIcon = hasSkill ? '' : '🔒 ';
 
         html += `
-        <div class="card fade-in" style="text-align:center; opacity: ${opacity};">
-            <div style="font-size:32px; margin-bottom:5px;">${j.icon}</div>
-            <b style="display:block; min-height:40px;">${lockIcon}${j.name}</b>
-            <div style="color:var(--green); font-weight:bold; margin-bottom:5px;">${j.pay.toLocaleString()}₪</div>
+        <div class="card fade-in" style="opacity: ${opacity};">
+            <div style="font-size:32px;">${j.icon}</div>
+            <b>${!hasSkill ? '🔒 ' : ''}${j.name}</b>
+            <div style="color:var(--green); font-weight:bold;">${j.pay.toLocaleString()}₪</div>
             <div style="font-size:10px; margin-bottom:10px;">דרישה: ${j.req || 'ללא'}</div>
             
             <div id="prog-cont-${j.id}" style="display:none; height:6px; background:#111; border-radius:10px; margin-bottom:10px; overflow:hidden;">
@@ -57,7 +54,7 @@ function drawWork(c) {
             
             <button class="sys-btn" id="job-${j.id}" style="width:100%" 
                 onclick="${hasSkill ? `startWork('${j.id}')` : `showMsg('חסר לך: ${j.req}', 'var(--red)')`}">
-                ${hasSkill ? 'בצע עבודה' : 'נעול'}
+                בצע עבודה
             </button>
         </div>`;
     });
@@ -70,43 +67,37 @@ function startWork(id) {
     const bar = document.getElementById(`bar-${j.id}`);
     const cont = document.getElementById(`prog-cont-${j.id}`);
     
-    // חישוב זמן עבודה לפי מהירות הרכב (CarSpeed)
     const finalTime = j.time / carSpeed;
-
     btn.disabled = true;
     cont.style.display = "block";
     
     setTimeout(() => {
         bar.style.transition = `width ${finalTime}ms linear`;
         bar.style.width = "100%";
-    }, 10);
+    }, 50);
 
     setTimeout(() => {
         money += j.pay;
         lifeXP += j.xp;
-        totalEarned += j.pay;
-        
         btn.disabled = false;
         cont.style.display = "none";
         bar.style.width = "0%";
         bar.style.transition = "none";
-        
-        showMsg(`+${j.pay}₪ | +${j.xp} XP`, "var(--green)");
+        showMsg(`+${j.pay.toLocaleString()}₪ | +${j.xp} XP`, "var(--green)");
         updateUI();
         saveGame();
     }, finalTime);
 }
 
-// --- 3. תצוגת כישורים (Skills Tab) ---
+// --- 3. כישורים (Skills) ---
 function drawSkills(c) {
-    if(!c) return;
-    let html = `<h3>🎓 פיתוח אישי וכישורים</h3><div class="grid-1">`;
+    let html = `<h3>🎓 כישורים ולימודים</h3><div class="grid-1">`;
     skillList.forEach(s => {
-        const owned = skills.includes(s.name);
+        const owned = inventory.some(i => i.name === s.name);
         html += `
         <div class="card fade-in" style="display:flex; justify-content:space-between; align-items:center;">
-            <div><span style="font-size:20px;">${s.icon}</span> <b>${s.name}</b></div>
-            <button class="sys-btn" ${owned ? 'disabled' : ''} onclick="buySkill('${s.name}', ${s.price})">
+            <div><span>${s.icon}</span> <b>${s.name}</b></div>
+            <button class="sys-btn" ${owned ? 'disabled' : ''} onclick="buySkill('${s.name}', ${s.price}, '${s.icon}')">
                 ${owned ? 'נרכש' : s.price.toLocaleString() + ' ₪'}
             </button>
         </div>`;
@@ -114,68 +105,56 @@ function drawSkills(c) {
     c.innerHTML = html + "</div>";
 }
 
-function buySkill(name, price) {
+function buySkill(name, price, icon) {
     if(money >= price) {
         money -= price;
-        skills.push(name);
+        inventory.push({ name, icon, type: 'skill' });
         showMsg(`למדת ${name}!`, "var(--purple)");
         updateUI();
         saveGame();
         drawSkills(document.getElementById('content'));
-    } else showMsg("אין לך מספיק כסף ללימודים", "var(--red)");
+    } else showMsg("אין לך מספיק כסף!", "var(--red)");
 }
 
-// --- 4. תצוגת רכבים (Cars Tab) ---
+// --- 4. רכבים (Cars) ---
 function drawCars(c) {
-    if(!c) return;
-    let html = `<h3>🚗 סוכנות רכב</h3>
-    <p style="font-size:12px; text-align:center;">רכבים מקצרים את זמן העבודה (בונוס מהירות: x${carSpeed})</p>
-    <div class="grid-2">`;
+    let html = `<h3>🚗 סוכנות רכב</h3><div class="grid-2">`;
     carList.forEach(car => {
-        const owned = cars.includes(car.name);
+        const owned = inventory.some(i => i.name === car.name);
         html += `
-        <div class="card fade-in" style="text-align:center; border: ${owned ? '1px solid var(--blue)' : '1px solid var(--border)'}">
+        <div class="card fade-in" style="text-align:center;">
             <div style="font-size:35px;">${car.icon}</div>
             <b>${car.name}</b><br>
             <small style="color:var(--blue)">מהירות: x${car.speed}</small><br><br>
-            <button class="sys-btn" style="width:100%" ${owned ? 'disabled' : ''} onclick="buyCar('${car.name}', ${car.price}, ${car.speed})">
-                ${owned ? 'בבעלותך' : car.price.toLocaleString() + ' ₪'}
+            <button class="sys-btn" style="width:100%" ${owned ? 'disabled' : ''} onclick="buyCar('${car.name}', ${car.price}, ${car.speed}, '${car.icon}')">
+                ${owned ? 'בבעלות' : car.price.toLocaleString() + ' ₪'}
             </button>
         </div>`;
     });
     c.innerHTML = html + "</div>";
 }
 
-function buyCar(name, price, speed) {
+function buyCar(name, price, speed, icon) {
     if(money >= price) {
         money -= price;
-        cars.push(name);
-        if(speed > carSpeed) carSpeed = speed; // תמיד לוקח את הרכב המהיר ביותר
+        inventory.push({ name, icon, type: 'car' });
+        if(speed > carSpeed) carSpeed = speed; 
         showMsg(`תתחדש על ה${name}!`, "var(--blue)");
         updateUI();
         saveGame();
         drawCars(document.getElementById('content'));
-    } else showMsg("אין לך מספיק כסף לרכב זה", "var(--red)");
+    } else showMsg("אין לך מספיק כסף!", "var(--red)");
 }
 
-// --- 5. קזינו (Tasks Tab) ---
-function drawTasks(c) {
-    if(!c) return;
+// --- 5. קזינו (נקרא כעת drawCasino כדי להתאים ל-ui.js) ---
+function drawCasino(c) {
     c.innerHTML = `
     <div class="card fade-in" style="text-align:center;">
         <h3 style="color:var(--yellow)">🎰 קזינו Grand Royal</h3>
-        <p>בחר סכום והמר על המזל</p>
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <button class="sys-btn" onclick="document.getElementById('gamble-amt').value=1000">1K</button>
-            <button class="sys-btn" onclick="document.getElementById('gamble-amt').value=10000">10K</button>
-            <button class="sys-btn" onclick="document.getElementById('gamble-amt').value=50000">50K</button>
-        </div>
-        <input type="number" id="gamble-amt" placeholder="סכום..." 
-               style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:#000; color:#fff; text-align:center; font-size:20px; margin-bottom:15px;">
-        
+        <input type="number" id="gamble-amt" value="1000" style="width:100%; padding:15px; border-radius:12px; background:#000; color:#fff; text-align:center; font-size:20px; margin-bottom:15px; border:1px solid var(--border);">
         <div class="grid-2">
-            <button class="action" onclick="playGamble(2, 48)" style="background:var(--blue);">פי 2 <br><small>(48% סיכוי)</small></button>
-            <button class="action" onclick="playGamble(10, 8)" style="background:var(--purple);">פי 10 <br><small>(8% סיכוי)</small></button>
+            <button class="action" onclick="playGamble(2, 48)" style="background:var(--blue);">פי 2 <br><small>(48%)</small></button>
+            <button class="action" onclick="playGamble(10, 8)" style="background:var(--purple);">פי 10 <br><small>(8%)</small></button>
         </div>
     </div>`;
 }
@@ -190,27 +169,9 @@ function playGamble(mult, chance) {
         money += win;
         showMsg(`🎉 זכית ב-${win.toLocaleString()}₪!`, "var(--green)");
     } else {
-        showMsg("הפסדת... נסה שוב!", "var(--red)");
+        showMsg("הפסדת...", "var(--red)");
     }
     updateUI();
     saveGame();
-    drawTasks(document.getElementById('content'));
-}
-
-// --- 6. מתנה יומית ---
-function getDailyGift() {
-    const now = Date.now();
-    const wait = 24 * 60 * 60 * 1000;
-    if (now - lastGift > wait) {
-        const amount = 5000 + (getLevelData(lifeXP).level * 1000);
-        money += amount;
-        lastGift = now;
-        showMsg(`🎁 קיבלת ${amount.toLocaleString()}₪ מתנה!`, "var(--yellow)");
-        updateUI();
-        saveGame();
-    } else {
-        const diff = wait - (now - lastGift);
-        const h = Math.floor(diff / 3600000);
-        showMsg(`המתנה הבאה בעוד ${h} שעות`, "var(--red)");
-    }
+    drawCasino(document.getElementById('content'));
 }
