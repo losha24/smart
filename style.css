@@ -1,7 +1,6 @@
-/* Smart Money Pro - style.css - v6.5.2 TURBO - FULL & FINAL */
+/* Smart Money Pro - style.css - v7.4.0 - FIXED GRID 4 */
 
 :root { 
-    /* פלטת צבעים בומבסטית - לפי העיצוב שלך */
     --bg: #070b14; 
     --card: #151c2e; 
     --text: #f1f5f9; 
@@ -14,11 +13,9 @@
     --shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
 }
 
-/* הגדרות בסיס */
 * { 
     box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent; 
-    outline: none;
 }
 
 body { 
@@ -26,144 +23,134 @@ body {
     background: var(--bg); 
     color: var(--text); 
     direction: rtl; 
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-    overflow-x: hidden;
+    font-family: 'Segoe UI', system-ui, sans-serif; 
     user-select: none;
     padding-bottom: 20px;
 }
 
-/* מסך טעינה - הוספתי מהקובץ שלך */
-.app-loader { 
-    position: fixed; inset: 0; background: var(--bg); 
-    display: flex; flex-direction: column; align-items: center; 
-    justify-content: center; z-index: 9999; transition: 0.5s; 
-}
-.spinner { 
-    width: 50px; height: 50px; 
-    border: 5px solid rgba(0,210,255,0.1); 
-    border-top-color: var(--blue); 
-    border-radius: 50%; 
-    animation: spin 1s linear infinite; 
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* כותרת עליונה קבועה */
-.main-header { 
-    background: linear-gradient(to bottom, #1e293b, #0f172a); 
-    height: 70px; display: flex; flex-direction: column; 
-    justify-content: center; align-items: center; 
-    border-bottom: 2px solid var(--blue);
-    position: sticky; top: 0; z-index: 2001;
-}
-.header-logo-container h1 { 
-    margin: 0; font-size: 22px; color: var(--blue); 
-    font-weight: 900; text-shadow: 0 0 15px rgba(0,210,255,0.5); 
-}
-.version-tag { font-size: 9px; opacity: 0.5; letter-spacing: 2px; }
-
-/* סטטיסטיקה דביקה (מתחת לכותרת) */
-.stats-bar-top { 
-    display: flex; justify-content: space-around; background: #1a2236; 
-    padding: 12px 5px; position: sticky; top: 70px; z-index: 2000; 
-    border-bottom: 2px solid var(--border); backdrop-filter: blur(10px);
-}
-.stat-item { font-size: 13px; font-weight: 800; text-align: center; }
-.stat-item span { display: block; color: var(--yellow); font-size: 16px; }
-
-/* תפריט ניווט - מותאם ל-12 כפתורים עם גלילה */
+/* --- תפריט ניווט - תיקון ל-4 בשורה --- */
 .topbar { 
     padding: 10px; 
     background: var(--card); 
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    overflow-x: auto; /* מאפשר גלילה הצידה ל-12 הכפתורים */
-    gap: 8px;
-    -webkit-overflow-scrolling: touch;
+    border-bottom: 2px solid var(--blue);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* בדיוק 4 בשורה */
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 2001;
 }
-.topbar::-webkit-scrollbar { display: none; } /* מחביא את הפס גלילה */
 
 .topbar button { 
-    flex: 0 0 auto; /* מונע מהכפתורים להתכווץ */
-    padding: 10px 18px; border-radius: 20px; border: 1px solid var(--border); 
-    background: #1e293b; color: #fff; font-size: 13px; font-weight: 700; 
-    white-space: nowrap; transition: 0.2s;
+    padding: 8px 2px; 
+    border-radius: 8px; 
+    border: 1px solid var(--border); 
+    background: #1e293b; 
+    color: #fff; 
+    font-size: 11px; /* מוקטן מעט כדי שייכנסו 4 */
+    font-weight: 700; 
+    transition: 0.2s;
+    cursor: pointer;
 }
+
 .topbar button.active { 
-    background: var(--blue); color: #000; 
-    box-shadow: 0 0 15px var(--blue); border-color: #fff; 
+    background: var(--blue); 
+    color: #000; 
+    box-shadow: 0 0 10px var(--blue); 
+    border-color: #fff; 
 }
 
-/* שורת סטטוס הודעות */
-#status-bar { 
-    text-align: center; min-height: 35px; line-height: 35px; 
-    font-size: 13px; font-weight: 700; margin: 10px; 
-    background: rgba(0, 210, 255, 0.05); border-radius: 8px; 
-    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    opacity: 0;
+/* --- סטטיסטיקה (מתחת לניווט) --- */
+.stats-bar-top { 
+    display: flex; 
+    justify-content: space-around; 
+    background: #1a2236; 
+    padding: 10px 5px; 
+    border-bottom: 1px solid var(--border);
 }
 
-/* כרטיס גיבור (Dashboard) - המנוע של דף הבית */
+.stat-item { font-size: 12px; font-weight: 800; text-align: center; }
+.stat-item span { display: block; color: var(--yellow); font-size: 14px; }
+
+/* --- פריסה בתוך הטאבים - 2 בשורה --- */
+.grid-2 { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+    padding: 10px 0;
+}
+
+/* --- כרטיס ראשי (Dashboard) --- */
 .main-card-hero { 
     background: linear-gradient(145deg, #1e293b, #0f172a); 
-    border: 1px solid var(--blue); border-radius: 18px; 
-    padding: 20px; margin: 10px; box-shadow: var(--shadow);
+    border: 1px solid var(--blue); 
+    border-radius: 18px; 
+    padding: 20px; 
+    margin: 10px; 
+    box-shadow: var(--shadow);
 }
+
 .xp-container-big { 
-    background: #000; border-radius: 10px; height: 14px; 
-    margin: 15px 0; overflow: hidden; border: 1px solid #333; 
+    background: #000; 
+    border-radius: 10px; 
+    height: 12px; 
+    margin: 10px 0; 
+    overflow: hidden; 
+    border: 1px solid #333; 
 }
+
 .xp-bar-fill { 
-    height: 100%; background: linear-gradient(90deg, var(--blue), var(--purple)); 
-    box-shadow: 0 0 12px var(--blue); transition: width 0.5s ease;
+    height: 100%; 
+    background: linear-gradient(90deg, var(--blue), var(--purple)); 
+    transition: width 0.5s ease;
 }
 
-/* כרטיסים ורשימות */
-.main-content { padding: 5px 10px; }
+/* --- עיצוב כרטיסי פריטים (עבודה/נדל"ן) --- */
 .card { 
-    background: var(--card); border-radius: 12px; padding: 15px; 
-    margin-bottom: 12px; border: 1px solid var(--border); 
-}
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-/* אינוונטרי (המחסן) */
-.inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.inv-slot { 
-    background: #0f172a; border: 1px solid var(--border); 
-    aspect-ratio: 1/1; border-radius: 10px; display: flex; 
-    align-items: center; justify-content: center; font-size: 24px; 
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    background: var(--card); 
+    border-radius: 12px; 
+    padding: 12px; 
+    border: 1px solid var(--border); 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
-/* כפתורי פעולה בולטים */
+/* --- כפתורי פעולה --- */
 .action { 
-    width: 100%; padding: 16px; border-radius: 12px; border: none; 
-    background: var(--blue); color: #000; font-weight: 800; font-size: 16px;
-    box-shadow: 0 4px 15px rgba(0,210,255,0.3); transition: 0.2s;
-    cursor: pointer; margin-bottom: 10px;
+    width: 100%; padding: 14px; border-radius: 10px; border: none; 
+    background: var(--blue); color: #000; font-weight: 800; 
+    cursor: pointer; margin-bottom: 8px;
 }
-.action:active { transform: scale(0.96); }
 
-/* כפתורי מערכת קטנים */
 .sys-btn {
-    background: transparent; border: 1px solid var(--blue);
-    color: var(--blue); padding: 8px 12px; border-radius: 8px;
-    font-weight: bold; cursor: pointer;
+    background: transparent; 
+    border: 1px solid var(--blue);
+    color: var(--blue); 
+    padding: 8px; 
+    border-radius: 6px;
+    font-weight: bold; 
+    width: 100%;
 }
-.sys-btn:hover { background: var(--blue); color: #000; }
 
-/* אנימציות */
+.sys-btn:active { background: var(--blue); color: #000; }
+
+/* --- אנימציות --- */
 .fade-in { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-.pulse { animation: pulse 2s infinite; }
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.6; }
-    100% { opacity: 1; }
-}
-
-/* התאמה למסכים קטנים */
-@media (max-width: 360px) {
-    .header-logo-container h1 { font-size: 18px; }
-    .stat-item { font-size: 11px; }
+/* --- הודעות (Message Popup) --- */
+#msg {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -100px;
+    padding: 12px 25px;
+    border-radius: 50px;
+    color: #000;
+    font-weight: bold;
+    z-index: 9999;
+    transition: 0.4s;
+    white-space: nowrap;
 }
