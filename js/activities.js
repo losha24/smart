@@ -1,6 +1,7 @@
-/* Smart Money Pro - js/activities.js - v6.5.2 - Production Ready */
+/* Smart Money Pro - js/activities.js - v6.5.5 - Final Production */
 
 // --- מאגרי נתונים ---
+
 const jobList = [
     { id: 'j1', name: 'מנקה', pay: 55, xp: 20, time: 3000, icon: '🧹' },
     { id: 'j2', name: 'שליח', pay: 95, xp: 45, time: 5000, icon: '🛵' },
@@ -9,9 +10,9 @@ const jobList = [
     { id: 'j5', name: 'נהג מונית', pay: 340, xp: 110, time: 12000, icon: '🚕', reqCar: true },
     { id: 'j6', name: 'סוהר', pay: 420, xp: 190, time: 14000, icon: '👮', req: 'קורס פיקודי' },
     { id: 'j7', name: 'נהג משאית', pay: 650, xp: 250, time: 16000, icon: '🚛', req: 'רישיון משאית', reqCar: true },
-    { id: 'j8', name: 'מתכנת PWA', pay: 900, xp: 480, time: 20000, icon: '💻', req: 'תכנות' },
-    { id: 'j9', name: 'מנהל רשת', pay: 1750, xp: 850, time: 25000, icon: '🌐', req: 'ניהול רשת' },
-    { id: 'j10', name: 'ארכיטקט', pay: 3500, xp: 1500, time: 35000, icon: '🏛️', req: 'ניהול טכנולוגי' }
+    { id: 'j8', name: 'מתכנת PWA', pay: 1250, xp: 550, time: 18000, icon: '💻', req: 'תכנות PWA' },
+    { id: 'j9', name: 'מנהל רשת', pay: 2100, xp: 950, time: 25000, icon: '🌐', req: 'ניהול רשת' },
+    { id: 'j10', name: 'ארכיטקט מערכות', pay: 4500, xp: 2000, time: 35000, icon: '🏛️', req: 'ניהול טכנולוגי' }
 ];
 
 const stockList = [
@@ -19,49 +20,56 @@ const stockList = [
     { id: 'TSLA', name: 'Tesla', price: 920, trend: 0, icon: '⚡' },
     { id: 'NVDA', name: 'Nvidia', price: 420, trend: 0, icon: '🎮' },
     { id: 'BTC',  name: 'Bitcoin', price: 65000, trend: 0, icon: '₿' },
-    { id: 'ELAL', name: 'אל-על', price: 12, trend: 0, icon: '✈️' }
+    { id: 'ELAL', name: 'אל-על', price: 12, trend: 0, icon: '✈️' },
+    { id: 'AMZN', name: 'Amazon', price: 180, trend: 0, icon: '📦' }
 ];
 
 const skillList = [
-    { name: 'רישיון נשק', price: 4500, icon: '🔫' },
-    { name: 'תכנות', price: 10000, icon: '📜' },
-    { name: 'רישיון משאית', price: 12000, icon: '🚛' },
-    { name: 'קורס פיקודי', price: 14500, icon: '🎖️' },
-    { name: 'ניהול רשת', price: 22000, icon: '🧠' },
-    { name: 'ניהול טכנולוגי', price: 45000, icon: '🚀' }
+    { id: 's1', name: 'רישיון נשק', price: 4500, icon: '🔫', desc: 'מאפשר עבודה באבטחה חמושה' },
+    { id: 's2', name: 'רישיון משאית', price: 12000, icon: '🚛', desc: 'מאפשר עבודה כנהג משאית' },
+    { id: 's3', name: 'קורס פיקודי', price: 14500, icon: '🎖️', desc: 'מאפשר עבודה כסוהר' },
+    { id: 's4', name: 'ניהול זמן', price: 2500, icon: '⏱️', desc: 'מעלה צבירת XP ב-15%' },
+    { id: 's5', name: 'שיווק דיגיטלי', price: 5500, icon: '📱', desc: 'בונוס להכנסה פסיבית' },
+    { id: 's6', name: 'תכנות PWA', price: 15000, icon: '💻', desc: 'פתיחת משרות פיתוח תוכנה' },
+    { id: 's7', name: 'ניתוח טכני', price: 8500, icon: '📊', desc: 'הנחה של 5% בקניית מניות' },
+    { id: 's8', name: 'ניהול רשת', price: 22000, icon: '🧠', desc: 'הכשרה למנהלי מערכות' }
 ];
 
 const carList = [
     { name: 'קורקינט', price: 3000, speed: 1.2, icon: '🛴' },
     { name: 'אופנוע', price: 16000, speed: 1.6, icon: '🛵' },
-    { name: 'סקודה', price: 90000, speed: 2.3, icon: '🚗' },
+    { name: 'סקודה', price: 95000, speed: 2.3, icon: '🚗' },
+    { name: 'BMW M4', price: 480000, speed: 3.8, icon: '🏎️' },
     { name: 'טסלה S', price: 280000, speed: 4.5, icon: '⚡' },
-    { name: 'פרארי', price: 1800000, speed: 8, icon: '🏎️' }
+    { name: 'Audi R8', price: 850000, speed: 5.5, icon: '🏎️' },
+    { name: 'Porsche 911', price: 1300000, speed: 7.0, icon: '🐎' },
+    { name: 'Lamborghini', price: 2500000, speed: 9.5, icon: '🐂' },
+    { name: 'Bugatti', price: 6000000, speed: 13.0, icon: '💎' },
+    { name: 'מסוק פרטי', price: 18000000, speed: 28.0, icon: '🚁' }
 ];
 
-// --- עדכון בורסה אוטומטי (כל 5 שניות) ---
+// --- לוגיקה ועדכונים אוטומטיים ---
+
 setInterval(() => {
     stockList.forEach(s => {
-        const change = (Math.random() * 0.06) - 0.03; // תנודה של עד 3%
+        const change = (Math.random() * 0.10) - 0.05; // תנודה של עד 5%
         s.price *= (1 + change);
-        if (s.price < 5) s.price = 5; // מחיר מינימום
+        if (s.price < 5) s.price = 5;
         s.trend = change;
     });
-    // רענון הטאב רק אם המשתמש נמצא בו
     const content = document.getElementById('content');
     const activeNav = document.querySelector('.topbar button.active');
-    if (activeNav && activeNav.id.includes('invest')) {
-        drawInvest(content);
-    }
+    if (activeNav && activeNav.id === 'nav-invest') drawInvest(content);
 }, 5000);
 
-// --- פונקציות תצוגה ---
+// --- פונקציות תצוגה (UI Rendering) ---
 
 function drawWork(c) {
+    if (!c) return;
     let html = `<h3>⚒️ מרכז תעסוקה</h3><div class="grid-2">`;
     jobList.forEach(j => {
-        const hasSkill = !j.req || skills.includes(j.req);
-        const hasCar = !j.reqCar || (Array.isArray(cars) && cars.length > 0);
+        const hasSkill = !j.req || (typeof skills !== 'undefined' && skills.includes(j.req));
+        const hasCar = !j.reqCar || (typeof cars !== 'undefined' && cars.length > 0);
         const canWork = hasSkill && hasCar;
 
         html += `
@@ -69,13 +77,11 @@ function drawWork(c) {
                 <div style="font-size:26px; margin-bottom:5px;">${j.icon}</div>
                 <div style="font-weight:bold; font-size:13px; min-height:35px;">${j.name}</div>
                 <div style="color:var(--green); font-size:12px; margin-bottom:10px;">${j.pay.toLocaleString()}₪</div>
-                
                 <div id="prog-cont-${j.id}" style="display:none; width:100%; background:rgba(0,0,0,0.3); height:6px; border-radius:10px; margin-bottom:10px; overflow:hidden;">
                     <div id="bar-${j.id}" style="width:0%; height:100%; background:var(--blue); transition: width linear;"></div>
                 </div>
-
                 <button class="sys-btn" id="job-${j.id}" style="width:100%;" onclick="startWork('${j.id}')" ${canWork ? '' : 'disabled'}>
-                    ${canWork ? 'בצע עבודה' : 'נעול'}
+                    ${canWork ? 'בצע' : 'נעול'}
                 </button>
             </div>`;
     });
@@ -86,12 +92,11 @@ function startWork(id) {
     const j = jobList.find(x => x.id === id);
     if (!j) return;
     const btn = document.getElementById(`job-${j.id}`);
-    const container = document.getElementById(`prog-cont-${j.id}`);
     const bar = document.getElementById(`bar-${j.id}`);
+    const container = document.getElementById(`prog-cont-${j.id}`);
     
-    // בונוס מהירות מהרכב
-    const currentSpeed = typeof carSpeed !== 'undefined' ? carSpeed : 1;
-    const actualTime = j.time / currentSpeed;
+    let speed = (typeof carSpeed !== 'undefined') ? carSpeed : 1;
+    const actualTime = j.time / speed;
 
     if(btn) btn.disabled = true;
     if(container) container.style.display = "block";
@@ -110,26 +115,20 @@ function startWork(id) {
 }
 
 function drawInvest(c) {
-    let html = `<h3>📈 מניות וקריפטו</h3><div class="grid-1">`;
+    if (!c) return;
+    let html = `<h3>📈 בורסה ומסחר</h3><div class="grid-2">`;
     stockList.forEach(s => {
-        const owned = invOwned[s.id] || 0;
+        const owned = (typeof invOwned !== 'undefined' && invOwned[s.id]) ? invOwned[s.id] : 0;
         const color = s.trend >= 0 ? 'var(--green)' : 'var(--red)';
         html += `
-            <div class="card fade-in" style="display:flex; justify-content:space-between; align-items:center; border-right: 4px solid ${color}">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div style="font-size:22px;">${s.icon}</div>
-                    <div>
-                        <div style="font-weight:bold;">${s.name}</div>
-                        <small style="opacity:0.6;">בבעלותך: ${owned}</small>
-                    </div>
-                </div>
-                <div style="text-align:left;">
-                    <div style="color:${color}; font-weight:bold;">${s.price.toLocaleString(undefined,{maximumFractionDigits:2})}₪</div>
-                    <small style="color:${color}; font-size:10px;">${s.trend >= 0 ? '▲' : '▼'} ${(Math.abs(s.trend)*100).toFixed(2)}%</small>
-                </div>
-                <div style="display:flex; gap:6px;">
-                    <button class="sys-btn" style="padding:6px 12px;" onclick="buyStock('${s.id}')">קנה</button>
-                    <button class="sys-btn" style="padding:6px 12px; background:rgba(239,68,68,0.15); color:var(--red);" onclick="sellStock('${s.id}')">מכור</button>
+            <div class="card fade-in" style="text-align:center; border-bottom: 3px solid ${color}; padding:10px;">
+                <div style="font-size:24px;">${s.icon}</div>
+                <div style="font-weight:bold; font-size:14px;">${s.name}</div>
+                <div style="color:${color}; font-size:13px; font-weight:bold;">₪${s.price.toFixed(2)}</div>
+                <small style="opacity:0.6; display:block; margin-bottom:10px;">בבעלותך: ${owned}</small>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                    <button class="sys-btn" style="padding:5px; font-size:11px;" onclick="buyStock('${s.id}')">קנה</button>
+                    <button class="sys-btn" style="padding:5px; font-size:11px; background:rgba(239,68,68,0.1); color:var(--red);" onclick="sellStock('${s.id}')">מכור</button>
                 </div>
             </div>`;
     });
@@ -140,64 +139,37 @@ function buyStock(id) {
     const s = stockList.find(x => x.id === id);
     if (money >= s.price) {
         money -= s.price;
+        if (typeof invOwned === 'undefined') window.invOwned = {};
         invOwned[id] = (invOwned[id] || 0) + 1;
-        showMsg(`רכשת מניית ${s.name}`, "var(--blue)");
+        showMsg(`רכשת ${s.name}`, "var(--blue)");
         updateUI(); saveGame(); drawInvest(document.getElementById('content'));
-    } else { showMsg("אין לך מספיק מזומן", "var(--red)"); }
+    } else { showMsg("אין לך מספיק כסף", "var(--red)"); }
 }
 
 function sellStock(id) {
-    if (invOwned[id] > 0) {
+    if (invOwned && invOwned[id] > 0) {
         const s = stockList.find(x => x.id === id);
         money += s.price;
         invOwned[id] -= 1;
-        showMsg(`מכרת מניית ${s.name}`, "var(--yellow)");
+        showMsg(`מכרת ${s.name}`, "var(--yellow)");
         updateUI(); saveGame(); drawInvest(document.getElementById('content'));
     }
 }
 
-function drawTasks(c) {
-    c.innerHTML = `
-        <div class="card fade-in" style="text-align:center; padding:30px; border: 2px solid var(--yellow);">
-            <div style="font-size:50px; margin-bottom:15px;">🎰</div>
-            <h2 style="color:var(--yellow); margin:0;">קזינו מזל</h2>
-            <p style="font-size:12px; opacity:0.7;">סיכוי זכייה: 45% | פרס: פי 2</p>
-            <input type="number" id="gamble-amt" placeholder="סכום להימור..." style="width:100%; padding:15px; margin:20px 0; text-align:center; background:#000; color:#fff; border:1px solid #333; border-radius:10px;">
-            <button class="action" style="background:var(--yellow); color:#000;" onclick="playCasino()">סובב את הרולטה!</button>
-        </div>`;
-}
-
-function playCasino() {
-    const input = document.getElementById('gamble-amt');
-    const amt = parseInt(input.value);
-    if(!amt || amt <= 0 || amt > money) return showMsg("סכום לא תקין או שאין לך מספיק כסף", "var(--red)");
-    
-    money -= amt;
-    updateUI();
-    showMsg("🎲 הרולטה מסתובבת...", "var(--white)");
-
-    setTimeout(() => {
-        if (Math.random() > 0.55) {
-            const win = amt * 2;
-            money += win;
-            showMsg(`🎉 זכית ב-${win.toLocaleString()}₪!`, "var(--green)");
-        } else {
-            showMsg("😢 הפסדת הפעם. אולי פעם הבאה?", "var(--red)");
-        }
-        updateUI(); saveGame();
-    }, 1200);
-}
-
 function drawSkills(c) {
-    let html = `<h3>🎓 כישורים והכשרות</h3><div class="grid-2">`;
+    if (!c) return;
+    let html = `<h3>🎓 כישורים והכשרות</h3><div class="grid-1">`;
     skillList.forEach(s => {
-        const has = skills.includes(s.name);
+        const has = (typeof skills !== 'undefined' && skills.includes(s.name));
         html += `
-            <div class="card" style="text-align:center;">
-                <div style="font-size:24px;">${s.icon}</div>
-                <div style="font-weight:bold; font-size:13px; margin:5px 0;">${s.name}</div>
-                <button class="sys-btn" style="width:100%;" onclick="buySkill('${s.name}', ${s.price})" ${has ? 'disabled' : ''}>
-                    ${has ? '✅ נלמד' : s.price.toLocaleString() + '₪'}
+            <div class="card fade-in" style="display:flex; align-items:center; gap:15px; border-left: 4px solid ${has ? 'var(--green)' : 'var(--blue)'}">
+                <div style="font-size:28px;">${s.icon}</div>
+                <div style="flex:1;">
+                    <div style="font-weight:bold;">${s.name}</div>
+                    <small style="opacity:0.6;">${s.desc}</small>
+                </div>
+                <button class="sys-btn" onclick="buySkill('${s.name}', ${s.price})" ${has ? 'disabled' : ''}>
+                    ${has ? '✅' : '₪' + s.price.toLocaleString()}
                 </button>
             </div>`;
     });
@@ -207,23 +179,25 @@ function drawSkills(c) {
 function buySkill(name, price) {
     if (money >= price) {
         money -= price;
+        if (typeof skills === 'undefined') window.skills = [];
         skills.push(name);
         showMsg(`למדת ${name}!`, "var(--green)");
         updateUI(); saveGame(); drawSkills(document.getElementById('content'));
-    } else { showMsg("אין לך מספיק כסף לקורס זה", "var(--red)"); }
+    } else { showMsg("אין לך מספיק כסף", "var(--red)"); }
 }
 
 function drawCars(c) {
-    let html = `<h3>🏎️ סוכנות רכבים</h3><div class="grid-2">`;
+    if (!c) return;
+    let html = `<h3>🏎️ סוכנות רכבי יוקרה</h3><div class="grid-2">`;
     carList.forEach(car => {
-        const has = cars.includes(car.name);
+        const has = (typeof cars !== 'undefined' && cars.includes(car.name));
         html += `
-            <div class="card" style="text-align:center;">
-                <div style="font-size:24px;">${car.icon}</div>
-                <div style="font-weight:bold; font-size:13px; margin:5px 0;">${car.name}</div>
-                <small style="display:block; margin-bottom:10px; opacity:0.6;">מהירות: x${car.speed}</small>
-                <button class="sys-btn" style="width:100%;" onclick="buyCar('${car.name}', ${car.price}, ${car.speed})" ${has ? 'disabled' : ''}>
-                    ${has ? '🚗 במוסך' : car.price.toLocaleString() + '₪'}
+            <div class="card fade-in" style="text-align:center; border-bottom: 3px solid ${has ? 'var(--green)' : 'var(--blue)'};">
+                <div style="font-size:30px; margin-bottom:5px;">${car.icon}</div>
+                <div style="font-weight:bold; font-size:14px;">${car.name}</div>
+                <small style="display:block; margin:5px 0; opacity:0.7; color:var(--yellow);">מהירות: x${car.speed}</small>
+                <button class="sys-btn" style="width:100%; font-weight:bold;" onclick="buyCar('${car.name}', ${car.price}, ${car.speed})" ${has ? 'disabled' : ''}>
+                    ${has ? 'בבעלותך ✅' : '₪' + car.price.toLocaleString()}
                 </button>
             </div>`;
     });
@@ -233,9 +207,42 @@ function drawCars(c) {
 function buyCar(name, price, speed) {
     if (money >= price) {
         money -= price;
-        cars.push(name);
-        carSpeed = speed;
-        showMsg(`תתחדש על ה${name}!`, "var(--green)");
+        if (typeof window.cars === 'undefined') window.cars = [];
+        window.cars.push(name);
+        window.carSpeed = speed; 
+        showMsg(`תתחדש על ה${name}! המהירות עלתה.`, "var(--green)");
         updateUI(); saveGame(); drawCars(document.getElementById('content'));
-    } else { showMsg("אין לך מספיק כסף לרכב זה", "var(--red)"); }
+    } else { showMsg("אין לך מספיק כסף", "var(--red)"); }
+}
+
+function drawTasks(c) {
+    if (!c) return;
+    c.innerHTML = `
+        <div class="card fade-in" style="text-align:center; padding:30px; border: 2px solid var(--yellow);">
+            <div style="font-size:50px; margin-bottom:15px;">🎰</div>
+            <h2 style="color:var(--yellow); margin:0;">קזינו מזל</h2>
+            <input type="number" id="gamble-amt" placeholder="סכום להימור..." style="width:100%; padding:15px; margin:20px 0; text-align:center; background:#000; color:#fff; border:1px solid #333; border-radius:10px;">
+            <button class="action" style="background:var(--yellow); color:#000; width:100%;" onclick="playCasino()">המר עכשיו!</button>
+        </div>`;
+}
+
+function playCasino() {
+    const input = document.getElementById('gamble-amt');
+    const amt = parseInt(input.value);
+    if(!amt || amt <= 0 || amt > money) return showMsg("סכום לא תקין", "var(--red)");
+    
+    money -= amt;
+    updateUI();
+    showMsg("🎲 מסובב...", "var(--white)");
+
+    setTimeout(() => {
+        if (Math.random() > 0.6) {
+            const win = Math.floor(amt * 2.5);
+            money += win;
+            showMsg(`🎉 זכית ב-₪${win.toLocaleString()}!`, "var(--green)");
+        } else {
+            showMsg("😢 הפסדת.", "var(--red)");
+        }
+        updateUI(); saveGame();
+    }, 1000);
 }
