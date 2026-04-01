@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.2.7 - XP System & Box Messages */
+/* Smart Money Pro - js/ui.js - v6.2.8 - Final Logic & UI Sync */
 
 let deferredPrompt;
 let adminMessage = localStorage.getItem('admin_msg') || "ברוכים הבאים אלכסיי! המערכת מוכנה.";
@@ -14,7 +14,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 function getLevelData(totalXp) {
     let level = 1;
     let xpNeededForNext = 1000; // בסיס רמה 1
-    let tempXp = totalXp || 0;
+    let tempXp = Number(totalXp) || 0;
 
     // נוסחה: כל רמה עולה ב-25% קושי + 500 נקודות קבועות
     while (tempXp >= xpNeededForNext) {
@@ -33,26 +33,23 @@ function getLevelData(totalXp) {
 }
 
 /**
- * הצגת הודעה בתוך תיבה מעל בר הכפתורים (Box Style)
+ * הצגת הודעה בתוך תיבה צפה בתחתית (Box Style)
  */
 function showMsg(text, color = "var(--blue)") {
     const msgEl = document.getElementById('msg');
     if (!msgEl) return;
     
-    // הזרקת התיבה המעוצבת לפי ה-CSS באינדקס
-    msgEl.innerHTML = `
-        <div class="msg-box" style="border-color: ${color};">
-            ${text}
-        </div>`;
+    // הזרקת התיבה המעוצבת
+    msgEl.innerHTML = `<div class="msg-box" style="border-color: ${color};">${text}</div>`;
     
-    // הצגת התיבה עם אפקט
+    // אנימציית כניסה (עולה מלמטה)
     msgEl.style.opacity = "1";
     msgEl.style.transform = "translateX(-50%) translateY(0)";
 
     // הסתרה לאחר 3 שניות
     setTimeout(() => {
         msgEl.style.opacity = "0";
-        msgEl.style.transform = "translateX(-50%) translateY(15px)";
+        msgEl.style.transform = "translateX(-50%) translateY(20px)";
     }, 3000);
 }
 
@@ -62,13 +59,10 @@ function showMsg(text, color = "var(--blue)") {
 function drawHome(c) {
     if (!c) return;
     
-    // סנכרון אינוונטרי אם קיים
+    // סנכרון אינוונטרי
     if (typeof updateGlobalInventory === 'function') updateGlobalInventory();
 
     const xpValue = (typeof lifeXP !== 'undefined') ? lifeXP : 0;
-    const currentMoney = (typeof money !== 'undefined') ? money : 0;
-    
-    // חישוב נתוני רמה
     const ld = getLevelData(xpValue);
 
     c.innerHTML = `
@@ -76,17 +70,17 @@ function drawHome(c) {
             <div class="card" style="border-right: 4px solid var(--purple); background: rgba(168, 85, 247, 0.05); margin-bottom:15px; position:relative;">
                 <small style="color:var(--purple); font-weight:bold;">📢 עדכונים</small>
                 <p id="admin-text" style="margin:5px 0 0 0; font-size:13px; font-weight:500;">${adminMessage}</p>
-                <button class="sys-btn" onclick="editAdminMsg()" style="position:absolute; left:10px; top:10px; padding:5px; font-size:12px; opacity:0.6;">✏️</button>
+                <button class="sys-btn" onclick="editAdminMsg()" style="position:absolute; left:10px; top:10px; padding:5px; font-size:12px; opacity:0.6; background:none; border:none; color:var(--blue);">✏️</button>
             </div>
 
             <div class="card profile-card" style="background: linear-gradient(145deg, #1e293b, #111827);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:15px;">
                     <div>
                         <span style="font-size:12px; opacity:0.6; display:block; margin-bottom:2px;">דרגת המשתמש</span>
-                        <div style="font-size:28px; font-weight:900; color:var(--blue); letter-spacing:1px;">LEVEL ${ld.level}</div>
+                        <div id="home-level-val" style="font-size:28px; font-weight:900; color:var(--blue); letter-spacing:1px;">LEVEL ${ld.level}</div>
                     </div>
                     <div style="text-align:left;">
-                        <span style="font-size:11px; opacity:0.6;">התקדמות כללית</span>
+                        <span style="font-size:11px; opacity:0.6;">התקדמות</span>
                         <div style="font-size:14px; font-weight:bold; color:var(--green);">${Math.floor(ld.progressPercent)}%</div>
                     </div>
                 </div>
@@ -111,8 +105,8 @@ function drawHome(c) {
             </div>
 
             <div class="grid-2" style="margin-top:15px; gap:12px;">
-                <button class="action" onclick="saveGame()" style="background:#1e293b; color:var(--blue); border:1px solid var(--blue); padding:15px; font-weight:bold;">💾 שמור התקדמות</button>
-                <button class="action daily-btn" onclick="getDailyGift()" style="background:var(--purple); color:#fff; padding:15px; font-weight:bold; box-shadow:0 4px 12px rgba(168,85,247,0.3);">🎁 מתנה יומית</button>
+                <button class="action" onclick="saveGame()" style="background:#1e293b; color:var(--blue); border:1px solid var(--blue); padding:15px; font-weight:bold;">💾 שמור</button>
+                <button class="action daily-btn" onclick="getDailyGift()" style="background:var(--purple); color:#fff; padding:15px; font-weight:bold; box-shadow:0 4px 12px rgba(168,85,247,0.3);">🎁 מתנה</button>
             </div>
         </div>
     `;
@@ -156,14 +150,14 @@ function renderInventoryIcons() {
     const inv = (typeof inventory !== 'undefined' && Array.isArray(inventory)) ? inventory : [];
     if (inv.length === 0) return '<span style="grid-column: 1/6; font-size:11px; opacity:0.3; text-align:center; padding:10px;">אין נכסים כרגע</span>';
     
-    return inv.slice(0, 10).map(item => { // מציג עד 10 ראשונים בבית
+    return inv.slice(0, 10).map(item => {
         const icon = (typeof item === 'object') ? (item.icon || '📦') : '📦';
         return `<div class="inv-item-slot" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; display:flex; justify-content:center; align-items:center; aspect-ratio:1/1; font-size:20px;">${icon}</div>`;
     }).join('');
 }
 
 /**
- * עדכון UI כללי (סנכרון אלמנטים קבועים)
+ * עדכון UI כללי
  */
 function updateUI() {
     try {
@@ -173,7 +167,6 @@ function updateUI() {
         
         const ld = getLevelData(xp);
         
-        // עדכון טקסטים
         const moneyEl = document.getElementById('money');
         const bankEl = document.getElementById('bank');
         const levelEl = document.getElementById('life-level-ui');
@@ -182,7 +175,6 @@ function updateUI() {
         if(bankEl) bankEl.innerText = Math.floor(b).toLocaleString();
         if(levelEl) levelEl.innerText = ld.level;
 
-        // עדכון בר התקדמות אם קיים בדף הבית
         const bar = document.getElementById('xp-progress-bar');
         const xpTxt = document.getElementById('xp-text-detail');
         const levelValHome = document.getElementById('home-level-val');
