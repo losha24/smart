@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.1.3</title>
+    <title>Smart Money Pro | v6.1.4</title>
     
-    <link rel="manifest" href="manifest.json?v=6.1.3">
+    <link rel="manifest" href="manifest.json?v=6.1.4">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.1.3">
+    <link rel="stylesheet" href="style.css?v=6.1.4">
     <style>
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
         .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid var(--blue); }
         
+        /* עיצוב הודעת מערכת/מנהל */
         .admin-box {
             background: rgba(59, 130, 246, 0.15);
             border-right: 4px solid var(--blue);
@@ -26,8 +27,22 @@
             color: #fff;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        /* תיקון קטן לנראות כפתורי הניווט */
-        .topbar button.active { background: var(--blue); color: #000; font-weight: bold; }
+
+        /* הדגשת כפתור ניווט פעיל */
+        .topbar button.active { 
+            background: var(--blue) !important; 
+            color: #000 !important; 
+            font-weight: bold; 
+            box-shadow: 0 0 10px var(--blue);
+        }
+
+        /* תיקון לבאר ההודעות הצף */
+        #msg { 
+            pointer-events: none; 
+            transition: opacity 0.4s ease, transform 0.4s ease; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            z-index: 10001;
+        }
     </style>
 </head>
 <body class="dark-theme">
@@ -42,7 +57,7 @@
         <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
     </div>
 
-    <div id="msg" class="status-msg" style="display:none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 10px 20px; border-radius: 10px; color: white; text-align: center; min-width: 200px;"></div>
+    <div id="msg" class="status-msg" style="opacity: 0; position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 12px; color: white; text-align: center; min-width: 250px;"></div>
 
     <nav class="topbar">
         <div class="nav-row">
@@ -63,39 +78,38 @@
         <div class="nav-row">
             <button onclick="openTab('market')" id="nav-market">🛒 שוק</button>
             <button onclick="document.getElementById('installModal').style.display='flex'" class="sys-btn">📲</button>
-            <button onclick="forceUpdate()" class="sys-btn">🔄</button>
+            <button onclick="location.reload()" class="sys-btn">🔄</button>
             <button onclick="toggleTheme()" class="sys-btn">🌓</button>
         </div>
     </nav>
 
-    <main id="content" class="fade-in container"></main>
+    <main id="content" class="container fade-in"></main>
 
-    <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
+    <div id="installModal" class="modal-overlay" onclick="this.style.display='none'">
         <div class="modal-card" onclick="event.stopPropagation()">
-            <h3>📲 התקנה</h3>
+            <h3>📲 התקנת אפליקציה</h3>
             <p id="android-instr">לחץ על 3 הנקודות בתפריט ובחר "התקן אפליקציה".</p>
             <p id="ios-instr" style="display:none;">לחץ על "שתף" ואז "הוסף למסך הבית".</p>
-            <button class="action" onclick="closeInstallGuide()" style="background:var(--red); color:#fff; width:100%;">סגור</button>
+            <button class="action" onclick="document.getElementById('installModal').style.display='none'" style="background:var(--red); color:#fff; width:100%;">סגור</button>
         </div>
     </div>
 
-    <footer class="main-footer" style="padding-bottom: 30px;">
-        © 2026 Smart Money Pro v6.1.3 | אלכסיי זבודיסקר
+    <footer class="main-footer" style="padding: 20px 0 40px 0; opacity: 0.4; font-size: 10px;">
+        © 2026 Smart Money Pro | נוצר ע"י אלכסיי זבודיסקר
     </footer>
 
     <script src="js/core.js?v=6.3.2"></script>
     <script src="js/ui.js?v=6.3.0"></script>
-    <script src="js/activities.js?v=6.5.0"></script>
+    <script src="js/activities.js?v=6.5.2"></script>
     <script src="js/economy.js?v=6.1.5"></script>
 
     <script>
-        const adminMsgText = "ברוכים הבאים אלכסיי! המערכת מסונכרנת (v6.1.3).";
-
+        // פונקציית ניווט חכמה
         function openTab(tabName) {
             const content = document.getElementById('content');
             if (!content) return;
 
-            // עדכון ויזואלי של כפתורי הניווט
+            // עדכון ויזואלי של הכפתורים
             document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById('nav-' + tabName);
             if (activeBtn) activeBtn.classList.add('active');
@@ -103,42 +117,54 @@
             content.innerHTML = ""; 
             window.scrollTo(0,0);
 
-            try {
-                if (tabName === 'home') {
-                    if (typeof drawHome === 'function') drawHome(content);
-                    
-                    // הוספת הודעת מנהל
-                    const adminDiv = document.createElement('div');
-                    adminDiv.className = 'admin-box fade-in';
-                    adminDiv.innerHTML = `📢 <b>מערכת:</b> ${adminMsgText}`;
-                    content.prepend(adminDiv);
-                } 
-                else if (tabName === 'work' && typeof drawWork === 'function') drawWork(content);
-                else if (tabName === 'invest' && typeof drawInvest === 'function') drawInvest(content);
-                else if (tabName === 'tasks' && typeof drawTasks === 'function') drawTasks(content);
-                else if (tabName === 'business' && typeof drawBusiness === 'function') drawBusiness(content);
-                else if (tabName === 'estate' && typeof drawEstate === 'function') drawEstate(content);
-                else if (tabName === 'skills' && typeof drawSkills === 'function') drawSkills(content);
-                else if (tabName === 'bank' && typeof drawBank === 'function') drawBank(content);
-                else if (tabName === 'cars' && typeof drawCars === 'function') drawCars(content);
-                else if (tabName === 'market' && typeof drawMarket === 'function') drawMarket(content);
-                
-                // עדכון ה-UI לאחר החלפת הטאב
-                if (typeof updateUI === 'function') updateUI();
-            } catch (e) {
-                console.error("Tab Error:", e);
-                content.innerHTML = `<div class="card" style="color:var(--red)">שגיאה בטעינת הטאב: ${tabName}</div>`;
+            // מפת פונקציות לכל טאב
+            const routes = {
+                'home': typeof drawHome === 'function' ? drawHome : null,
+                'work': typeof drawWork === 'function' ? drawWork : null,
+                'invest': typeof drawInvest === 'function' ? drawInvest : null,
+                'tasks': typeof drawTasks === 'function' ? drawTasks : null,
+                'business': typeof drawBusiness === 'function' ? drawBusiness : null,
+                'estate': typeof drawEstate === 'function' ? drawEstate : null,
+                'skills': typeof drawSkills === 'function' ? drawSkills : null,
+                'bank': typeof drawBank === 'function' ? drawBank : null,
+                'cars': typeof drawCars === 'function' ? drawCars : null,
+                'market': typeof drawMarket === 'function' ? drawMarket : null
+            };
+
+            if (routes[tabName]) {
+                try {
+                    routes[tabName](content);
+                    // הודעה מיוחדת לטאב הבית
+                    if (tabName === 'home') {
+                        const adminDiv = document.createElement('div');
+                        adminDiv.className = 'admin-box fade-in';
+                        adminDiv.innerHTML = `📢 <b>מערכת:</b> ברוך הבא אלכסיי. הגרסה העדכנית (v6.1.4) מוכנה.`;
+                        content.prepend(adminDiv);
+                    }
+                } catch (e) {
+                    console.error("Error drawing tab:", e);
+                    content.innerHTML = `<div class="card">שגיאה בטעינת הטאב: ${tabName}</div>`;
+                }
+            } else {
+                content.innerHTML = `<div class="card" style="text-align:center; padding:50px;">
+                    <h3>🚧 בקרוב</h3>
+                    <p>האזור <b>${tabName}</b> נמצא כרגע בשלבי פיתוח.</p>
+                </div>`;
             }
+
+            // עדכון הנתונים בתצוגה
+            if (typeof updateUI === 'function') updateUI();
         }
 
-        function closeInstallGuide() { document.getElementById('installModal').style.display = 'none'; }
-
+        // אתחול האפליקציה
         document.addEventListener('DOMContentLoaded', () => {
-            // אתחול המשחק מה-Core אם הוא עוד לא רץ
+            // טעינת נתונים מה-Core
             if (typeof loadGame === 'function') loadGame();
             
+            // פתיחת טאב הבית
             openTab('home');
 
+            // זיהוי מכשיר להוראות התקנה
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 document.getElementById('android-instr').style.display = 'none';
                 document.getElementById('ios-instr').style.display = 'block';
