@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v6.5.5 - Final Production */
+/* Smart Money Pro - js/activities.js - v6.6.0 - Enhanced Inventory & Passive Income */
 
 // --- מאגרי נתונים ---
 
@@ -48,21 +48,66 @@ const carList = [
     { name: 'מסוק פרטי', price: 18000000, speed: 28.0, icon: '🚁' }
 ];
 
-// --- לוגיקה ועדכונים אוטומטיים ---
+// --- לוגיקה פנימית ומערכת נכסים ---
+
+function updateGlobalInventory() {
+    window.inventory = []; 
+    if (window.skills) window.skills.forEach(s => {
+        const item = skillList.find(sl => sl.name === s);
+        window.inventory.push({ name: s, icon: item ? item.icon : '🎓' });
+    });
+    if (window.cars) window.cars.forEach(c => {
+        const item = carList.find(cl => cl.name === c);
+        window.inventory.push({ name: c, icon: item ? item.icon : '🚗' });
+    });
+    // תמיכה בנדל"ן ועסקים עתידיים
+    if (window.properties) window.properties.forEach(p => window.inventory.push({ name: p.name, icon: '🏠' }));
+    if (window.businesses) window.businesses.forEach(b => window.inventory.push({ name: b.name, icon: '🏢' }));
+}
 
 setInterval(() => {
     stockList.forEach(s => {
-        const change = (Math.random() * 0.10) - 0.05; // תנודה של עד 5%
+        const change = (Math.random() * 0.10) - 0.05;
         s.price *= (1 + change);
         if (s.price < 5) s.price = 5;
         s.trend = change;
     });
-    const content = document.getElementById('content');
     const activeNav = document.querySelector('.topbar button.active');
-    if (activeNav && activeNav.id === 'nav-invest') drawInvest(content);
+    if (activeNav && activeNav.id === 'nav-invest') drawInvest(document.getElementById('content'));
 }, 5000);
 
-// --- פונקציות תצוגה (UI Rendering) ---
+// --- פונקציות עבודה ---
+
+function startWork(id) {
+    const j = jobList.find(x => x.id === id);
+    if (!j) return;
+    const btn = document.getElementById(`job-${j.id}`);
+    const bar = document.getElementById(`bar-${j.id}`);
+    const container = document.getElementById(`prog-cont-${j.id}`);
+    
+    let speed = (typeof carSpeed !== 'undefined') ? carSpeed : 1;
+    const actualTime = j.time / speed;
+
+    if(btn) btn.disabled = true;
+    if(container) container.style.display = "block";
+    
+    setTimeout(() => { if(bar) { bar.style.transition = `width ${actualTime}ms linear`; bar.style.width = "100%"; } }, 50);
+
+    setTimeout(() => {
+        const passiveInc = Math.floor(j.pay * 0.30);
+        money += (j.pay + passiveInc);
+        lifeXP += j.xp;
+        
+        if(btn) btn.disabled = false;
+        if(container) container.style.display = "none";
+        if(bar) { bar.style.transition = "none"; bar.style.width = "0%"; }
+        
+        showMsg(`💰 +${j.pay.toLocaleString()}₪ | 📈 פסיבי: +${passiveInc}₪ | ✨ +${j.xp} XP`, "var(--green)");
+        updateUI(); saveGame();
+    }, actualTime);
+}
+
+// --- פונקציות תצוגה ---
 
 function drawWork(c) {
     if (!c) return;
@@ -86,32 +131,6 @@ function drawWork(c) {
             </div>`;
     });
     c.innerHTML = html + `</div>`;
-}
-
-function startWork(id) {
-    const j = jobList.find(x => x.id === id);
-    if (!j) return;
-    const btn = document.getElementById(`job-${j.id}`);
-    const bar = document.getElementById(`bar-${j.id}`);
-    const container = document.getElementById(`prog-cont-${j.id}`);
-    
-    let speed = (typeof carSpeed !== 'undefined') ? carSpeed : 1;
-    const actualTime = j.time / speed;
-
-    if(btn) btn.disabled = true;
-    if(container) container.style.display = "block";
-    
-    setTimeout(() => { if(bar) { bar.style.transition = `width ${actualTime}ms linear`; bar.style.width = "100%"; } }, 50);
-
-    setTimeout(() => {
-        money += j.pay;
-        lifeXP += j.xp;
-        if(btn) btn.disabled = false;
-        if(container) container.style.display = "none";
-        if(bar) { bar.style.transition = "none"; bar.style.width = "0%"; }
-        showMsg(`💰 +${j.pay.toLocaleString()}₪ | ✨ +${j.xp} XP`, "var(--green)");
-        updateUI(); saveGame();
-    }, actualTime);
 }
 
 function drawInvest(c) {
@@ -158,18 +177,15 @@ function sellStock(id) {
 
 function drawSkills(c) {
     if (!c) return;
-    let html = `<h3>🎓 כישורים והכשרות</h3><div class="grid-1">`;
+    let html = `<h3>🎓 כישורים והכשרות</h3><div class="grid-2">`;
     skillList.forEach(s => {
         const has = (typeof skills !== 'undefined' && skills.includes(s.name));
         html += `
-            <div class="card fade-in" style="display:flex; align-items:center; gap:15px; border-left: 4px solid ${has ? 'var(--green)' : 'var(--blue)'}">
-                <div style="font-size:28px;">${s.icon}</div>
-                <div style="flex:1;">
-                    <div style="font-weight:bold;">${s.name}</div>
-                    <small style="opacity:0.6;">${s.desc}</small>
-                </div>
-                <button class="sys-btn" onclick="buySkill('${s.name}', ${s.price})" ${has ? 'disabled' : ''}>
-                    ${has ? '✅' : '₪' + s.price.toLocaleString()}
+            <div class="card fade-in" style="text-align:center; border-top: 3px solid ${has ? 'var(--green)' : 'var(--blue)'}; padding: 15px 10px;">
+                <div style="font-size:28px; margin-bottom:5px;">${s.icon}</div>
+                <div style="font-weight:bold; font-size:13px; min-height:32px; display:flex; align-items:center; justify-content:center;">${s.name}</div>
+                <button class="sys-btn" style="width:100%; margin-top:8px;" onclick="buySkill('${s.name}', ${s.price})" ${has ? 'disabled' : ''}>
+                    ${has ? '✅ נלמד' : '₪' + s.price.toLocaleString()}
                 </button>
             </div>`;
     });
@@ -181,6 +197,7 @@ function buySkill(name, price) {
         money -= price;
         if (typeof skills === 'undefined') window.skills = [];
         skills.push(name);
+        updateGlobalInventory();
         showMsg(`למדת ${name}!`, "var(--green)");
         updateUI(); saveGame(); drawSkills(document.getElementById('content'));
     } else { showMsg("אין לך מספיק כסף", "var(--red)"); }
@@ -210,6 +227,7 @@ function buyCar(name, price, speed) {
         if (typeof window.cars === 'undefined') window.cars = [];
         window.cars.push(name);
         window.carSpeed = speed; 
+        updateGlobalInventory();
         showMsg(`תתחדש על ה${name}! המהירות עלתה.`, "var(--green)");
         updateUI(); saveGame(); drawCars(document.getElementById('content'));
     } else { showMsg("אין לך מספיק כסף", "var(--red)"); }
