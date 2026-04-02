@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.6.8</title>
+    <title>Smart Money Pro | v6.6.8 Shop Edition</title>
     
     <link rel="manifest" href="manifest.json?v=6.6.8">
     <meta name="theme-color" content="#0f172a">
@@ -73,7 +73,8 @@
             <button onclick="window.openTab('cars')" id="btnCars">🚗 רכבים</button>
         </div>
         <div class="nav-row">
-            <button onclick="window.openTab('market')" id="btnMarket">🛒 שוק</button>
+            <button onclick="window.openTab('shop')" id="btnShop">🛒 חנות</button>
+            
             <button onclick="document.getElementById('installModal').style.display='flex'" class="sys-btn">📲</button>
             <button onclick="if(window.openTab) window.openTab('home')" class="sys-btn">🔄</button>
             <button onclick="if(window.toggleTheme) window.toggleTheme()" class="sys-btn">🌓</button>
@@ -101,25 +102,20 @@
     <script src="js/ui.js?v=6.6.8"></script>
 
     <script>
-        // הודעת מנהל ברירת מחדל
-        window.adminMsgText = "שלום אלכסיי, המערכת מוכנה לגרסה 6.6.8 יציבה.";
+        window.adminMsgText = "שלום אלכסיי, עברנו למערכת חנות מעודכנת.";
 
         function closeInstallGuide() { 
             document.getElementById('installModal').style.display = 'none'; 
         }
 
-        // הפעלה ראשונית מבוקרת
         window.addEventListener('load', () => {
-            // בדיקה ש-ui.js נטען וש-openTab קיימת
             if (window.openTab) {
-                // מפעיל את דף הבית רק אם התוכן ריק
                 const content = document.getElementById("content");
                 if (content && content.innerHTML === "") {
                     window.openTab('home');
                 }
             }
             
-            // התאמה לאייפון במידת הצורך
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const androidEl = document.getElementById('android-instr');
                 const iosEl = document.getElementById('ios-instr');
