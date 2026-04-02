@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.5.0 - Final Optimized Mobile Version */
+/* Smart Money Pro - js/ui.js - v6.5.2 - Shop Edition Update */
 
 let deferredPrompt;
 let currentTab = 'home'; 
@@ -39,14 +39,16 @@ function renderUIUpdate(ld) {
     }
 }
 
-// --- מערכת ניווט עם הגנת גלילה (Anti-Jump) ---
+// --- מערכת ניווט עם הגנת גלילה (Anti-Jump) מותאמת לחנות ---
 window.openTab = function(t) {
-    // אם המשתמש כבר בטאב הזה, לא מציירים מחדש (מונע קפיצות בגלל לחיצות כפולות)
+    // מניעת רענון כפול אם הקריאה הגיעה מטיימר אוטומטי
     const isAuto = new Error().stack.includes('setInterval');
     if (t === currentTab && isAuto) return;
 
     currentTab = t; 
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
+    
+    // זיהוי כפתור ה-ID (למשל btnShop)
     const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
     const btn = document.getElementById(btnId);
     if(btn) btn.classList.add("active");
@@ -54,12 +56,12 @@ window.openTab = function(t) {
     const c = document.getElementById("content"); 
     if(!c) return;
     
-    c.style.opacity = "0.5"; // עמעום קל במקום העלמה מוחלטת למעבר חלק
+    c.style.opacity = "0.5"; 
     
     setTimeout(() => {
         c.innerHTML = "";
         
-        // בחירת הפונקציה לציור
+        // ניסיון להריץ פונקציית ציור (למשל drawShop)
         const drawFunc = window["draw" + t.charAt(0).toUpperCase() + t.slice(1)];
         if (typeof drawFunc === 'function') {
             drawFunc(c);
@@ -69,8 +71,8 @@ window.openTab = function(t) {
         
         c.style.opacity = "1";
 
-        // התיקון הקריטי: לא חוזרים לראש הדף אם אנחנו בשוק!
-        if (t !== 'market') {
+        // הגנה קריטית: אם אנחנו בחנות (shop), אל תגלול למעלה!
+        if (t !== 'shop') {
             window.scrollTo(0,0);
         }
 
@@ -78,7 +80,7 @@ window.openTab = function(t) {
     }, 100);
 };
 
-// --- דף הבית המלא (v6.5.0) ---
+// --- דף הבית המלא (v6.5.2) ---
 window.drawHome = function(c) {
     const ld = (typeof getLevelData === 'function') 
                ? getLevelData(window.lifeXP || 0) 
@@ -89,7 +91,7 @@ window.drawHome = function(c) {
             <div id="admin-box" class="admin-box">
                 <button class="edit-admin-btn" onclick="window.editAdminMsg()">✏️</button>
                 📢 <b>הודעה מהמערכת:</b><br>
-                <span style="font-size:13px;">${window.adminMsgText || "ברוכים הבאים אלכסיי! הגרסה יציבה ומסונכרנת."}</span>
+                <span style="font-size:13px;">${window.adminMsgText || "שלום אלכסיי! מערכת החנות החדשה הופעלה."}</span>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
