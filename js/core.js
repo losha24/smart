@@ -1,31 +1,32 @@
-/* Smart Money Pro - js/core.js - v6.8.9 - Ultimate Core Engine */
+/* Smart Money Pro - js/core.js - v6.9.4 - Ultimate Core Engine */
 
-const VERSION = "6.8.9";
-const SAVE_KEY = "smartMoneySave_v6_main";
+// הגדרות מערכת גלובליות
+window.VERSION = "6.9.4";
+window.SAVE_KEY = "SMP_Final_Save"; 
 
-// --- משתנים גלובליים (State) ---
-let money = 1250; 
-let bank = 0;
-let loan = 0;
-let lifeXP = 0;
-let passive = 0;
-let energy = 100;   
-let hunger = 0;     
-let lastGift = 0;   // הוספתי: מעקב למתנה יומית
-let skills = [];
-let cars = [];
-let inventory = []; 
-let invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, META:0, ELAL:0 };
-let carSpeed = 1;
-let totalEarned = 0;
-let lastSaveTime = Date.now();
-let lastKnownLevel = 1; 
-let currentTab = 'home'; 
+// --- משתנים גלובליים (מוצמדים ל-window לסנכרון מלא) ---
+window.money = 1250; 
+window.bank = 0;
+window.loan = 0;
+window.lifeXP = 0;
+window.passive = 0;
+window.energy = 100;   
+window.hunger = 0;     
+window.lastGift = 0;   
+window.skills = [];
+window.cars = [];
+window.inventory = []; 
+window.invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, META:0, ELAL:0 };
+window.carSpeed = 1;
+window.totalEarned = 0;
+window.lastSaveTime = Date.now();
+window.lastKnownLevel = 1; 
+window.currentTab = 'home'; 
 
 let msgTimer; 
 
 // --- 1. מנוע חישוב רמות דינמי ---
-function getLevelData(xp) {
+window.getLevelData = function(xp) {
     let level = 1;
     let xpForNext = 1000; 
     let totalXpThreshold = 0; 
@@ -37,7 +38,6 @@ function getLevelData(xp) {
     }
 
     let xpInCurrentLevel = xp - totalXpThreshold;
-    // הגנה שלא יעבור את ה-100% ב-UI
     let progressPercent = Math.min(99.9, (xpInCurrentLevel / xpForNext) * 100);
 
     return { 
@@ -47,35 +47,34 @@ function getLevelData(xp) {
         progressPercent,
         totalXpThreshold 
     };
-}
+};
 
 // --- 2. ניהול זיכרון ושמירה ---
-function loadGame() {
+window.loadGame = function() {
     try {
-        const saved = localStorage.getItem(SAVE_KEY);
+        const saved = localStorage.getItem(window.SAVE_KEY);
         if (saved) {
             const data = JSON.parse(saved);
             
-            money = Number(data.money) || 1250;
-            bank = Number(data.bank) || 0;
-            loan = Number(data.loan) || 0;
-            lifeXP = Number(data.lifeXP) || 0;
-            passive = Number(data.passive) || 0;
-            energy = Number(data.energy) || 100;
-            hunger = Number(data.hunger) || 0;
-            lastGift = Number(data.lastGift) || 0; // טעינת זמן מתנה
+            window.money = Number(data.money) || 1250;
+            window.bank = Number(data.bank) || 0;
+            window.loan = Number(data.loan) || 0;
+            window.lifeXP = Number(data.lifeXP) || 0;
+            window.passive = Number(data.passive) || 0;
+            window.energy = Number(data.energy) || 100;
+            window.hunger = Number(data.hunger) || 0;
+            window.lastGift = Number(data.lastGift) || 0;
             
-            skills = data.skills || [];
-            cars = data.cars || [];
-            inventory = data.inventory || [];
-            invOwned = data.invOwned || invOwned;
-            carSpeed = data.carSpeed || 1;
-            totalEarned = data.totalEarned || 0;
-            lastSaveTime = data.lastSaveTime || Date.now();
+            window.skills = data.skills || [];
+            window.cars = data.cars || [];
+            window.inventory = data.inventory || [];
+            window.invOwned = data.invOwned || window.invOwned;
+            window.carSpeed = data.carSpeed || 1;
+            window.totalEarned = data.totalEarned || 0;
+            window.lastSaveTime = data.lastSaveTime || Date.now();
             
-            lastKnownLevel = getLevelData(lifeXP).level;
+            window.lastKnownLevel = window.getLevelData(window.lifeXP).level;
             
-            // חישוב רווחים לא מקוונים
             calculateOfflineEarnings();
         }
         
@@ -85,107 +84,103 @@ function loadGame() {
     } catch (e) { 
         console.error("שגיאה בטעינה:", e); 
     }
-}
+};
 
 function calculateOfflineEarnings() {
-    if (passive > 0) {
+    if (window.passive > 0) {
         const now = Date.now();
-        let msPassed = Math.min(now - lastSaveTime, 12 * 60 * 60 * 1000); // מקסימום 12 שעות
+        let msPassed = Math.min(now - window.lastSaveTime, 12 * 60 * 60 * 1000); 
         const hoursPassed = msPassed / (1000 * 60 * 60);
-        const offlineEarnings = hoursPassed * passive;
+        const offlineEarnings = hoursPassed * window.passive;
         
         if (offlineEarnings > 10) {
-            money += offlineEarnings;
-            totalEarned += offlineEarnings;
-            // הודעה מושהית כדי שה-UI יספיק להיטען
+            window.money += offlineEarnings;
+            window.totalEarned += offlineEarnings;
             setTimeout(() => {
                 showMsg(`💰 ברוך השב אלכסיי! הרווחת ${Math.floor(offlineEarnings).toLocaleString()}₪ בזמן שלא היית`, "var(--yellow)");
-                updateUI();
-            }, 1500);
+                window.updateUI();
+            }, 2000);
         }
     }
 }
 
-function saveGame() {
+window.saveGame = function() {
     const data = { 
-        money, bank, loan, lifeXP, passive, energy, hunger, lastGift,
-        skills, cars, inventory, invOwned, carSpeed, 
-        totalEarned, lastSaveTime: Date.now() 
+        money: window.money, bank: window.bank, loan: window.loan, lifeXP: window.lifeXP, 
+        passive: window.passive, energy: window.energy, hunger: window.hunger, lastGift: window.lastGift,
+        skills: window.skills, cars: window.cars, inventory: window.inventory, invOwned: window.invOwned, 
+        carSpeed: window.carSpeed, totalEarned: window.totalEarned, lastSaveTime: Date.now() 
     };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-    console.log("Game Saved...");
-}
+    localStorage.setItem(window.SAVE_KEY, JSON.stringify(data));
+};
 
 // --- 3. מערכת הודעות (Global UI) ---
-function showMsg(txt, color = "var(--blue)") {
+window.showMsg = function(txt, color = "var(--blue)") {
     const bar = document.getElementById('status-bar');
     if (!bar) return;
     clearTimeout(msgTimer); 
     bar.innerText = txt;
     bar.style.opacity = "1";
     bar.style.transform = "translateY(0)";
-    bar.style.backgroundColor = color; // שימוש ברקע במקום צבע טקסט לנראות בטלפון
+    bar.style.backgroundColor = color; 
     
     msgTimer = setTimeout(() => {
         bar.style.opacity = "0";
         bar.style.transform = "translateY(-20px)";
     }, 4000);
-}
+};
 
 // --- 4. סנכרון ותצוגה ---
-function updateUI() {
-    const ld = getLevelData(lifeXP);
+window.updateUI = function() {
+    const ld = window.getLevelData(window.lifeXP);
     
     const mEl = document.getElementById('top-money');
     const bEl = document.getElementById('top-bank');
     const lEl = document.getElementById('life-level-ui');
 
-    if(mEl) mEl.innerText = Math.floor(money).toLocaleString() + " ₪";
-    if(bEl) bEl.innerText = Math.floor(bank).toLocaleString() + " ₪";
+    if(mEl) mEl.innerText = Math.floor(window.money).toLocaleString() + " ₪";
+    if(bEl) bEl.innerText = Math.floor(window.bank).toLocaleString() + " ₪";
     if(lEl) lEl.innerText = ld.level;
 
-    // שליחה ל-ui.js
+    // עדכון UI משני (נמצא ב-ui.js)
     if (typeof window.renderUIUpdate === 'function') {
         window.renderUIUpdate(ld);
     }
     
     checkLevelUp(ld.level);
-}
+};
 
 function checkLevelUp(currentLevel) {
-    if (currentLevel > lastKnownLevel) {
+    if (currentLevel > window.lastKnownLevel) {
         const bonus = currentLevel * 1500;
-        money += bonus;
+        window.money += bonus;
         showMsg(`🎉 רמה ${currentLevel}! קיבלת בונוס של ${bonus.toLocaleString()}₪ 🎉`, "var(--green)");
-        lastKnownLevel = currentLevel;
-        saveGame();
+        window.lastKnownLevel = currentLevel;
+        window.saveGame();
     }
 }
 
-// --- 5. מנועי זמן ---
-// שים לב: הכנסה פסיבית מנוהלת ב-economy.js כדי למנוע כפילויות
-// כאן נשאר רק עדכון ה-UI הבסיסי ושמירה אוטומטית
-setInterval(saveGame, 60000); // שמירה כל דקה
+// --- 5. מנועי זמן ושמירה ---
+setInterval(window.saveGame, 60000); // שמירה אוטומטית כל דקה
 
-// --- 6. פונקציות עזר ---
-function toggleTheme() {
+window.toggleTheme = function() {
     const isLight = document.body.classList.contains('light-theme');
     const next = isLight ? 'dark' : 'light';
     document.body.className = next + '-theme';
     localStorage.setItem('theme', next);
     showMsg(`עברת למצב ${next === 'light' ? 'יום' : 'לילה'}`);
-}
+};
 
-function resetGame() {
+window.resetGame = function() {
     if (confirm("⚠️ אלכסיי, כל ההתקדמות שלך תימחק. האם אתה בטוח?")) {
         localStorage.clear();
         location.reload();
     }
-}
+};
 
 // אתחול מערכת
 document.addEventListener("DOMContentLoaded", () => {
-    loadGame();
-    updateUI();
-    console.log(`Core v${VERSION} Initialized.`);
+    window.loadGame();
+    window.updateUI();
+    console.log(`Core v${window.VERSION} Initialized.`);
 });
