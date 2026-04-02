@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v6.8.0 - The Ultimate Update */
+/* Smart Money Pro - js/activities.js - v6.9.0 - The Ultimate Update */
 
 // --- מאגרי נתונים משולבים ומורחבים ---
 const jobList = [
@@ -78,6 +78,9 @@ const carList = [
     { name: 'מטוס פרטי', price: 15000000, speed: 25, icon: '🛩️' }
 ];
 
+// משתנה עזר לניהול הריבית בבנק
+if (window.bankTaxRate === undefined) window.bankTaxRate = 0.01;
+
 // --- מנוע בורסה חי ---
 setInterval(() => {
     stockList.forEach(s => {
@@ -92,7 +95,7 @@ setInterval(() => {
     }
 }, 4000);
 
-// --- פונקציות עבודה ---
+// --- פונקציות עבודה עם הכנסה פסיבית מדורגת ---
 window.drawWork = function(c) {
     let html = `<h3>⚒️ מרכז תעסוקה</h3><div class="grid-2">`;
     jobList.forEach(j => {
@@ -123,15 +126,22 @@ window.startWork = function(id) {
     const container = document.getElementById(`prog-cont-${j.id}`);
     const bar = document.getElementById(`bar-${j.id}`);
     const actualTime = j.time / (window.carSpeed || 1);
+
     if(btn) btn.disabled = true;
     if(container) container.style.display = "block";
     setTimeout(() => { if(bar) { bar.style.transition = `width ${actualTime}ms linear`; bar.style.width = "100%"; } }, 50);
+
     setTimeout(() => {
+        // חישוב אחוז פסיבי מדורג 30% עד 50%
+        const jobLevel = parseInt(j.id.replace('j', ''));
+        const passivePercent = 0.30 + (jobLevel - 1) * (0.20 / (jobList.length - 1));
+        const passiveAdd = j.pay * passivePercent;
+
         window.money += j.pay;
         window.lifeXP += j.xp;
-        const passiveAdd = j.pay * 0.15; 
         window.passive += passiveAdd; 
-        if(typeof showMsg === 'function') showMsg(`💰 +${j.pay}₪ | ✨ +${j.xp} XP | 🚀 פסיבי: +${passiveAdd.toFixed(2)}`, "var(--green)");
+
+        if(typeof showMsg === 'function') showMsg(`💰 +${j.pay}₪ | ✨ +${j.xp} XP | 🚀 פסיבי (+${(passivePercent*100).toFixed(0)}%): +${passiveAdd.toFixed(2)}`, "var(--green)");
         if(btn) btn.disabled = false;
         if(container) container.style.display = "none";
         if(bar) { bar.style.transition = "none"; bar.style.width = "0%"; }
@@ -169,7 +179,7 @@ window.buyEstate = function(id) {
     saveGame(); updateUI(); drawEstate(document.getElementById('content'));
 }
 
-// --- פונקציות עסקים (משוחזר v6.5.0) ---
+// --- פונקציות עסקים ---
 window.drawBusiness = function(c) {
     let html = `<h3>💼 הקמת אימפריית עסקים</h3><div class="grid-1">`;
     businessList.forEach(b => {
@@ -283,42 +293,53 @@ window.buyShopItem = function(id) {
     } else { showMsg("אין לך מספיק כסף!", "var(--red)"); }
 };
 
-// --- פונקציות בנק (משוחזר v6.5.0) ---
+// --- פונקציות בנק עם צבעים וריבית מדורגת ---
 window.drawBank = function(c) {
+    const currentTaxPercent = (window.bankTaxRate * 100).toFixed(1);
     c.innerHTML = `
-        <div class="card fade-in" style="text-align:center;">
-            <h3>🏦 בנק הפועלים</h3>
+        <div class="card fade-in" style="text-align:center; border-top: 4px solid var(--blue);">
+            <h3>🏦 בנק הפועלים - ניהול חשבון</h3>
             <div class="grid-2" style="margin-bottom:15px;">
                 <div class="card" style="background:rgba(0,0,0,0.2);">
                     <small>יתרה בבנק</small>
                     <h4 style="color:var(--blue);">${window.bank.toLocaleString()}₪</h4>
                 </div>
                 <div class="card" style="background:rgba(0,0,0,0.2);">
-                    <small>חוב הלוואה</small>
-                    <h4 style="color:var(--red);">${window.loan.toLocaleString()}₪</h4>
+                    <small>עמלת פעולה</small>
+                    <h4 style="color:var(--red);">${currentTaxPercent}%</h4>
                 </div>
             </div>
             <div class="grid-2" style="gap:10px;">
-                <button class="sys-btn" style="background:var(--blue);" onclick="bankDeposit()">הפקד 10k</button>
-                <button class="sys-btn" style="background:var(--purple);" onclick="bankWithdraw()">משוך 10k</button>
+                <button class="sys-btn" style="background:#2563eb; color:white;" onclick="bankDeposit()">הפקד 10k</button>
+                <button class="sys-btn" style="background:#a855f7; color:white;" onclick="bankWithdraw()">משוך 10k</button>
             </div>
-            <button class="action" style="background:#451a1a; color:white; width:100%; margin-top:15px;" onclick="takeLoan()">קח הלוואה (50,000₪)</button>
+            <div style="margin-top:15px; padding:10px; background:rgba(239,68,68,0.1); border-radius:8px;">
+                <div style="font-size:12px; color:var(--red); margin-bottom:5px;">חוב הלוואה: ${window.loan.toLocaleString()}₪</div>
+                <button class="action" style="background:#451a1a; color:white; width:100%;" onclick="takeLoan()">קח הלוואה (50,000₪)</button>
+            </div>
         </div>
     `;
 }
 
 window.bankDeposit = function() {
-    if (window.money >= 10000) {
-        window.money -= 10000; window.bank += 10000;
-        showMsg("💰 הפקדת 10,000₪", "var(--blue)");
+    const amount = 10000;
+    const tax = amount * window.bankTaxRate;
+    const totalToDeduct = amount + tax;
+    if (window.money >= totalToDeduct) {
+        window.money -= totalToDeduct; window.bank += amount;
+        showMsg(`💰 הפקדת 10k (עמלה: ${tax.toFixed(0)}₪)`, "var(--blue)");
+        if (window.bankTaxRate < 0.05) window.bankTaxRate += 0.005;
         saveGame(); updateUI(); drawBank(document.getElementById('content'));
-    } else { showMsg("חסר מזומן!", "var(--red)"); }
+    } else { showMsg(`חסר מזומן! דרוש ${totalToDeduct.toLocaleString()}₪`, "var(--red)"); }
 }
 
 window.bankWithdraw = function() {
-    if (window.bank >= 10000) {
-        window.bank -= 10000; window.money += 10000;
-        showMsg("💵 משכת 10,000₪", "var(--green)");
+    const amount = 10000;
+    const tax = amount * window.bankTaxRate;
+    if (window.bank >= amount) {
+        window.bank -= amount; window.money += (amount - tax);
+        showMsg(`💵 משכת 10k (עמלה: ${tax.toFixed(0)}₪)`, "#a855f7");
+        if (window.bankTaxRate < 0.05) window.bankTaxRate += 0.005;
         saveGame(); updateUI(); drawBank(document.getElementById('content'));
     } else { showMsg("אין מספיק בחיסכון!", "var(--red)"); }
 }
