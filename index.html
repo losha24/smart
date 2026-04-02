@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Smart Money Pro | v6.9.2</title>
     
-    <link rel="manifest" href="manifest.json?v=6.9.2">
+    <link rel="manifest" href="manifest.json?v=700">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.9.2">
+    <link rel="stylesheet" href="style.css?v=700">
     <style>
-        /* תיקוני שכבות - מבטיח שהודעות הסטטוס והסטטיסטיקה תמיד יראו */
+        /* שכבות הגנה ל-UI */
         .stats-bar-top {
             position: sticky;
             top: 0;
-            z-index: 999; /* מתחת להודעות הסטטוס */
+            z-index: 999;
             display: flex;
             justify-content: space-around;
             background: rgba(15, 23, 42, 0.98);
@@ -38,6 +38,7 @@
             margin-bottom: 20px;
             font-size: 14px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            color: #e2e8f0;
         }
 
         .stat-item { font-weight: bold; font-size: 14px; color: var(--text); }
@@ -73,23 +74,26 @@
         <div class="nav-row">
             <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
             <button onclick="openTab('cars')" id="btnCars">🚗 רכבים</button>
-            <button onclick="toggleTheme()" style="font-size: 18px;">🌗</button>
+            <button onclick="toggleTheme()" style="font-size: 18px; background:none; border:none; cursor:pointer;">🌗</button>
         </div>
     </nav>
 
     <main id="content" class="fade-in container" style="padding-top: 15px; padding-bottom: 100px;"></main>
 
-    <script src="js/core.js?v=6.9.2"></script>
-    <script src="js/economy.js?v=6.9.2"></script>
-    <script src="js/activities.js?v=6.9.2"></script>
-    <script src="js/ui.js?v=6.9.2"></script>
-    <script src="js/debug.js?v=6.9.2"></script>
+    <footer style="padding: 20px; text-align: center; font-size: 10px; opacity: 0.4;">
+        Smart Money Pro v6.9.2 | פותח ע"י אלכסיי זבודיסקר © 2026
+    </footer>
+
+    <script src="js/core.js?v=700"></script>
+    <script src="js/economy.js?v=700"></script>
+    <script src="js/activities.js?v=700"></script>
+    <script src="js/ui.js?v=700"></script>
+    <script src="js/debug.js?v=700"></script>
 
     <script>
-        // הודעת עדכון לאלכסיי
-        const adminMsgText = "גרסה 6.9.2 פעילה. כל הקישורים (קזינו, בורסה, בנק) תוקנו ומסונכרנים.";
+        const adminMsgText = "שלום אלכסיי! המערכת עודכנה לגרסה 6.9.2. הפרופיל הוסר והקישורים סונכרנו.";
 
-        // עטיפת ה-openTab להוספת הודעת המנהל בטאב הבית
+        // ניהול פתיחת טאבים והודעת מנהל
         const originalOpenTab = window.openTab;
         window.openTab = function(tab) {
             if (typeof originalOpenTab === 'function') originalOpenTab(tab);
@@ -107,12 +111,15 @@
             }
         };
 
-        // אתחול דף ראשון
+        // אתחול מערכת
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
-                if (typeof openTab === 'function') openTab('home');
-                console.log("System Ready.");
-            }, 500);
+                if (typeof openTab === 'function') {
+                    openTab('home');
+                } else {
+                    console.error("Critical: openTab function not found!");
+                }
+            }, 600);
         });
     </script>
 </body>
