@@ -1,32 +1,21 @@
-/* Smart Money Pro - js/economy.js - v6.8.9 - Full Sync with v6.0.5 */
+/* Smart Money Pro - js/economy.js - v6.8.9 - Full Sync */
 
-// --- משתני מערכת גלובליים ---
-let money = 1250;
-let bank = 0;
-let loan = 0;
-let lifeXP = 0;
-let passive = 0;
-let lastGift = 0;
-let skills = [];
-let cars = [];
-let inventory = []; 
-let invOwned = {}; 
-let carSpeed = 1;
+// --- הגדרות פנימיות למנוע ---
 let lastUpdate = Date.now();
-let taxRate = 0.1; // מס הכנסה בסיסי
+let taxRate = 0.1; 
 
-// --- מאגר מניות מורחב (מסונכרן ל-6.0.5) ---
+// --- מאגר מניות (Stock Market Data) ---
 const stockMarket = [
-    { id: 'AAPL', name: 'Apple', price: 580, vol: 0.02, history: [] },
-    { id: 'TSLA', name: 'Tesla', price: 920, vol: 0.05, history: [] },
-    { id: 'NVDA', name: 'Nvidia', price: 420, vol: 0.04, history: [] },
-    { id: 'BTC',  name: 'Bitcoin', price: 65000, vol: 0.08, history: [] },
-    { id: 'ELAL', name: 'אל-על', price: 12, vol: 0.01, history: [] },
+    { id: 'AAPL', name: 'Apple', price: 150, vol: 0.02, history: [] },
+    { id: 'TSLA', name: 'Tesla', price: 700, vol: 0.05, history: [] },
+    { id: 'NVDA', name: 'Nvidia', price: 400, vol: 0.04, history: [] },
+    { id: 'BTC',  name: 'Bitcoin', price: 60000, vol: 0.08, history: [] },
+    { id: 'ELAL', name: 'אל-על', price: 15, vol: 0.01, history: [] },
     { id: 'AMZN', name: 'Amazon', price: 180, vol: 0.03, history: [] },
-    { id: 'META', name: 'Meta', price: 490, vol: 0.04, history: [] }
+    { id: 'META', name: 'Meta', price: 480, vol: 0.04, history: [] }
 ];
 
-// --- 1. מנוע רמות ו-XP (נוסחת ה-6.0.5 המקורית) ---
+// --- 1. מנוע רמות ו-XP (נוסחת ה-1.28 המקורית) ---
 function getLevelData(xp) {
     let level = 1;
     let xpForNext = 1000;
@@ -36,62 +25,62 @@ function getLevelData(xp) {
         level++;
         xpForNext = Math.floor(xpForNext * 1.28); 
     }
-    // ככל שהרמה עולה, המס יורד מעט (הטבת מס לותיקים)
+    // חישוב מס הכנסה לפי רמה
     taxRate = Math.max(0.05, 0.15 - (level * 0.01));
     
     return {
         level,
         xpInCurrentLevel: xp - totalThreshold,
         xpForNext,
-        progressPercent: ((xp - totalThreshold) / xpForNext) * 100,
+        progressPercent: Math.min(100, ((xp - totalThreshold) / xpForNext) * 100),
         taxRate: (taxRate * 100).toFixed(0)
     };
 }
 
-// --- 2. מנוע בורסה בזמן אמת ---
+// --- 2. מנוע בורסה (Market Simulator) ---
 function simulateMarket() {
     stockMarket.forEach(s => {
         const change = (Math.random() * (s.vol * 2)) - s.vol;
         s.price *= (1 + change);
-        if (s.price < 0.5) s.price = 0.5;
-        s.trend = change;
+        if (s.price < 1) s.price = 1;
         
-        // שמירת היסטוריה (לגרפים בעתיד)
         s.history.push(s.price);
         if (s.history.length > 20) s.history.shift();
     });
     
+    // רענון ויזואלי של טאב הבורסה אם הוא פתוח
     if (typeof currentTab !== 'undefined' && currentTab === 'market') {
         const content = document.getElementById('content');
         if (content && typeof drawMarket === 'function') drawMarket(content);
     }
 }
-setInterval(simulateMarket, 5000);
+setInterval(simulateMarket, 10000); // עדכון כל 10 שניות
 
-// --- 3. חישוב רווחים והוצאות (The Tick Engine) ---
+// --- 3. מנוע הזמן (The Game Tick) ---
 function gameTick() {
     const now = Date.now();
-    const dt = (now - lastUpdate) / 1000; // דלתא בשניות
+    const dt = (now - lastUpdate) / 1000; // זמן בשניות מאז העדכון האחרון
     lastUpdate = now;
 
     // א) הכנסה פסיבית נטו (אחרי מס)
-    if (passive > 0) {
-        const gross = (passive / 3600) * dt;
-        const net = gross * (1 - taxRate);
-        money += net;
+    if (typeof passive !== 'undefined' && passive > 0) {
+        const netPerSec = (passive / 3600) * (1 - taxRate);
+        money += netPerSec * dt;
     }
 
-    // ב) ריבית הלוואה (Loan Interest)
-    if (loan > 0) {
-        const loanInterest = (loan * 0.06 / 3600) * dt; // 6% לשעה חוב
-        loan += loanInterest;
+    // ב) ריבית הלוואה (6% לשעה)
+    if (typeof loan !== 'undefined' && loan > 0) {
+        loan += (loan * 0.06 / 3600) * dt;
     }
 
-    // ג) ריבית בנק (Bank Interest)
-    if (bank > 0) {
-        const bankInterest = (bank * 0.02 / 3600) * dt; // 2% לשעה רווח
-        bank += bankInterest;
+    // ג) ריבית בנק (2% לשעה)
+    if (typeof bank !== 'undefined' && bank > 0) {
+        bank += (bank * 0.02 / 3600) * dt;
     }
+
+    // ד) רעב ואנרגיה (יורד/עולה לאט)
+    if (typeof hunger !== 'undefined' && hunger < 100) hunger += (0.1 / 60) * dt;
+    if (typeof energy !== 'undefined' && energy < 100 && hunger < 80) energy += (0.5 / 60) * dt;
 
     updateUI();
 }
@@ -103,10 +92,10 @@ function buyStock(id) {
     if (money >= s.price) {
         money -= s.price;
         invOwned[id] = (invOwned[id] || 0) + 1;
-        showMsg(`רכשת מניית ${s.name}`, "var(--green)");
+        showMsg(`קנית מניית ${s.name}`, "var(--green)");
         saveGame();
     } else {
-        showMsg("אין מספיק מזומן!", "var(--red)");
+        showMsg("אין לך מספיק כסף!", "var(--red)");
     }
 }
 
@@ -120,29 +109,29 @@ function sellStock(id) {
     }
 }
 
-// --- 5. ניהול בנק והלוואות (Bank & Loans) ---
+// --- 5. בנק והלוואות (Bank Services) ---
 function deposit(amount) {
     if (amount === 'all') amount = money;
-    if (money >= amount) {
+    if (money >= amount && amount > 0) {
         money -= amount;
         bank += amount;
-        showMsg(`הפקדת ${Math.floor(amount).toLocaleString()}₪`, "var(--blue)");
+        showMsg(`הפקדת ${Math.floor(amount).toLocaleString()}₪`);
         saveGame();
     }
 }
 
 function withdraw(amount) {
     if (amount === 'all') amount = bank;
-    if (bank >= amount) {
+    if (bank >= amount && amount > 0) {
         bank -= amount;
         money += amount;
-        showMsg(`משכת ${Math.floor(amount).toLocaleString()}₪`, "var(--green)");
+        showMsg(`משכת ${Math.floor(amount).toLocaleString()}₪`);
         saveGame();
     }
 }
 
-function takeLoan(amt = 50000) {
-    if (loan > 200000) return showMsg("הבנק לא מאשר הלוואה נוספת!", "var(--red)");
+function takeLoan(amt) {
+    if (loan > 500000) return showMsg("הבנק לא מאשר הלוואה נוספת!", "var(--red)");
     loan += amt;
     money += amt;
     showMsg(`קיבלת הלוואה של ${amt.toLocaleString()}₪`, "var(--yellow)");
@@ -151,102 +140,46 @@ function takeLoan(amt = 50000) {
 
 function payLoan(amt) {
     if (amt === 'all') amt = loan;
-    const actualPay = Math.min(amt, money, loan);
-    if (actualPay > 0) {
-        money -= actualPay;
-        loan -= actualPay;
-        showMsg(`שילמת ${Math.floor(actualPay).toLocaleString()}₪ מהחוב`, "var(--green)");
+    const toPay = Math.min(amt, money, loan);
+    if (toPay > 0) {
+        money -= toPay;
+        loan -= toPay;
+        showMsg(`שילמת ${Math.floor(toPay).toLocaleString()}₪ מהחוב`);
         saveGame();
     }
 }
 
-// --- 6. שמירה וטעינה (Persistence) ---
-function saveGame() {
-    const state = {
-        money, bank, loan, lifeXP, passive, lastGift,
-        skills, cars, inventory, invOwned, carSpeed,
-        ts: Date.now()
-    };
-    localStorage.setItem('SMP_Final_Save', JSON.stringify(state));
-}
-
-function loadGame() {
-    const data = localStorage.getItem('SMP_Final_Save');
-    if (data) {
-        const obj = JSON.parse(data);
-        money = obj.money;
-        bank = obj.bank;
-        loan = obj.loan;
-        lifeXP = obj.lifeXP;
-        passive = obj.passive;
-        lastGift = obj.lastGift;
-        skills = obj.skills || [];
-        cars = obj.cars || [];
-        inventory = obj.inventory || [];
-        invOwned = obj.invOwned || {};
-        carSpeed = obj.carSpeed || 1;
-
-        // חישוב רווחים בזמן לא מקוון (Offline)
-        const secondsOffline = (Date.now() - obj.ts) / 1000;
-        if (secondsOffline > 60) {
-            const offGain = (passive / 3600) * secondsOffline * (1 - taxRate);
-            if (offGain > 5) {
-                money += offGain;
-                setTimeout(() => showMsg(`ברוך השב! הרווחת ${Math.floor(offGain).toLocaleString()}₪ בזמן שלא היית`, "var(--yellow)"), 1000);
-            }
-        }
+// --- 6. מתנה יומית (Daily Gift) ---
+function claimDailyGift() {
+    const now = Date.now();
+    const cooldown = 24 * 60 * 60 * 1000;
+    if (now - lastGift >= cooldown) {
+        const prize = 2500 + (lifeXP / 5);
+        money += prize;
+        lastGift = now;
+        showMsg(`🎁 מתנה יומית: ${Math.floor(prize).toLocaleString()}₪`, "var(--purple)");
+        saveGame();
+    } else {
+        const left = cooldown - (now - lastGift);
+        const h = Math.floor(left / 3600000);
+        showMsg(`תחזור בעוד ${h} שעות למתנה נוספת`, "var(--yellow)");
     }
 }
 
-// --- 7. עדכון UI וסנכרון ---
-function updateUI() {
-    const ld = getLevelData(lifeXP);
-    
-    // Header Stats
-    const mDisplay = document.getElementById('top-money');
-    const bDisplay = document.getElementById('top-bank');
-    const lDisplay = document.getElementById('life-level-ui');
-    
-    if (mDisplay) mDisplay.innerText = Math.floor(money).toLocaleString() + " ₪";
-    if (bDisplay) bDisplay.innerText = Math.floor(bank).toLocaleString() + " ₪";
-    if (lDisplay) lDisplay.innerText = ld.level;
-
-    // קריאה ל-ui.js
-    if (typeof renderUIUpdate === 'function') {
-        renderUIUpdate(ld);
-    }
-}
-
-// אירועים אקראיים (שחזור מ-6.0.5)
-function triggerRandomEvent() {
-    if (Math.random() < 0.03) { // 3% סיכוי
+// --- 7. אירועים אקראיים (Random Events) ---
+setInterval(() => {
+    if (Math.random() < 0.02) { 
         const events = [
-            { n: "בונוס חג!", v: 1500, c: "var(--green)" },
-            { n: "תיקון פנצ'ר", v: -300, c: "var(--red)" },
-            { n: "מתנה מהמשפחה", v: 1000, c: "var(--yellow)" },
-            { n: "קנס מהירות", v: -750, c: "var(--red)" }
+            { n: "קיבלת דיבידנד!", v: 1500, c: "var(--green)" },
+            { n: "דו''ח חניה", v: -250, c: "var(--red)" },
+            { n: "בונוס רבעוני", v: 3000, c: "var(--blue)" }
         ];
-        const ev = events[Math.floor(Math.random() * events.length)];
-        money += ev.v;
-        if (money < 0) money = 0;
-        showMsg(ev.n, ev.c);
+        const e = events[Math.floor(Math.random() * events.length)];
+        money = Math.max(0, money + e.v);
+        showMsg(e.n, e.c);
         saveGame();
     }
-}
-setInterval(triggerRandomEvent, 60000);
+}, 60000);
 
-// אתחול
-function initGame() {
-    loadGame();
-    updateUI();
-    console.log("Economy Engine v6.8.9 Fully Synced.");
-}
-
-function resetGame() {
-    if(confirm("לאפס את כל החשבון?")) {
-        localStorage.removeItem('SMP_Final_Save');
-        location.reload();
-    }
-}
-
-document.addEventListener('DOMContentLoaded', initGame);
+// אתחול המנוע
+console.log("Economy Engine v6.8.9 Ready.");
