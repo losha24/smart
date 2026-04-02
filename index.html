@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.9.2</title>
+    <title>Smart Money Pro | v7.3.1</title>
     
-    <link rel="manifest" href="manifest.json?v=700">
+    <link rel="manifest" href="manifest.json?v=731">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=700">
+    <link rel="stylesheet" href="style.css?v=731">
     <style>
-        /* שכבות הגנה ל-UI */
         .stats-bar-top {
             position: sticky;
             top: 0;
@@ -24,10 +23,6 @@
             backdrop-filter: blur(10px);
             padding: 12px 5px;
             border-bottom: 1px solid var(--border);
-        }
-
-        #status-bar { 
-            z-index: 1001 !important; 
         }
 
         .admin-box {
@@ -44,18 +39,31 @@
         .stat-item { font-weight: bold; font-size: 14px; color: var(--text); }
         #top-money { color: var(--green); font-weight: 900; }
         #top-bank { color: var(--blue); font-weight: 900; }
+
+        /* עיצוב כפתורי העדכון והנושא */
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 0 10px;
+        }
     </style>
 </head>
 <body class="dark-theme">
     
-    <header class="main-header" style="padding: 10px 0; text-align: center;">
-        <img src="logo.png" alt="Smart Money Pro" onclick="openTab('home')" style="height: 45px; cursor:pointer;">
+    <header class="main-header" style="padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;">
+        <img src="logo.png" alt="Smart Money Pro" onclick="openTab('home')" style="height: 40px; cursor:pointer;">
+        
+        <div class="topbar-actions">
+            <button onclick="forceSystemUpdate()" title="עדכון מערכת" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">🔄</button>
+            <button onclick="toggleTheme()" id="theme-toggle" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">🌙</button>
+        </div>
     </header>
 
     <div class="stats-bar-top">
         <div class="stat-item">💰 <span id="top-money">0</span></div>
         <div class="stat-item">🏦 <span id="top-bank">0</span></div>
-        <div class="stat-item">⭐ דרגה <span id="life-level-ui">1</span></div>
+        <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
     </div>
 
     <div id="status-bar" class="status-msg"></div>
@@ -65,35 +73,44 @@
             <button onclick="openTab('home')" id="btnHome" class="active">🏠 בית</button>
             <button onclick="openTab('work')" id="btnWork">⚒️ עבודה</button>
             <button onclick="openTab('tasks')" id="btnTasks">🎰 קזינו</button>
+            <button onclick="openTab('shop')" id="btnShop">🏪 שוק</button>
         </div>
         <div class="nav-row">
             <button onclick="openTab('market')" id="btnMarket">📈 בורסה</button>
+            <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
             <button onclick="openTab('estate')" id="btnEstate">🏘️ נדל"ן</button>
-            <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
         </div>
         <div class="nav-row">
+            <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
             <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
             <button onclick="openTab('cars')" id="btnCars">🚗 רכבים</button>
-            <button onclick="toggleTheme()" style="font-size: 18px; background:none; border:none; cursor:pointer;">🌗</button>
         </div>
     </nav>
 
     <main id="content" class="fade-in container" style="padding-top: 15px; padding-bottom: 100px;"></main>
 
     <footer style="padding: 20px; text-align: center; font-size: 10px; opacity: 0.4;">
-        Smart Money Pro v6.9.2 | פותח ע"י אלכסיי זבודיסקר © 2026
+        Smart Money Pro v7.3.1 | פותח ע"י אלכסיי זבודיסקר © 2026
     </footer>
 
-    <script src="js/core.js?v=700"></script>
-    <script src="js/economy.js?v=700"></script>
-    <script src="js/activities.js?v=700"></script>
-    <script src="js/ui.js?v=700"></script>
-    <script src="js/debug.js?v=700"></script>
+    <script src="js/core.js?v=731"></script>
+    <script src="js/economy.js?v=731"></script>
+    <script src="js/activities.js?v=731"></script>
+    <script src="js/ui.js?v=731"></script>
+    <script src="js/debug.js?v=731"></script>
 
     <script>
-        const adminMsgText = "שלום אלכסיי! המערכת עודכנה לגרסה 6.9.2. הפרופיל הוסר והקישורים סונכרנו.";
+        const adminMsgText = "ברוך הבא אלכסיי! המערכת סונכרנה: שוק, קזינו ועסקים פעילים. כפתור העדכון עבר למעלה.";
 
-        // ניהול פתיחת טאבים והודעת מנהל
+        // פונקציית עדכון כפוי
+        window.forceSystemUpdate = function() {
+            if (typeof showMsg === 'function') showMsg("מבצע רענון כפוי...", "var(--blue)");
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 800);
+        };
+
+        // ניהול טאבים והודעת מערכת
         const originalOpenTab = window.openTab;
         window.openTab = function(tab) {
             if (typeof originalOpenTab === 'function') originalOpenTab(tab);
@@ -111,14 +128,9 @@
             }
         };
 
-        // אתחול מערכת
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
-                if (typeof openTab === 'function') {
-                    openTab('home');
-                } else {
-                    console.error("Critical: openTab function not found!");
-                }
+                if (typeof openTab === 'function') openTab('home');
             }, 600);
         });
     </script>
