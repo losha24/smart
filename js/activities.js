@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v6.5.0 - Business Empire Integration */
+/* Smart Money Pro - js/activities.js - v6.5.2 - Shop & Business Empire */
 
 // --- מאגרי נתונים ---
 const jobList = [
@@ -22,7 +22,6 @@ const estateList = [
     { id: 'e5', name: 'מרכז מסחרי', price: 12000000, passive: 95000, icon: '🏗️' }
 ];
 
-// --- נתוני עסקים (החדש!) ---
 const businessList = [
     { id: 'biz_falafel', name: 'דוכן פלאפל', price: 65000, passive: 550, icon: '🥙' },
     { id: 'biz_garage', name: 'מוסך רכב', price: 320000, passive: 3400, icon: '🔧' },
@@ -56,7 +55,7 @@ const carList = [
     { name: 'פרארי', price: 1800000, speed: 8, icon: '🏎️' }
 ];
 
-// --- מנוע עדכון בורסה חי ---
+// --- מנוע עדכון בורסה חי - מותאם לחנות (Shop) ---
 setInterval(() => {
     stockList.forEach(s => {
         const change = (Math.random() * 0.05) - 0.024;
@@ -64,14 +63,14 @@ setInterval(() => {
         if (s.price < 1) s.price = 1;
         s.trend = change;
     });
-    if (typeof currentTab !== 'undefined' && currentTab === 'market') {
+    // עדכון רק אם המשתמש נמצא פיזית בטאב החנות
+    if (typeof currentTab !== 'undefined' && currentTab === 'shop') {
         const content = document.getElementById('content');
-        if (content) drawMarket(content);
+        if (content) drawShop(content);
     }
-}, 3000);
+}, 4000); // הגדלת זמן העדכון ל-4 שניות ליציבות בנייד
 
 // --- פונקציות עבודה ---
-
 function drawWork(c) {
     let html = `<h3>⚒️ מרכז תעסוקה</h3><div class="grid-2">`;
     jobList.forEach(j => {
@@ -124,7 +123,6 @@ function startWork(id) {
 }
 
 // --- פונקציות נדל"ן (Estate) ---
-
 function drawEstate(c) {
     let html = `<h3>🏠 השקעות נדל"ן</h3><div class="grid-2">`;
     estateList.forEach(e => {
@@ -153,8 +151,7 @@ function buyEstate(id) {
     saveGame(); updateUI(); drawEstate(document.getElementById('content'));
 }
 
-// --- פונקציות הקמת עסק (החדש!) ---
-
+// --- פונקציות עסקים ---
 function drawBusiness(c) {
     let html = `<h3>💼 הקמת אימפריית עסקים</h3><div class="grid-1">`;
     businessList.forEach(b => {
@@ -190,10 +187,9 @@ function buyBusiness(id, price, passAdd) {
     } else { showMsg("אין מספיק כסף להשקעה!", "var(--red)"); }
 }
 
-// --- פונקציות בורסה (Market) ---
-
-function drawMarket(c) {
-    let html = `<h3>📈 שוק ההון (Live)</h3><div class="grid-1">`;
+// --- פונקציות חנות (Shop) - מחליף את ה-Market המקורי ---
+window.drawShop = function(c) {
+    let html = `<h3>🛒 חנות מוצרים והשקעות</h3><div class="grid-1">`;
     stockList.forEach(s => {
         const owned = invOwned[s.id] || 0;
         const color = s.trend >= 0 ? 'var(--green)' : 'var(--red)';
@@ -223,7 +219,7 @@ function buyStock(id) {
         money -= s.price;
         invOwned[id] = (invOwned[id] || 0) + 1;
         showMsg(`📈 קנית ${s.name}`, "var(--blue)");
-        saveGame(); updateUI(); drawMarket(document.getElementById('content'));
+        saveGame(); updateUI(); drawShop(document.getElementById('content'));
     } else { showMsg("חסר מזומן!", "var(--red)"); }
 }
 
@@ -233,12 +229,11 @@ function sellStock(id) {
         money += s.price;
         invOwned[id] -= 1;
         showMsg(`💰 מכרת ${s.name}`, "var(--green)");
-        saveGame(); updateUI(); drawMarket(document.getElementById('content'));
+        saveGame(); updateUI(); drawShop(document.getElementById('content'));
     } else { showMsg("אין לך יחידות למכירה!", "var(--red)"); }
 }
 
 // --- פונקציות בנק ---
-
 function drawBank(c) {
     c.innerHTML = `
         <div class="card fade-in" style="text-align:center;">
@@ -260,7 +255,6 @@ function takeLoan() {
 }
 
 // --- פונקציות קזינו ---
-
 function drawTasks(c) {
     c.innerHTML = `
         <div class="card fade-in" style="text-align:center; padding:20px; border: 2px dashed var(--yellow);">
@@ -287,7 +281,6 @@ function playCasino() {
 }
 
 // --- פונקציות כישורים ורכבים ---
-
 function drawSkills(c) {
     let html = `<h3>🎓 הכשרה ולימודים</h3><div class="grid-2">`;
     skillList.forEach(s => {
@@ -317,12 +310,3 @@ function buyCar(name, price, speed) {
 }
 
 function drawInvest(c) { c.innerHTML = "<h3>💰 השקעות</h3><p>בקרוב...</p>"; }
-
-function getDailyGift() {
-    const now = Date.now();
-    if (now - lastGift > 86400000) {
-        money += 2000; lastGift = now;
-        showMsg(`🎁 קיבלת 2,000₪!`, "var(--yellow)");
-        saveGame(); updateUI(); openTab('home');
-    } else { showMsg("חזור מחר!", "var(--white)"); }
-}
