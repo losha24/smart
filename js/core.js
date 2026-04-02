@@ -1,9 +1,9 @@
-/* Smart Money Pro - js/core.js - v6.5.0 - Pro Debug Sync */
+/* Smart Money Pro - js/core.js - v6.5.1 - Stable Mobile Sync */
 
-const VERSION = "6.5.0";
+const VERSION = "6.5.1";
 const SAVE_KEY = "smartMoneySave_v6_main";
 
-// --- אתחול משתנים גלובליים (מוצמדים ל-window עבור הדיבאג) ---
+// --- אתחול משתנים גלובליים ---
 window.money = 1200; 
 window.bank = 0;
 window.loan = 0;
@@ -24,13 +24,13 @@ let msgTimer;
 // --- מנוע חישוב רמות דינמי (25% קושי עולה) ---
 function getLevelData(xp) {
     let level = 1;
-    let xpForNext = 1000; // רמה 1 דורשת 1000 XP
+    let xpForNext = 1000; 
     let totalXPStack = 0;
 
     while (xp >= totalXPStack + xpForNext) {
         totalXPStack += xpForNext;
         level++;
-        xpForNext = Math.floor(xpForNext * 1.25); // כל רמה קשה ב-25%
+        xpForNext = Math.floor(xpForNext * 1.25); 
     }
 
     let xpInCurrentLevel = xp - totalXPStack;
@@ -75,7 +75,7 @@ function loadGame() {
                     window.money += offlineEarnings;
                     window.totalEarned += offlineEarnings;
                     setTimeout(() => {
-                        showMsg(`💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()}₪ בזמן שלא היית!`, "var(--yellow)");
+                        if(typeof showMsg === 'function') showMsg(`💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()}₪ בזמן שלא היית!`, "var(--yellow)");
                     }, 1500);
                 }
             }
@@ -137,6 +137,7 @@ function updateUI() {
     const ld = getLevelData(window.lifeXP);
     if(lEl) lEl.innerText = ld.level;
 
+    // עדכון UI כבד (גרפיקה ורמות) - רק אם הפונקציה קיימת ב-UI.js
     if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate(ld);
     
     checkLevelUp(ld.level);
@@ -174,6 +175,8 @@ function resetGame() {
 }
 
 // --- מנועי זמן (Passive Income) ---
+
+// 1. עדכון כסף מהיר (20 פעם בשנייה) - לא גורם לקפיצות כי הוא מעדכן רק טקסט
 setInterval(() => {
     if (window.passive > 0) {
         const tickIncome = window.passive / 72000; 
@@ -182,14 +185,18 @@ setInterval(() => {
         
         const mEl = document.getElementById('money');
         if(mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
-
-        if (typeof window.renderUIUpdate === 'function') {
-            const ld = getLevelData(window.lifeXP);
-            window.renderUIUpdate(ld);
-        }
     }
 }, 50); 
 
+// 2. עדכון UI גרפי כבד (פעם בשנייה) - המפתח למניעת קפיצות בשוק
+setInterval(() => {
+    if (typeof window.renderUIUpdate === 'function') {
+        const ld = getLevelData(window.lifeXP);
+        window.renderUIUpdate(ld);
+    }
+}, 1000); 
+
+// 3. שמירה אוטומטית כל 15 שניות
 setInterval(saveGame, 15000);
 
 document.addEventListener("DOMContentLoaded", () => {
