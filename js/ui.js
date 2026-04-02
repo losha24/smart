@@ -1,8 +1,7 @@
-/* Smart Money Pro - js/ui.js - v6.5.0 - Alexey Custom Edition */
+/* Smart Money Pro - js/ui.js - v6.5.0 - Final Optimized Version */
 
 let deferredPrompt;
 let currentTab = 'home'; 
-let msgTimer;
 
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -10,8 +9,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
     renderInstallBtn();
 });
 
-// --- עדכון ויזואלי מהיר (נקרא מה-Core) ---
+// --- עדכון ויזואלי מהיר (נקרא מה-Core ושולח אובייקט ld) ---
 function renderUIUpdate(ld) {
+    // גיבוי למקרה שלא נשלח אובייקט ld מה-Core
     if (!ld && typeof getLevelData === 'function') {
         ld = getLevelData(window.lifeXP || 0);
     }
@@ -40,8 +40,8 @@ function renderUIUpdate(ld) {
     }
 }
 
-// --- מערכת ניווט ---
-function openTab(t) {
+// --- מערכת ניווט חלקית (v6.3.0 Style) ---
+window.openTab = function(t) {
     currentTab = t; 
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
     const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
@@ -51,27 +51,34 @@ function openTab(t) {
     const c = document.getElementById("content"); 
     if(!c) return;
     
-    c.innerHTML = "";
-    switch(t) {
-        case 'home':       drawHome(c); break;
-        case 'work':       if(typeof drawWork === 'function') drawWork(c); break;
-        case 'tasks':      if(typeof drawTasks === 'function') drawTasks(c); break; 
-        case 'invest':     if(typeof drawInvest === 'function') drawInvest(c); break;
-        case 'business':   if(typeof drawBusiness === 'function') drawBusiness(c); break;
-        case 'estate':     if(typeof drawEstate === 'function') drawEstate(c); break; 
-        case 'skills':     if(typeof drawSkills === 'function') drawSkills(c); break;
-        case 'bank':       if(typeof drawBank === 'function') drawBank(c); break;
-        case 'cars':       if(typeof drawCars === 'function') drawCars(c); break;
-        case 'market':     if(typeof drawMarket === 'function') drawMarket(c); break;
-        default:           drawHome(c);
-    }
+    // אנימציית יציאה חלקה
+    c.style.opacity = "0";
     
-    window.scrollTo(0,0);
-    if(typeof updateUI === 'function') updateUI();
-}
+    setTimeout(() => {
+        c.innerHTML = "";
+        switch(t) {
+            case 'home':       window.drawHome(c); break;
+            case 'work':       if(typeof window.drawWork === 'function') window.drawWork(c); break;
+            case 'tasks':      if(typeof window.drawTasks === 'function') window.drawTasks(c); break; 
+            case 'invest':     if(typeof window.drawInvest === 'function') window.drawInvest(c); break;
+            case 'business':   if(typeof window.drawBusiness === 'function') window.drawBusiness(c); break;
+            case 'estate':     if(typeof window.drawEstate === 'function') window.drawEstate(c); break; 
+            case 'skills':     if(typeof window.drawSkills === 'function') window.drawSkills(c); break;
+            case 'bank':       if(typeof window.drawBank === 'function') window.drawBank(c); break;
+            case 'cars':       if(typeof window.drawCars === 'function') window.drawCars(c); break;
+            case 'market':     if(typeof window.drawMarket === 'function') window.drawMarket(c); break;
+            default:           window.drawHome(c);
+        }
+        
+        // אנימציית כניסה
+        c.style.opacity = "1";
+        window.scrollTo(0,0);
+        if(typeof updateUI === 'function') updateUI();
+    }, 120);
+};
 
-// --- דף הבית המעודכן ---
-function drawHome(c) {
+// --- דף הבית המעודכן (v6.5.0) ---
+window.drawHome = function(c) {
     const ld = (typeof getLevelData === 'function') 
                ? getLevelData(window.lifeXP || 0) 
                : { level: 1, xpInCurrentLevel: 0, xpForNext: 1000, progressPercent: 0 };
@@ -116,8 +123,8 @@ function drawHome(c) {
                 <div class="equipment-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:13px;">
                     <div>👕 <b>בגדים:</b> <span style="color:#94a3b8">בגדי עבודה</span></div>
                     <div>🚗 <b>רכב:</b> <span style="color:var(--yellow)">${(window.cars && window.cars.length > 0) ? window.cars[window.cars.length-1] : "הולך ברגל"}</span></div>
-                    <div>📱 <b>טלפון:</b> <span style="color:#94a3b8">דור 5</span></div>
-                    <div>🔑 <b>מפתח:</b> <span style="color:#94a3b8">דירה שכורה</span></div>
+                    <div>📱 <b>טלפון:</b> <span style="color:#94a3b8">iPhone 15</span></div>
+                    <div>🔑 <b>מפתח:</b> <span style="color:#94a3b8">דירה בבעלות</span></div>
                 </div>
             </div>
 
@@ -128,17 +135,13 @@ function drawHome(c) {
     `;
     startGiftTimer();
     renderInstallBtn();
-}
+};
 
-// --- ניהול מתנה וטיימר 4 שעות ---
+// --- ניהול מתנה ---
 function claimDailyGift() {
     const now = Date.now();
     const waitTime = 4 * 60 * 60 * 1000; 
-
-    if (window.lastGift && (now - window.lastGift < waitTime)) {
-        showMsg("המתנה עדיין לא מוכנה...", "red");
-        return;
-    }
+    if (window.lastGift && (now - window.lastGift < waitTime)) return;
 
     const bonus = 500 + (window.lastKnownLevel * 250);
     window.money += bonus;
@@ -151,58 +154,37 @@ function claimDailyGift() {
 function startGiftTimer() {
     const timerEl = document.getElementById('giftTimer');
     const btn = document.getElementById('giftBtn');
-    
     const update = () => {
         if (!timerEl || !btn) return;
-        const now = Date.now();
-        const waitTime = 4 * 60 * 60 * 1000;
-        const timeLeft = waitTime - (now - (window.lastGift || 0));
-
+        const timeLeft = (4 * 60 * 60 * 1000) - (Date.now() - (window.lastGift || 0));
         if (timeLeft <= 0) {
-            timerEl.innerText = "✅ המתנה מחכה לך!";
-            timerEl.style.color = "#22c55e";
-            btn.disabled = false;
-            btn.style.opacity = "1";
+            timerEl.innerText = "✅ המתנה מוכנה!";
+            btn.disabled = false; btn.style.opacity = "1";
         } else {
-            const h = Math.floor(timeLeft / 3600000);
-            const m = Math.floor((timeLeft % 3600000) / 60000);
-            const s = Math.floor((timeLeft % 60000) / 1000);
+            const h = Math.floor(timeLeft / 3600000), m = Math.floor((timeLeft % 3600000) / 60000), s = Math.floor((timeLeft % 60000) / 1000);
             timerEl.innerText = `⏳ זמן נותר: ${h}ש' ${m}ד' ${s}ש'`;
-            timerEl.style.color = "var(--yellow)";
-            btn.disabled = true;
-            btn.style.opacity = "0.5";
+            btn.disabled = true; btn.style.opacity = "0.5";
         }
     };
-    
     update();
-    const intv = setInterval(() => {
-        if (!document.getElementById('giftTimer')) { clearInterval(intv); return; }
-        update();
-    }, 1000);
+    const intv = setInterval(() => { if(!document.getElementById('giftTimer')) clearInterval(intv); else update(); }, 1000);
 }
 
-// --- עריכת הודעת מנהל בסיסמא ---
-function editAdminMsg() {
-    const pass = prompt("שלום אלכסיי, הכנס סיסמת מנהל לעריכה:");
+// --- עריכת מנהל ---
+window.editAdminMsg = function() {
+    const pass = prompt("שלום אלכסיי, הכנס סיסמת מנהל:");
     if (pass === "1234") { 
-        const newMsg = prompt("הכנס הודעת מנהל חדשה:", window.adminMsgText || "");
-        if (newMsg !== null) {
-            window.adminMsgText = newMsg;
-            if (typeof showMsg === 'function') showMsg("הודעה עודכנה בהצלחה!", "green");
-            openTab('home'); // רענון התצוגה
-        }
-    } else if (pass !== null) {
-        alert("סיסמא שגויה!");
-    }
-}
+        const newMsg = prompt("הודעה חדשה:", window.adminMsgText || "");
+        if (newMsg !== null) { window.adminMsgText = newMsg; showMsg("עודכן!", "green"); window.openTab('home'); }
+    } else if (pass !== null) alert("שגוי!");
+};
 
 function renderInstallBtn() {
     const cont = document.getElementById("install-container");
     if(!cont) return;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if(!isStandalone && deferredPrompt) {
-        cont.innerHTML = `<button class="action" style="background:#3b82f6; color:#fff; font-weight:bold; width:100%; padding:12px; border-radius:8px; border:none; cursor:pointer;" onclick="triggerInstall()">📲 התקן כאפליקציה (PWA)</button>`;
-    } else { cont.innerHTML = ""; }
+    if(!window.matchMedia('(display-mode: standalone)').matches && deferredPrompt) {
+        cont.innerHTML = `<button class="action" style="background:#3b82f6; width:100%; border-radius:8px; border:none; color:white; padding:12px; font-weight:bold; cursor:pointer;" onclick="triggerInstall()">📲 התקן כאפליקציה (PWA)</button>`;
+    }
 }
 
 async function triggerInstall() {
@@ -213,5 +195,5 @@ async function triggerInstall() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => { openTab('home'); }, 150);
+    setTimeout(() => { window.openTab('home'); }, 150);
 });
