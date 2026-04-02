@@ -16,7 +16,7 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
         .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid var(--blue); }
         
-        /* עיצוב הודעת מנהל */
+        /* עיצוב הודעת מנהל משופר */
         .admin-box {
             background: rgba(59, 130, 246, 0.15);
             border-right: 4px solid #3b82f6;
@@ -26,7 +26,22 @@
             font-size: 14px;
             color: #fff;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            position: relative;
         }
+
+        .edit-admin-btn {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            cursor: pointer;
+            font-size: 16px;
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .edit-admin-btn:hover { opacity: 1; }
 
         /* אנימציה חלקה לדיבאג ולהודעות */
         .fade-in { animation: fadeIn 0.5s ease-in; }
@@ -90,11 +105,11 @@
     <script src="js/activities.js?v=6.5.0"></script>
     <script src="js/economy.js?v=6.5.0"></script>
     <script src="js/ui.js?v=6.5.0"></script>
-    
     <script src="js/debug.js?v=1.3.0"></script>
 
     <script>
-        const adminMsgText = "ברוכים הבאים אלכסיי! מערכת הדיבאג v1.3.0 הופעלה ומסונכרנת עם גרסה 6.5.0.";
+        // הגדרת הודעת מנהל גלובלית כדי שתוכל להשתנות בעריכה
+        window.adminMsgText = "ברוכים הבאים אלכסיי! מערכת הדיבאג v1.3.0 הופעלה ומסונכרנת עם גרסה 6.5.0.";
 
         function showStatus(msg, type = 'blue') {
             const bar = document.getElementById('status-bar');
@@ -110,14 +125,12 @@
             const content = document.getElementById('content');
             if (!content) return;
 
-            // עדכון כפתור פעיל
             document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById('btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
             if (activeBtn) activeBtn.classList.add('active');
 
             content.innerHTML = ""; 
 
-            // ניתוב לטאב המתאים
             if (tabName === 'home') {
                 if (typeof drawHome === 'function') {
                     drawHome(content); 
@@ -125,10 +138,14 @@
                     content.innerHTML = `<div class="card"><h3>🏠 בית</h3><p>הנתונים בטעינה...</p></div>`;
                 }
 
-                // הוספת הודעת המנהל בראש הבית
+                // בניית הודעת המנהל עם כפתור העריכה
                 const adminDiv = document.createElement('div');
                 adminDiv.className = 'admin-box fade-in';
-                adminDiv.innerHTML = `📢 <b>הודעת מנהל:</b><br>${adminMsgText}`;
+                adminDiv.innerHTML = `
+                    📢 <b>הודעת מנהל:</b> 
+                    <button onclick="editAdminMsg()" class="edit-admin-btn" title="עריכת הודעה">✏️</button>
+                    <br><span id="admin-text-content">${window.adminMsgText}</span>
+                `;
                 content.prepend(adminDiv);
             } 
             else if (tabName === 'work' && typeof drawWork === 'function') drawWork(content);
@@ -141,7 +158,6 @@
             else if (tabName === 'cars' && typeof drawCars === 'function') drawCars(content);
             else if (tabName === 'market' && typeof drawMarket === 'function') drawMarket(content);
             
-            // עדכון ערכים ויזואליים
             if (typeof updateUI === 'function') updateUI();
         }
 
@@ -149,7 +165,6 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             openTab('home');
-            // זיהוי מכשיר אייפון להוראות התקנה
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 document.getElementById('android-instr').style.display = 'none';
                 document.getElementById('ios-instr').style.display = 'block';
