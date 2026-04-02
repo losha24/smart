@@ -9,8 +9,9 @@ let bank = 0;
 let loan = 0;
 let lifeXP = 0;
 let passive = 0;
-let energy = 100;   // נוסף: ניהול כוח עבודה
-let hunger = 0;     // נוסף: ניהול שובע
+let energy = 100;   
+let hunger = 0;     
+let lastGift = 0;   // הוספתי: מעקב למתנה יומית
 let skills = [];
 let cars = [];
 let inventory = []; 
@@ -19,15 +20,15 @@ let carSpeed = 1;
 let totalEarned = 0;
 let lastSaveTime = Date.now();
 let lastKnownLevel = 1; 
-let currentTab = 'home'; // ניהול טאב נוכחי
+let currentTab = 'home'; 
 
 let msgTimer; 
 
-// --- 1. מנוע חישוב רמות דינמי (25% קושי עולה) ---
+// --- 1. מנוע חישוב רמות דינמי ---
 function getLevelData(xp) {
     let level = 1;
     let xpForNext = 1000; 
-    let totalXpThreshold = 0; // הנקודה בה הרמה הנוכחית התחילה
+    let totalXpThreshold = 0; 
 
     while (xp >= totalXpThreshold + xpForNext) {
         totalXpThreshold += xpForNext;
@@ -36,75 +37,83 @@ function getLevelData(xp) {
     }
 
     let xpInCurrentLevel = xp - totalXpThreshold;
-    let progressPercent = Math.min(100, (xpInCurrentLevel / xpForNext) * 100);
+    // הגנה שלא יעבור את ה-100% ב-UI
+    let progressPercent = Math.min(99.9, (xpInCurrentLevel / xpForNext) * 100);
 
     return { 
         level, 
         xpInCurrentLevel, 
         xpForNext, 
         progressPercent,
-        totalXpThreshold // חיוני לחישובים ב-UI
+        totalXpThreshold 
     };
 }
 
-// --- 2. ניהול זיכרון ושמירה (Persistence) ---
+// --- 2. ניהול זיכרון ושמירה ---
 function loadGame() {
     try {
         const saved = localStorage.getItem(SAVE_KEY);
         if (saved) {
             const data = JSON.parse(saved);
             
-            money = data.money ?? 1250;
-            bank = data.bank ?? 0;
-            loan = data.loan ?? 0;
-            lifeXP = data.lifeXP ?? 0;
-            passive = data.passive ?? 0;
-            energy = data.energy ?? 100;
-            hunger = data.hunger ?? 0;
-            skills = data.skills ?? [];
-            cars = data.cars ?? [];
-            inventory = data.inventory ?? [];
-            invOwned = data.invOwned ?? invOwned;
-            carSpeed = data.carSpeed ?? 1;
-            totalEarned = data.totalEarned ?? 0;
-            lastSaveTime = data.lastSaveTime ?? Date.now();
+            money = Number(data.money) || 1250;
+            bank = Number(data.bank) || 0;
+            loan = Number(data.loan) || 0;
+            lifeXP = Number(data.lifeXP) || 0;
+            passive = Number(data.passive) || 0;
+            energy = Number(data.energy) || 100;
+            hunger = Number(data.hunger) || 0;
+            lastGift = Number(data.lastGift) || 0; // טעינת זמן מתנה
+            
+            skills = data.skills || [];
+            cars = data.cars || [];
+            inventory = data.inventory || [];
+            invOwned = data.invOwned || invOwned;
+            carSpeed = data.carSpeed || 1;
+            totalEarned = data.totalEarned || 0;
+            lastSaveTime = data.lastSaveTime || Date.now();
             
             lastKnownLevel = getLevelData(lifeXP).level;
             
-            // חישוב רווחים בזמן לא מקוון (עד 12 שעות)
-            if (passive > 0) {
-                const now = Date.now();
-                let msPassed = Math.min(now - lastSaveTime, 12 * 60 * 60 * 1000);
-                const offlineEarnings = (msPassed / (1000 * 60 * 60)) * passive;
-                
-                if (offlineEarnings > 5) {
-                    money += offlineEarnings;
-                    totalEarned += offlineEarnings;
-                    setTimeout(() => {
-                        showMsg(`💰 ברוך השב! הרווחת ${Math.floor(offlineEarnings).toLocaleString()}₪ בזמן שישנת`, "var(--yellow)");
-                    }, 2000);
-                }
-            }
+            // חישוב רווחים לא מקוונים
+            calculateOfflineEarnings();
         }
         
-        // טעינת ערכת נושא
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.body.className = savedTheme + '-theme';
         
     } catch (e) { 
         console.error("שגיאה בטעינה:", e); 
-        showMsg("שגיאה בטעינת נתונים", "var(--red)");
+    }
+}
+
+function calculateOfflineEarnings() {
+    if (passive > 0) {
+        const now = Date.now();
+        let msPassed = Math.min(now - lastSaveTime, 12 * 60 * 60 * 1000); // מקסימום 12 שעות
+        const hoursPassed = msPassed / (1000 * 60 * 60);
+        const offlineEarnings = hoursPassed * passive;
+        
+        if (offlineEarnings > 10) {
+            money += offlineEarnings;
+            totalEarned += offlineEarnings;
+            // הודעה מושהית כדי שה-UI יספיק להיטען
+            setTimeout(() => {
+                showMsg(`💰 ברוך השב אלכסיי! הרווחת ${Math.floor(offlineEarnings).toLocaleString()}₪ בזמן שלא היית`, "var(--yellow)");
+                updateUI();
+            }, 1500);
+        }
     }
 }
 
 function saveGame() {
-    lastSaveTime = Date.now();
     const data = { 
-        money, bank, loan, lifeXP, passive, energy, hunger,
+        money, bank, loan, lifeXP, passive, energy, hunger, lastGift,
         skills, cars, inventory, invOwned, carSpeed, 
-        totalEarned, lastSaveTime 
+        totalEarned, lastSaveTime: Date.now() 
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    console.log("Game Saved...");
 }
 
 // --- 3. מערכת הודעות (Global UI) ---
@@ -115,12 +124,11 @@ function showMsg(txt, color = "var(--blue)") {
     bar.innerText = txt;
     bar.style.opacity = "1";
     bar.style.transform = "translateY(0)";
-    bar.style.color = color;
-    bar.style.borderLeft = `4px solid ${color}`; // עיצוב מודרני יותר
+    bar.style.backgroundColor = color; // שימוש ברקע במקום צבע טקסט לנראות בטלפון
     
     msgTimer = setTimeout(() => {
         bar.style.opacity = "0";
-        bar.style.transform = "translateY(-10px)";
+        bar.style.transform = "translateY(-20px)";
     }, 4000);
 }
 
@@ -128,7 +136,6 @@ function showMsg(txt, color = "var(--blue)") {
 function updateUI() {
     const ld = getLevelData(lifeXP);
     
-    // עדכון אלמנטים גלובליים ב-Header
     const mEl = document.getElementById('top-money');
     const bEl = document.getElementById('top-bank');
     const lEl = document.getElementById('life-level-ui');
@@ -137,7 +144,7 @@ function updateUI() {
     if(bEl) bEl.innerText = Math.floor(bank).toLocaleString() + " ₪";
     if(lEl) lEl.innerText = ld.level;
 
-    // שליחה ל-ui.js לרינדור הטאב הפעיל
+    // שליחה ל-ui.js
     if (typeof window.renderUIUpdate === 'function') {
         window.renderUIUpdate(ld);
     }
@@ -147,7 +154,7 @@ function updateUI() {
 
 function checkLevelUp(currentLevel) {
     if (currentLevel > lastKnownLevel) {
-        const bonus = currentLevel * 1250;
+        const bonus = currentLevel * 1500;
         money += bonus;
         showMsg(`🎉 רמה ${currentLevel}! קיבלת בונוס של ${bonus.toLocaleString()}₪ 🎉`, "var(--green)");
         lastKnownLevel = currentLevel;
@@ -155,30 +162,12 @@ function checkLevelUp(currentLevel) {
     }
 }
 
-// --- 5. מנועי זמן (Timers) ---
-// מנוע הכנסה פסיבית + התאוששות
-setInterval(() => {
-    // הכנסה פסיבית
-    if (passive > 0) {
-        const tickIncome = passive / 3600; // חישוב לפי שעה, מעדכן כל שנייה
-        money += tickIncome;
-        totalEarned += tickIncome;
-    }
+// --- 5. מנועי זמן ---
+// שים לב: הכנסה פסיבית מנוהלת ב-economy.js כדי למנוע כפילויות
+// כאן נשאר רק עדכון ה-UI הבסיסי ושמירה אוטומטית
+setInterval(saveGame, 60000); // שמירה כל דקה
 
-    // התאוששות אנרגיה ועליית רעב
-    if (energy < 100) energy += 0.1;
-    if (hunger < 100) hunger += 0.05;
-
-    // עדכון UI מהיר רק למספרים
-    const mDisplay = document.getElementById('top-money');
-    if(mDisplay) mDisplay.innerText = Math.floor(money).toLocaleString() + " ₪";
-
-}, 1000); 
-
-// שמירה אוטומטית כל 30 שניות
-setInterval(saveGame, 30000);
-
-// --- 6. פונקציות עזר (Utilities) ---
+// --- 6. פונקציות עזר ---
 function toggleTheme() {
     const isLight = document.body.classList.contains('light-theme');
     const next = isLight ? 'dark' : 'light';
@@ -188,7 +177,7 @@ function toggleTheme() {
 }
 
 function resetGame() {
-    if (confirm("⚠️ אלכסיי, כל ההתקדמות שלך תימחק לצמיתות. האם אתה בטוח?")) {
+    if (confirm("⚠️ אלכסיי, כל ההתקדמות שלך תימחק. האם אתה בטוח?")) {
         localStorage.clear();
         location.reload();
     }
