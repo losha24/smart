@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.6.8 Shop Edition</title>
+    <title>Smart Money Pro | v6.7.0 Investment Edition</title>
     
-    <link rel="manifest" href="manifest.json?v=6.6.8">
+    <link rel="manifest" href="manifest.json?v=6.7.0">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.6.8">
+    <link rel="stylesheet" href="style.css?v=6.7.0">
     <style>
         /* תיקוני מודל ועיצוב מקומיים */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
@@ -40,6 +40,9 @@
 
         /* מניעת בחירת טקסט בטעות בנייד */
         body { -webkit-user-select: none; user-select: none; }
+        
+        /* הדגשה לכפתור בורסה החדש */
+        #btnInvest { border-bottom: 2px solid var(--blue); font-weight: bold; }
     </style>
 </head>
 <body class="dark-theme">
@@ -93,16 +96,16 @@
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.6.8 | אלכסיי זבודיסקר
+        © 2026 Smart Money Pro v6.7.0 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.6.8"></script>
-    <script src="js/activities.js?v=6.6.8"></script>
-    <script src="js/economy.js?v=6.6.8"></script>
-    <script src="js/ui.js?v=6.6.8"></script>
+    <script src="js/core.js?v=6.7.0"></script>
+    <script src="js/activities.js?v=6.7.0"></script>
+    <script src="js/economy.js?v=6.7.0"></script>
+    <script src="js/ui.js?v=6.7.0"></script>
 
     <script>
-        window.adminMsgText = "שלום אלכסיי, עברנו למערכת חנות מעודכנת.";
+        window.adminMsgText = "שלום אלכסיי! הבורסה עברה למקומה החדש והמרכזי. החנות בשיפוצים.";
 
         function closeInstallGuide() { 
             document.getElementById('installModal').style.display = 'none'; 
