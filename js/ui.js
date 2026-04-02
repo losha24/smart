@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.7.0 - Investment & Shop Swap Edition */
+/* Smart Money Pro - js/ui.js - v6.7.2 - Admin Dev & Debug Update */
 
 let deferredPrompt;
 let currentTab = 'home'; 
@@ -41,14 +41,12 @@ function renderUIUpdate(ld) {
 
 // --- מערכת ניווט עם הגנת גלילה (Anti-Jump) מותאמת לבורסה ---
 window.openTab = function(t) {
-    // מניעת רענון כפול אם הקריאה הגיעה מה-setInterval של הבורסה
     const isAuto = new Error().stack.includes('setInterval');
     if (t === currentTab && isAuto) return;
 
     currentTab = t; 
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
     
-    // זיהוי כפתור ה-ID הדינמי (למשל btnInvest או btnShop)
     const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
     const btn = document.getElementById(btnId);
     if(btn) btn.classList.add("active");
@@ -61,18 +59,15 @@ window.openTab = function(t) {
     setTimeout(() => {
         c.innerHTML = "";
         
-        // ניסיון להריץ פונקציית ציור מה-activities.js (למשל drawInvest)
         const drawFunc = window["draw" + t.charAt(0).toUpperCase() + t.slice(1)];
         if (typeof drawFunc === 'function') {
             drawFunc(c);
         } else {
-            // ברירת מחדל אם הפונקציה לא קיימת
             window.drawHome(c);
         }
         
         c.style.opacity = "1";
 
-        // הגנה קריטית: אם אנחנו בבורסה (invest), אל תגלול למעלה כדי למנוע קפיצות רענון!
         if (t !== 'invest') {
             window.scrollTo(0,0);
         }
@@ -81,7 +76,7 @@ window.openTab = function(t) {
     }, 100);
 };
 
-// --- דף הבית המלא (v6.7.0) ---
+// --- דף הבית המלא (v6.7.2) ---
 window.drawHome = function(c) {
     const ld = (typeof getLevelData === 'function') 
                ? getLevelData(window.lifeXP || 0) 
@@ -92,7 +87,7 @@ window.drawHome = function(c) {
             <div id="admin-box" class="admin-box">
                 <button class="edit-admin-btn" onclick="window.editAdminMsg()">✏️</button>
                 📢 <b>הודעה מהמערכת:</b><br>
-                <span style="font-size:13px;">${window.adminMsgText || "שלום אלכסיי! הבורסה עברה למקומה החדש והמרכזי."}</span>
+                <span style="font-size:13px;">${window.adminMsgText || "שלום אלכסיי! מערכת הדיבאג והצ'יטים זמינה כעת בעריכה."}</span>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -202,15 +197,65 @@ async function triggerInstall() {
     if (outcome === 'accepted') { deferredPrompt = null; renderInstallBtn(); }
 }
 
-// עריכת הודעת מנהל
+// עריכת הודעת מנהל + כלי דיבאג וצ'יטים
 window.editAdminMsg = function() {
     const pass = prompt("שלום אלכסיי, הכנס סיסמת מנהל:");
     if (pass === "1234") { 
-        const newMsg = prompt("הודעה חדשה:", window.adminMsgText || "");
-        if (newMsg !== null) { 
-            window.adminMsgText = newMsg; 
-            if(typeof showMsg === 'function') showMsg("ההודעה עודכנה!", "var(--green)"); 
-            window.openTab('home'); 
+        const action = prompt(
+            "--- תפריט מנהל ---\n" +
+            "1 - עריכת הודעת מערכת\n" +
+            "2 - בדיקת דיבאג (נתונים חיים)\n" +
+            "3 - הוספת כסף (Cheat)\n" +
+            "4 - הוספת ניסיון (XP Boost)", 
+            "1"
+        );
+        
+        switch(action) {
+            case "1":
+                const newMsg = prompt("הכנס הודעה חדשה:", window.adminMsgText || "");
+                if (newMsg !== null) { 
+                    window.adminMsgText = newMsg; 
+                    if(typeof showMsg === 'function') showMsg("ההודעה עודכנה!", "var(--green)"); 
+                    window.openTab('home'); 
+                }
+                break;
+
+            case "2":
+                const debugInfo = `
+--- DEBUG REPORT ---
+💰 מזומן: ${window.money.toLocaleString()}₪
+🏦 בנק: ${window.bank.toLocaleString()}₪
+📉 חוב: ${window.loan.toLocaleString()}₪
+✨ XP: ${window.lifeXP}
+🚀 פסיבי: ${window.passive.toFixed(2)}₪/ש
+🎒 נכסים: ${window.inventory ? window.inventory.length : 0}
+🏎️ מהירות רכב: ${window.carSpeed || 1}
+📱 גרסה: 6.7.2
+-------------------`;
+                alert(debugInfo);
+                break;
+
+            case "3":
+                const moneyAdd = prompt("כמה כסף להוסיף?", "100000");
+                if (moneyAdd && !isNaN(moneyAdd)) {
+                    window.money += parseInt(moneyAdd);
+                    if(typeof showMsg === 'function') showMsg(`💸 נוספו ${parseInt(moneyAdd).toLocaleString()}₪!`, "var(--blue)");
+                    if(typeof updateUI === 'function') updateUI();
+                    if(typeof saveGame === 'function') saveGame();
+                    window.openTab('home');
+                }
+                break;
+
+            case "4":
+                const xpAdd = prompt("כמה XP להוסיף?", "1000");
+                if (xpAdd && !isNaN(xpAdd)) {
+                    window.lifeXP += parseInt(xpAdd);
+                    if(typeof showMsg === 'function') showMsg(`✨ נוספו ${parseInt(xpAdd)} XP!`, "var(--purple)");
+                    if(typeof updateUI === 'function') updateUI();
+                    if(typeof saveGame === 'function') saveGame();
+                    window.openTab('home');
+                }
+                break;
         }
     } else if (pass !== null) alert("סיסמה שגויה!");
 };
