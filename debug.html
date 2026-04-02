@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Money Pro - בודק שגיאות</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; padding: 20px; }
+        .error-box { background: #450a0a; border: 2px solid #ef4444; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .success-box { background: #064e3b; border: 2px solid #10b981; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .log { background: #1e293b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; white-space: pre-wrap; height: 200px; overflow-y: scroll; }
+        h2 { color: #3b82f6; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>🛠️ לוכד שגיאות אוטומטי</h2>
+    
+    <div id="output">
+        <p>ממתין לטעינת קבצים...</p>
+    </div>
+
+    <h3>📜 יומן מערכת (Log):</h3>
+    <div id="console-log" class="log"></div>
+
+    <button onclick="location.reload()">רענן ובדוק שוב</button>
+    <button onclick="localStorage.clear(); alert('הזיכרון נמחק!'); location.reload();" style="background:#ef4444; margin-top:20px;">איפוס זיכרון (Cache Clear)</button>
+
+    <script>
+        const output = document.getElementById('output');
+        const consoleLog = document.getElementById('console-log');
+
+        // לכידת שגיאות גלובליות
+        window.onerror = function(message, source, lineno, colno, error) {
+            output.innerHTML = `
+                <div class="error-box">
+                    <h3 style="margin:0;">❌ נמצאה שגיאה!</h3>
+                    <p><b>הודעה:</b> ${message}</p>
+                    <p><b>קובץ:</b> ${source.split('/').pop()}</p>
+                    <p><b>שורה:</b> ${lineno}</p>
+                </div>`;
+            return false;
+        };
+
+        // לכידת לוגים רגילים
+        const oldLog = console.log;
+        console.log = function(...args) {
+            consoleLog.innerHTML += "✅ " + args.join(' ') + "<br>";
+            oldLog.apply(console, args);
+        };
+    </script>
+
+    <script src="js/core.js"></script>
+    <script src="js/economy.js"></script>
+    <script src="js/activities.js"></script>
+    <script src="js/ui.js"></script>
+
+    <script>
+        // בדיקה סופית אם הכל נטען
+        setTimeout(() => {
+            if (!output.querySelector('.error-box')) {
+                output.innerHTML = `
+                <div class="success-box">
+                    <h3 style="margin:0;">✅ הכל נראה תקין!</h3>
+                    <p>הקבצים נטענו ללא שגיאות תחביר בסיסיות.</p>
+                </div>`;
+            }
+        }, 2000);
+    </script>
+
+    <div id="top-money" style="display:none"></div>
+    <div id="top-bank" style="display:none"></div>
+    <div id="life-level-ui" style="display:none"></div>
+    <div id="status-bar" style="display:none"></div>
+    <div id="content" style="display:none"></div>
+
+</body>
+</html>
