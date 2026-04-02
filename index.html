@@ -3,59 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.8.0</title>
+    <title>Smart Money Pro | v6.9.2</title>
     
-    <link rel="manifest" href="manifest.json?v=6.8.0">
+    <link rel="manifest" href="manifest.json?v=6.9.2">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.8.0">
+    <link rel="stylesheet" href="style.css?v=6.9.2">
     <style>
-        /* תיקוני UI מקומיים */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
-        .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 20px; border: 1px solid var(--blue); box-shadow: 0 0 30px rgba(59, 130, 246, 0.3); }
-        
-        .admin-box {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.05));
-            border-right: 4px solid var(--blue);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #e2e8f0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            line-height: 1.5;
-        }
-
+        /* תיקוני שכבות - מבטיח שהודעות הסטטוס והסטטיסטיקה תמיד יראו */
         .stats-bar-top {
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 999; /* מתחת להודעות הסטטוס */
             display: flex;
             justify-content: space-around;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(15, 23, 42, 0.98);
             backdrop-filter: blur(10px);
             padding: 12px 5px;
             border-bottom: 1px solid var(--border);
         }
 
+        #status-bar { 
+            z-index: 1001 !important; 
+        }
+
+        .admin-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
+            border-right: 4px solid var(--blue);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
         .stat-item { font-weight: bold; font-size: 14px; color: var(--text); }
-        #top-money { color: var(--green); }
-        #top-bank { color: var(--blue); }
+        #top-money { color: var(--green); font-weight: 900; }
+        #top-bank { color: var(--blue); font-weight: 900; }
     </style>
 </head>
 <body class="dark-theme">
     
-    <header class="main-header" style="padding: 15px 0;">
-        <img src="logo.png" alt="Smart Money Pro" class="header-logo-big" onclick="openTab('home')" style="height: 50px; cursor:pointer;">
+    <header class="main-header" style="padding: 10px 0; text-align: center;">
+        <img src="logo.png" alt="Smart Money Pro" onclick="openTab('home')" style="height: 45px; cursor:pointer;">
     </header>
 
     <div class="stats-bar-top">
         <div class="stat-item">💰 <span id="top-money">0</span></div>
         <div class="stat-item">🏦 <span id="top-bank">0</span></div>
-        <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
+        <div class="stat-item">⭐ דרגה <span id="life-level-ui">1</span></div>
     </div>
 
     <div id="status-bar" class="status-msg"></div>
@@ -68,86 +67,52 @@
         </div>
         <div class="nav-row">
             <button onclick="openTab('market')" id="btnMarket">📈 בורסה</button>
-            <button onclick="openTab('business')" id="btnBusiness">🏢 עסקים</button>
             <button onclick="openTab('estate')" id="btnEstate">🏘️ נדל"ן</button>
+            <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
         </div>
         <div class="nav-row">
             <button onclick="openTab('skills')" id="btnSkills">🎓 כישורים</button>
-            <button onclick="openTab('bank')" id="btnBank">🏦 בנק</button>
             <button onclick="openTab('cars')" id="btnCars">🚗 רכבים</button>
+            <button onclick="toggleTheme()" style="font-size: 18px;">🌗</button>
         </div>
     </nav>
 
-    <main id="content" class="fade-in container" style="padding-bottom: 80px;"></main>
+    <main id="content" class="fade-in container" style="padding-top: 15px; padding-bottom: 100px;"></main>
 
-    <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <h3>📲 התקנת אפליקציה</h3>
-            <p id="android-instr">לחץ על תפריט הדפדפן (3 נקודות) ובחר <b>"התקן אפליקציה"</b>.</p>
-            <p id="ios-instr" style="display:none;">לחץ על כפתור ה-<b>"שתף"</b> (ריבוע עם חץ) ואז בחר <b>"הוסף למסך הבית"</b>.</p>
-            <button class="action" onclick="closeInstallGuide()" style="background:var(--blue); color:#fff; width:100%; margin-top:15px;">הבנתי!</button>
-        </div>
-    </div>
-
-    <footer class="main-footer" style="padding: 20px; text-align: center; font-size: 11px; opacity: 0.5;">
-        Smart Money Pro v6.8.0 | פותח ע"י אלכסיי זבודיסקר © 2026
-    </footer>
-
-    <script src="js/core.js?v=6.8.0"></script>
-    <script src="js/activities.js?v=6.8.0"></script>
-    <script src="js/economy.js?v=6.8.0"></script>
-    <script src="js/ui.js?v=6.8.0"></script>
+    <script src="js/core.js?v=6.9.2"></script>
+    <script src="js/economy.js?v=6.9.2"></script>
+    <script src="js/activities.js?v=6.9.2"></script>
+    <script src="js/ui.js?v=6.9.2"></script>
+    <script src="js/debug.js?v=6.9.2"></script>
 
     <script>
-        const adminMsgText = "שלום אלכסיי! גרסה 6.8.0 הותקנה בהצלחה. מערכת הבורסה החיה והמחסן החדש פעילים כעת.";
+        // הודעת עדכון לאלכסיי
+        const adminMsgText = "גרסה 6.9.2 פעילה. כל הקישורים (קזינו, בורסה, בנק) תוקנו ומסונכרנים.";
 
-        // פונקציית סטטוס (הודעות קופצות)
-        function showMsg(msg, color = 'var(--blue)') {
-            const bar = document.getElementById('status-bar');
-            if (!bar) return;
-            bar.innerText = msg;
-            bar.style.background = color;
-            bar.style.opacity = "1";
-            bar.style.transform = "translateY(0)";
-            setTimeout(() => { 
-                bar.style.opacity = "0"; 
-                bar.style.transform = "translateY(-20px)";
-            }, 3000);
-        }
-
-        // דריסת פונקציית openTab לטובת הודעת המנהל
+        // עטיפת ה-openTab להוספת הודעת המנהל בטאב הבית
         const originalOpenTab = window.openTab;
-        window.openTab = function(t) {
-            if (typeof originalOpenTab === 'function') {
-                originalOpenTab(t);
-                
-                // הוספת הודעת המנהל רק בטאב הבית
-                if (t === 'home') {
-                    setTimeout(() => {
-                        const content = document.getElementById('content');
-                        if (content && !document.querySelector('.admin-box')) {
-                            const adminDiv = document.createElement('div');
-                            adminDiv.className = 'admin-box fade-in';
-                            adminDiv.innerHTML = `📢 <b>עדכון מערכת:</b><br>${adminMsgText}`;
-                            content.prepend(adminDiv);
-                        }
-                    }, 200);
-                }
+        window.openTab = function(tab) {
+            if (typeof originalOpenTab === 'function') originalOpenTab(tab);
+            
+            if (tab === 'home') {
+                setTimeout(() => {
+                    const content = document.getElementById('content');
+                    if (content && !document.querySelector('.admin-box')) {
+                        const adminDiv = document.createElement('div');
+                        adminDiv.className = 'admin-box fade-in';
+                        adminDiv.innerHTML = `📢 <b>מערכת:</b> ${adminMsgText}`;
+                        content.prepend(adminDiv);
+                    }
+                }, 400);
             }
         };
 
-        function closeInstallGuide() { document.getElementById('installModal').style.display = 'none'; }
-
+        // אתחול דף ראשון
         document.addEventListener('DOMContentLoaded', () => {
-            // זיהוי מערכת הפעלה להוראות התקנה
-            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                document.getElementById('android-instr').style.display = 'none';
-                document.getElementById('ios-instr').style.display = 'block';
-            }
-            
-            // אתחול המשחק
-            if (typeof initGame === 'function') initGame();
-            else openTab('home');
+            setTimeout(() => {
+                if (typeof openTab === 'function') openTab('home');
+                console.log("System Ready.");
+            }, 500);
         });
     </script>
 </body>
