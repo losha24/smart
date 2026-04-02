@@ -1,11 +1,6 @@
-/* Smart Money Pro - js/activities.js - v6.8.9 - Full Pro Edition */
+/* Smart Money Pro - js/activities.js - v6.8.9 - Fix No Duplicates */
 
-let isWorking = false;
-let energy = 100;
-let hunger = 0; 
-let workInterval;
-
-// --- 1. מאגרי נתונים (מסונכרן לגרסה 6.5.0 המלאה) ---
+// --- 1. מאגרי נתונים (מסונכרן מלא) ---
 const jobList = [
     { id: 'cleaner', name: 'מנקה רחובות', pay: 45, xp: 20, time: 10, energy: 12, minLvl: 1 },
     { id: 'guard', name: 'מאבטח מתקנים', pay: 85, xp: 40, time: 25, energy: 18, minLvl: 2 },
@@ -26,8 +21,11 @@ const carDealer = [
     { id: 'ferrari', name: 'פרארי אדומה', price: 1200000, speed: 2.5, icon: '🏎️' }
 ];
 
-// --- 2. ניהול עבודות וביצועים ---
+let workInterval; // נשאר כאן כי הוא מקומי לניהול הטיימר
+
+// --- 2. ניהול עבודות ---
 function drawWork(c) {
+    // שימוש במשתנים הגלובליים מ-core.js ללא הגדרה מחדש
     let h = `<div class="card fade-in">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h3 style="margin:0;">⚒️ מרכז תעסוקה</h3>
@@ -37,18 +35,20 @@ function drawWork(c) {
             </div>
         </div>`;
 
-    if (isWorking) {
+    if (typeof isWorking !== 'undefined' && isWorking) {
         h += `<div class="work-active-box" style="padding:20px; text-align:center; background:rgba(0,0,0,0.2); border-radius:10px;">
                 <p>עובד כרגע... נא לא לסגור ⏳</p>
-                <div class="progress-container"><div id="work-bar" class="progress-bar active-pulse" style="width:0%; background:var(--green);"></div></div>
+                <div class="progress-container" style="background:#444; height:12px; border-radius:6px; overflow:hidden;">
+                    <div id="work-bar" class="progress-bar" style="width:0%; height:100%; background:var(--green);"></div>
+                </div>
               </div>`;
     } else {
         jobList.forEach(j => {
             const hasSkill = j.req ? skills.includes(j.req) : true;
             const lvl = getLevelData(lifeXP).level;
-            const canDo = lvl >= j.minLvl && hasSkill && energy >= j.energy && hunger < 90;
+            const canDo = lvl >= j.minLvl && hasSkill && energy >= j.energy && hunger < 95;
 
-            h += `<div class="card job-item" style="opacity:${canDo ? 1 : 0.6}; border-left: 4px solid ${canDo ? 'var(--blue)' : 'var(--red)'};">
+            h += `<div class="card job-item" style="opacity:${canDo ? 1 : 0.6}; border-right: 4px solid ${canDo ? 'var(--blue)' : 'var(--red)'}; margin-bottom:10px; padding:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <b>${j.name}</b><br>
@@ -56,8 +56,6 @@ function drawWork(c) {
                     </div>
                     <button onclick="startJob('${j.id}')" class="sys-btn" ${!canDo ? 'disabled' : ''}>בצע</button>
                 </div>
-                ${!hasSkill ? `<div style="color:var(--red); font-size:10px; margin-top:5px;">⚠️ דרוש: ${j.req}</div>` : ''}
-                ${hunger >= 90 ? `<div style="color:var(--red); font-size:10px;">⚠️ אתה רעב מדי לעבוד!</div>` : ''}
             </div>`;
         });
     }
@@ -71,12 +69,10 @@ function startJob(id) {
 
     isWorking = true;
     energy -= j.energy;
-    hunger += 5; // העבודה מעלה את הרעב
-    let elapsed = 0;
+    hunger = Math.min(100, hunger + 5); 
     
-    // בונוס מהירות מהרכב הכי טוב שיש בבעלותך
     let speedMult = 1;
-    if (cars.length > 0) {
+    if (cars && cars.length > 0) {
         const bestCar = carDealer.filter(c => cars.includes(c.name)).sort((a,b) => b.speed - a.speed)[0];
         if (bestCar) speedMult = bestCar.speed;
     }
@@ -84,6 +80,7 @@ function startJob(id) {
     const totalTime = j.time / speedMult;
     openTab('work');
     
+    let elapsed = 0;
     workInterval = setInterval(() => {
         elapsed++;
         const pct = (elapsed / totalTime) * 100;
@@ -107,20 +104,46 @@ function finishJob(j) {
     openTab('work');
 }
 
-// --- 3. חנות רכבים וכישורים ---
+// --- 3. שוק ורכבים ---
+function drawMarket(c) {
+    const foods = [
+        { n: 'סנדוויץ׳', p: 50, h: -20, e: 10, i: '🥪' },
+        { n: 'ארוחה מלאה', p: 150, h: -60, e: 30, i: '🍱' }
+    ];
+    let h = `<div class="card fade-in"><h3>🛒 שוק ומזון</h3>`;
+    foods.forEach(f => {
+        h += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span>${f.i} ${f.n}</span>
+            <button onclick="eat('${f.n}', ${f.p}, ${f.h}, ${f.e})" class="action">אכול (${f.p}₪)</button>
+        </div>`;
+    });
+    h += `</div>`;
+    c.innerHTML = h;
+}
+
+function eat(n, p, hChange, eChange) {
+    if (money >= p) {
+        money -= p;
+        hunger = Math.max(0, hunger + hChange);
+        energy = Math.min(100, energy + eChange);
+        showMsg(`אכלת ${n}!`, "var(--green)");
+        saveGame();
+        updateUI();
+        openTab('market');
+    } else {
+        showMsg("אין לך מספיק כסף!", "var(--red)");
+    }
+}
+
 function drawCars(c) {
     let h = `<div class="card fade-in"><h3>🏎️ סוכנות רכבים</h3>`;
     carDealer.forEach(car => {
         const owned = cars.includes(car.name);
-        h += `<div class="card" style="border:1px solid ${owned ? 'var(--green)' : 'var(--border)'}">
+        h += `<div class="card" style="margin-bottom:10px; border-right: 4px solid ${owned ? 'var(--green)' : 'var(--border)'}">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:25px;">${car.icon}</div>
-                <div style="flex:1; margin-right:15px;">
-                    <b>${car.name}</b><br>
-                    <small>מהירות: x${car.speed} | מחיר: ${car.price.toLocaleString()}₪</small>
-                </div>
+                <span>${car.icon} <b>${car.name}</b> (x${car.speed})</span>
                 <button onclick="buyCar('${car.id}')" class="sys-btn" ${owned ? 'disabled' : ''}>
-                    ${owned ? 'בבעלותך' : 'קנה'}
+                    ${owned ? 'בבעלותך' : car.price.toLocaleString() + '₪'}
                 </button>
             </div>
         </div>`;
@@ -134,7 +157,6 @@ function buyCar(id) {
     if (money >= car.price && !cars.includes(car.name)) {
         money -= car.price;
         cars.push(car.name);
-        inventory.push({ n: car.name, i: car.icon, t: 'car' });
         showMsg(`תתחדש על ה${car.name}!`, "var(--green)");
         saveGame();
         updateUI();
@@ -142,57 +164,16 @@ function buyCar(id) {
     }
 }
 
-// --- 4. שוק אוכל (Health System) ---
-function drawMarket(c) {
-    const foods = [
-        { n: 'סנדוויץ׳', p: 50, h: -20, e: 10, i: '🥪' },
-        { n: 'ארוחה מלאה', p: 150, h: -60, e: 30, i: '🍱' }
-    ];
-    let h = `<div class="card fade-in"><h3>🛒 שוק ומזון</h3>`;
-    foods.forEach(f => {
-        h += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <span>${f.i} ${f.n} (שובע: ${Math.abs(f.h)}%)</span>
-            <button onclick="eat('${f.n}', ${f.p}, ${f.h}, ${f.e})" class="action" style="padding:5px 15px;">אכול ב-${f.p}₪</button>
-        </div>`;
-    });
-    h += `</div>`;
-    c.innerHTML = h;
-}
-
-function eat(n, p, hChange, eChange) {
-    if (money >= p) {
-        money -= p;
-        hunger = Math.max(0, hunger + hChange);
-        energy = Math.min(100, energy + eChange);
-        showMsg(`אכלת ${n}, הרעב ירד!`, "var(--green)");
-        saveGame();
-        updateUI();
-        openTab('market');
-    }
-}
-
-// --- 5. לוגיקת החלמה אוטומטית ---
-setInterval(() => {
-    if (hunger < 100) hunger += 0.5; // רעב עולה עם הזמן
-    if (energy < 100 && hunger < 80) energy += 1; // אנרגיה עולה רק אם לא רעבים מדי
-    
-    if (currentTab === 'work') {
-        const stats = document.querySelectorAll('.stat-badge, small');
-        if (stats.length > 0) {
-            // עדכון ויזואלי של הסטטוסים בתוך הטאב
-        }
-    }
-}, 20000); 
-
 function drawSkills(c) {
-    let h = `<div class="card fade-in"><h3>🎓 מרכז הכשרה</h3>`;
+    let h = `<div class="card fade-in"><h3>🎓 הכשרה ולימודים</h3>`;
     skillTree.forEach(s => {
         const owned = skills.includes(s.name);
-        h += `<div class="card">
+        h += `<div class="card" style="margin-bottom:10px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:24px;">${s.icon}</div>
-                <div style="flex:1; margin-right:15px;"><b>${s.name}</b><br><small>מחיר: ${s.price.toLocaleString()}₪</small></div>
-                <button onclick="buySkill('${s.id}')" class="sys-btn" ${owned ? 'disabled' : ''}>${owned ? 'נרכש' : 'קנה'}</button>
+                <span>${s.icon} <b>${s.name}</b></span>
+                <button onclick="buySkill('${s.id}')" class="sys-btn" ${owned ? 'disabled' : ''}>
+                    ${owned ? 'נרכש' : s.price.toLocaleString() + '₪'}
+                </button>
             </div>
         </div>`;
     });
@@ -206,7 +187,7 @@ function buySkill(id) {
         money -= s.price;
         skills.push(s.name);
         lifeXP += s.xp;
-        showMsg(`רכשת ${s.name}!`, "var(--blue)");
+        showMsg(`סיימת קורס ${s.name}!`, "var(--blue)");
         saveGame();
         updateUI();
         openTab('skills');
