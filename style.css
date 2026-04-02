@@ -1,4 +1,4 @@
-/* Smart Money Pro - style.css - v6.0.5 - Modern Progress & UI Sync */
+/* Smart Money Pro - style.css - v6.8.0 - Modern UI & System Integration */
 
 :root { 
     --bg: #0f172a; 
@@ -13,7 +13,7 @@
     --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* ערכת נושא בהירה */
+/* ערכת נושא בהירה - נשמר במלואו */
 .light-theme { 
     --bg: #f8fafc; 
     --card: #ffffff; 
@@ -138,6 +138,72 @@ body {
     box-shadow: var(--shadow);
 }
 
+/* --- חדש: מערכת מחסן (Inventory) מקצועית --- */
+.inv-grid { 
+    display: grid; 
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 8px; 
+    margin-top: 12px; 
+}
+
+.inv-slot { 
+    background: rgba(255, 255, 255, 0.03); 
+    border: 1px solid var(--border); 
+    border-radius: 12px; 
+    aspect-ratio: 1/1; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 20px; 
+    position: relative; 
+    transition: 0.2s;
+}
+
+.inv-slot:hover { border-color: var(--blue); background: rgba(56, 189, 248, 0.05); }
+
+.inv-count { 
+    position: absolute; 
+    bottom: -2px; 
+    right: -2px; 
+    font-size: 9px; 
+    background: var(--blue); 
+    color: #0f172a; 
+    padding: 1px 4px; 
+    border-radius: 6px; 
+    font-weight: 800;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* --- חדש: מערכת בורסה (Stocks) --- */
+.stock-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
+.stock-item:last-child { border-bottom: none; }
+
+.stock-info { display: flex; flex-direction: column; gap: 2px; }
+.stock-price { font-family: 'Courier New', monospace; font-weight: bold; }
+
+/* --- חדש: טיימר עבודה (Job Progress) --- */
+.work-progress-wrapper {
+    height: 8px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+    display: none; /* מוסתר כברירת מחדל */
+    border: 1px solid var(--border);
+}
+.work-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), #4ade80);
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
 /* Grid ל-2 בשורה */
 .grid-2 { 
     display: grid; 
@@ -176,7 +242,7 @@ body {
     transition: 0.2s;
 }
 
-.action:disabled { opacity: 0.5; cursor: not-allowed; }
+.action:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; transform: none !important; }
 .action:active:not(:disabled) { transform: scale(0.96); }
 
 /* פסי התקדמות משופרים */
@@ -197,14 +263,6 @@ body {
 
 .xp-bar { background: linear-gradient(90deg, var(--blue), var(--purple)) !important; }
 
-/* רשימת מלאי (Inventory) אופקית */
-#inventory-list {
-    scrollbar-width: none; /* Firefox */
-}
-#inventory-list::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
-}
-
 /* אנימציות */
 .fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { 
@@ -217,6 +275,7 @@ body {
     .topbar button { font-size: 10px; padding: 8px 1px; }
     .stat-item { font-size: 11px; }
     .grid-2 { gap: 8px; }
+    .inv-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 footer.main-footer {
