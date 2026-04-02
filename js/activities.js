@@ -1,6 +1,6 @@
-/* Smart Money Pro - js/activities.js - v7.5.2 - FULL SYNC (400+ Lines) */
+/* Smart Money Pro - js/activities.js - v7.5.3 - UI & Inventory Fix */
 
-// --- 1. מאגרי נתונים מורחבים (מועתק במדויק מהמקור שלך) ---
+// --- 1. מאגרי נתונים ---
 const jobList = [
     { id: 'j1', name: 'מנקה', pay: 55, xp: 20, time: 3000, icon: '🧹' },
     { id: 'j2', name: 'שליח', pay: 95, xp: 45, time: 5000, icon: '🛵' },
@@ -97,37 +97,43 @@ setInterval(() => {
     }
 }, 4000);
 
-// --- 3. דף הבית החדש: תצוגת אייקונים של רכוש ---
+// --- 3. דף הבית (מרכז שליטה) - מתוקן להצגת אייקונים ---
 window.drawHome = function(c) {
-    const itemIcons = shopItems.filter(si => window.inventory.includes(si.id) || window.inventory.includes(si.name))
-        .map(si => `<span title="${si.name}" style="font-size:24px; margin:2px;">${si.icon}</span>`).join('');
+    // פונקציית עזר לבדיקה אם פריט קיים (לפי שם או ID)
+    const hasItem = (id, name) => window.inventory.includes(id) || window.inventory.includes(name);
+
+    const itemIcons = shopItems.filter(si => hasItem(si.id, si.name))
+        .map(si => `<span title="${si.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${si.icon}</span>`).join('');
 
     const carIcons = carList.filter(car => window.cars.includes(car.name))
-        .map(car => `<span title="${car.name}" style="font-size:24px; margin:2px;">${car.icon}</span>`).join('');
+        .map(car => `<span title="${car.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${car.icon}</span>`).join('');
 
     const skillIcons = skillList.filter(sk => window.skills.includes(sk.name))
-        .map(sk => `<span title="${sk.name}" style="font-size:24px; margin:2px;">${sk.icon}</span>`).join('');
+        .map(sk => `<span title="${sk.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${sk.icon}</span>`).join('');
 
     c.innerHTML = `
         <div class="fade-in">
-            <h3 style="margin-bottom:15px;">🏠 הבית שלי</h3>
-            <div class="card" style="margin-bottom:12px; padding:12px;">
-                <div style="font-weight:bold; color:var(--purple); font-size:13px; border-bottom:1px solid #333; margin-bottom:10px;">🛍️ ציוד וחפצים</div>
-                <div style="display:flex; flex-wrap:wrap; gap:10px; min-height:30px;">${itemIcons || '<small style="opacity:0.4;">אין ציוד</small>'}</div>
+            <h3 style="margin-bottom:15px; text-align:center;">🏠 מרכז שליטה אישי</h3>
+            
+            <div class="card" style="margin-bottom:12px; border-right: 4px solid var(--purple);">
+                <div style="font-weight:bold; color:var(--purple); font-size:14px; margin-bottom:10px;">📦 ארון ציוד וחפצים</div>
+                <div style="display:flex; flex-wrap:wrap; gap:5px; min-height:45px;">${itemIcons || '<small style="opacity:0.4;">הארון ריק...</small>'}</div>
             </div>
-            <div class="card" style="margin-bottom:12px; padding:12px;">
-                <div style="font-weight:bold; color:var(--blue); font-size:13px; border-bottom:1px solid #333; margin-bottom:10px;">🏎️ צי הרכבים</div>
-                <div style="display:flex; flex-wrap:wrap; gap:10px; min-height:30px;">${carIcons || '<small style="opacity:0.4;">אין רכבים</small>'}</div>
+
+            <div class="card" style="margin-bottom:12px; border-right: 4px solid var(--blue);">
+                <div style="font-weight:bold; color:var(--blue); font-size:14px; margin-bottom:10px;">🏎️ החניה שלי</div>
+                <div style="display:flex; flex-wrap:wrap; gap:5px; min-height:45px;">${carIcons || '<small style="opacity:0.4;">אין רכבים בחניה</small>'}</div>
             </div>
-            <div class="card" style="padding:12px;">
-                <div style="font-weight:bold; color:var(--green); font-size:13px; border-bottom:1px solid #333; margin-bottom:10px;">🎓 כישורים שנרכשו</div>
-                <div style="display:flex; flex-wrap:wrap; gap:10px; min-height:30px;">${skillIcons || '<small style="opacity:0.4;">אין כישורים</small>'}</div>
+
+            <div class="card" style="border-right: 4px solid var(--green);">
+                <div style="font-weight:bold; color:var(--green); font-size:14px; margin-bottom:10px;">🎓 הסמכות וכישורים</div>
+                <div style="display:flex; flex-wrap:wrap; gap:5px; min-height:45px;">${skillIcons || '<small style="opacity:0.4;">טרם נרכשו כישורים</small>'}</div>
             </div>
         </div>
     `;
 }
 
-// --- 4. מנוע עבודה (מועתק במלואו מהמקור עם שיפור פסיבי) ---
+// --- 4. מנוע עבודה ---
 window.drawWork = function(c) {
     let html = `<h3>⚒️ מרכז תעסוקה</h3><div class="grid-2">`;
     jobList.forEach(j => {
@@ -181,7 +187,7 @@ window.startWork = function(id) {
     }, actualTime);
 }
 
-// --- 5. נדל"ן (מועתק במלואו) ---
+// --- 5. נדל"ן ---
 window.drawEstate = function(c) {
     let html = `<h3>🏠 השקעות נדל"ן</h3><div class="grid-2">`;
     estateList.forEach(e => {
@@ -210,7 +216,7 @@ window.buyEstate = function(id) {
     saveGame(); updateUI(); drawEstate(document.getElementById('content'));
 }
 
-// --- 6. עסקים (מועתק במלואו כולל לוגיקת מחיר עולה) ---
+// --- 6. עסקים ---
 window.drawBusiness = function(c) {
     let html = `<h3>💼 אימפריית עסקים</h3><div class="grid-2">`;
     businessList.forEach(b => {
@@ -244,7 +250,7 @@ window.buyBusiness = function(id, price, passAdd) {
     } else { showMsg("אין מספיק כסף!", "var(--red)"); }
 }
 
-// --- 7. בנק משודרג (כולל הפקדה חופשית והחזר הלוואה) ---
+// --- 7. בנק (מתוקן עם ריענון ממשק) ---
 window.drawBank = function(c) {
     const tax = (window.bankTaxRate * 100).toFixed(1);
     c.innerHTML = `
@@ -260,7 +266,7 @@ window.drawBank = function(c) {
                     <button class="sys-btn" style="background:#2563eb; height:45px;" onclick="bankProcess('deposit')">הפקד</button>
                     <button class="sys-btn" style="background:#a855f7; height:45px;" onclick="bankProcess('withdraw')">משוך</button>
                 </div>
-                <div style="font-size:11px; margin-top:8px; opacity:0.6;">עמלת פעולה נוכחית: ${tax}%</div>
+                <div style="font-size:11px; margin-top:8px; opacity:0.6;">עמלה: ${tax}%</div>
             </div>
             <button class="action" style="background:#451a1a; width:100%; margin-top:15px; padding:12px;" onclick="repayLoan()">💰 החזר חוב מהמזומן</button>
             <button class="action" style="background:#1e293b; width:100%; margin-top:10px;" onclick="takeLoan()">🏦 בקש הלוואה (50,000₪)</button>
@@ -276,35 +282,32 @@ window.bankProcess = function(mode) {
     if(mode === 'deposit') {
         if(window.money >= (val + fee)) {
             window.money -= (val + fee); window.bank += val;
-            showMsg(`הופקד בהצלחה! עמלה: ${fee.toFixed(0)}₪`, "var(--blue)");
-        } else return showMsg("אין מספיק מזומן לכיסוי העמלה", "var(--red)");
+            showMsg(`הופקד בהצלחה!`, "var(--blue)");
+        } else return showMsg("אין מספיק מזומן", "var(--red)");
     } else {
         if(window.bank >= val) {
             window.bank -= val; window.money += (val - fee);
-            showMsg(`נמשך בהצלחה! עמלה: ${fee.toFixed(0)}₪`, "var(--purple)");
-        } else return showMsg("אין מספיק יתרה בבנק", "var(--red)");
+            showMsg(`נמשך בהצלחה!`, "var(--purple)");
+        } else return showMsg("אין מספיק יתרה", "var(--red)");
     }
-    if(window.bankTaxRate < 0.05) window.bankTaxRate += 0.002;
     saveGame(); updateUI(); drawBank(document.getElementById('content'));
 }
 
 window.repayLoan = function() {
-    if(window.loan <= 0) return showMsg("אין לך חובות!", "var(--green)");
     const amountToPay = Math.min(window.money, window.loan);
     if(amountToPay > 0) {
         window.money -= amountToPay; window.loan -= amountToPay;
-        showMsg(`שילמת ${amountToPay.toLocaleString()}₪ מהחוב`, "var(--green)");
+        showMsg(`שילמת ${amountToPay.toLocaleString()}₪`, "var(--green)");
         saveGame(); updateUI(); drawBank(document.getElementById('content'));
-    } else showMsg("אין לך מספיק מזומן להחזיר", "var(--red)");
+    }
 }
 
 window.takeLoan = function() {
     window.loan += 50000; window.money += 50000;
-    showMsg("הלוואה אושרה!", "var(--yellow)");
     saveGame(); updateUI(); drawBank(document.getElementById('content'));
 }
 
-// --- 8. בורסה (מועתק במלואו) ---
+// --- 8. בורסה ---
 window.drawInvest = function(c) {
     let html = `<h3>📈 מסחר בבורסה</h3><div class="grid-2">`;
     stockList.forEach(s => {
@@ -375,7 +378,7 @@ window.buyShopItem = function(id) {
     }
 };
 
-// --- 10. קזינו (מועתק במלואו כולל אנימציה) ---
+// --- 10. קזינו ---
 window.drawTasks = function(c) {
     c.innerHTML = `
         <div class="card fade-in" style="text-align:center; padding:25px; border: 2px dashed var(--yellow);">
@@ -400,10 +403,8 @@ window.runCasino = function() {
         if (Math.random() > 0.58) {
             window.money += amt * 2;
             status.innerHTML = `<span style="color:var(--green);">💎 זכית ב-${amt*2}₪! 💎</span>`;
-            showMsg("💎 זכייה!", "var(--yellow)");
         } else {
             status.innerHTML = `<span style="color:var(--red);">💀 הפסדת הכל... 💀</span>`;
-            showMsg("💀 הפסד", "var(--red)");
         }
         updateUI(); saveGame();
     }, 1200);
