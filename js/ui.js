@@ -1,161 +1,170 @@
-/* Smart Money Pro - js/ui.js - v6.3.0 - Dynamic XP Scaling UI */
+/* Smart Money Pro - js/ui.js - v6.8.9 - Full UI Engine */
 
-let deferredPrompt;
-let currentTab = 'home'; 
+let currentTab = 'home';
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    renderInstallBtn();
-});
+// --- 1. ניהול טאבים וניווט ---
+function openTab(tabName) {
+    currentTab = tabName;
+    const content = document.getElementById('content');
+    if (!content) return;
 
-// --- עדכון ויזואלי מהיר (נקרא מה-Core ושולח אובייקט ld) ---
-function renderUIUpdate(ld) {
-    // אם לא נשלח אובייקט ld מה-Core, ננסה לחשב אותו מקומית כגיבוי
-    if (!ld && typeof getLevelData === 'function') {
-        ld = getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0);
+    // עדכון כפתורים פעילים
+    document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById('btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+    if (activeBtn) activeBtn.classList.add('active');
+
+    content.innerHTML = ""; 
+
+    // ניתוב לפונקציות הציור מ-activities.js
+    switch(tabName) {
+        case 'home': drawHome(content); break;
+        case 'work': drawWork(content); break;
+        case 'invest': 
+        case 'market': drawMarket(content); break;
+        case 'business':
+        case 'estate': drawEstate(content); break;
+        case 'tasks': drawTasks(content); break;
+        case 'skills': drawSkills(content); break;
+        case 'bank': drawBank(content); break;
+        case 'cars': drawCars(content); break;
+        default: drawHome(content);
     }
-
-    if (currentTab === 'home' && ld) {
-        const passiveEl = document.getElementById('passive-display');
-        const progressEl = document.getElementById('xp-progress-bar');
-        const xpTextEl = document.getElementById('xp-text-detail');
-        const levelValEl = document.getElementById('home-level-val');
-        
-        // הצגת הכנסה פסיבית
-        if (passiveEl) {
-            const currentPassive = typeof passive !== 'undefined' ? passive : 0;
-            passiveEl.innerText = currentPassive.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " ₪/ש";
-        }
-        
-        // עדכון בר התקדמות דינמי (לפי נוסחת 25% מה-Core)
-        if (progressEl) {
-            progressEl.style.width = ld.progressPercent + "%";
-        }
-        
-        if (xpTextEl) {
-            xpTextEl.innerText = `${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP`;
-        }
-        
-        // עדכון מספר הרמה
-        if (levelValEl) {
-            levelValEl.innerText = ld.level;
-        }
-    }
+    
+    updateUI();
 }
 
-// --- מערכת ניווט ---
-function openTab(t) {
-    currentTab = t; 
-    document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
-    const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
-    const btn = document.getElementById(btnId);
-    if(btn) btn.classList.add("active");
-    
-    const c = document.getElementById("content"); 
-    if(!c) return;
-    
-    c.style.opacity = "0";
-    
-    setTimeout(() => {
-        c.innerHTML = "";
-        switch(t) {
-            case 'home':       drawHome(c); break;
-            case 'work':       if(typeof drawWork === 'function') drawWork(c); break;
-            case 'tasks':      if(typeof drawTasks === 'function') drawTasks(c); break; 
-            case 'invest':     
-            case 'market':     if(typeof drawMarket === 'function') drawMarket(c); 
-                               else if(typeof drawInvest === 'function') drawInvest(c); break;
-            case 'bank':       if(typeof drawBank === 'function') drawBank(c); break;
-            case 'skills':     if(typeof drawSkills === 'function') drawSkills(c); break;
-            case 'cars':       if(typeof drawCars === 'function') drawCars(c); break;
-            case 'estate':     if(typeof drawEstate === 'function') drawEstate(c); break; 
-            case 'business':   if(typeof drawBusiness === 'function') drawBusiness(c); break;
-            default:           drawHome(c);
-        }
-        
-        c.style.opacity = "1";
-        window.scrollTo(0,0);
-        if(typeof updateUI === 'function') updateUI();
-    }, 120);
-}
-
-// --- דף הבית ---
+// --- 2. רינדור דף הבית (Home Screen) ---
 function drawHome(c) {
-    // קבלת נתוני רמה מה-Core (דורש core.js v6.3.0)
-    const ld = (typeof getLevelData === 'function') 
-               ? getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0) 
-               : { level: 1, xpInCurrentLevel: 0, xpForNext: 1000, progressPercent: 0 };
-
-    c.innerHTML = `
-        <div class="card fade-in">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="margin:0;">🏠 מרכז שליטה</h3>
-                <div style="display:flex; gap:8px;">
-                     <button onclick="getDailyGift()" class="sys-btn" style="padding:5px 12px; font-size:12px; background:var(--yellow); color:black;">🎁 מתנה</button>
-                     <button onclick="forceUpdate()" class="sys-btn" style="padding:5px 12px; font-size:12px;">🔄 רענן</button>
-                </div>
+    const ld = getLevelData(lifeXP);
+    
+    let html = `
+    <div class="fade-in">
+        <div class="card profile-card" style="text-align:center; background: linear-gradient(135deg, #1e293b, #0f172a);">
+            <div style="font-size:40px; margin-bottom:10px;">👤</div>
+            <h2 style="margin:5px 0;">אלכסיי זבודיסקר</h2>
+            <div class="badge" style="background:var(--blue); display:inline-block; padding:3px 12px; border-radius:15px; font-size:12px;">
+                דרגה: ${ld.level}
             </div>
             
-            <div class="card" style="background:rgba(255,255,255,0.03); margin-bottom:15px; padding:12px; border:1px solid var(--border);">
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px;">
-                    <span>רמת חיים <b id="home-level-val">${ld.level}</b></span>
-                    <span id="xp-text-detail" style="opacity:0.8;">${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP</span>
+            <div style="margin-top:20px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
+                    <span>התקדמות לרמה ${ld.level + 1}</span>
+                    <span>${Math.floor(ld.progressPercent)}%</span>
                 </div>
-                <div style="height:10px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
-                    <div id="xp-progress-bar" style="width:${ld.progressPercent}%; height:100%; background:linear-gradient(90deg, var(--blue), #60a5fa); transition: width 0.3s ease;"></div>
-                </div>
-            </div>
-
-            <div class="grid-2">
-                <div class="card" style="margin:0; padding:12px; text-align:center; border: 1px solid rgba(34, 197, 94, 0.2); background:rgba(34, 197, 94, 0.02);">
-                    <small style="opacity:0.7; font-size:10px; display:block; margin-bottom:4px;">💰 הכנסה פסיבית</small>
-                    <b id="passive-display" style="color:var(--green); font-size:15px;">${(typeof passive !== 'undefined' ? passive : 0).toLocaleString()} ₪/ש</b>
-                </div>
-                <div class="card" style="margin:0; padding:12px; text-align:center; border: 1px solid rgba(239, 68, 68, 0.2); background:rgba(239, 68, 68, 0.02);">
-                    <small style="opacity:0.7; font-size:10px; display:block; margin-bottom:4px;">🏦 חוב לבנק</small>
-                    <b style="color:var(--red); font-size:15px;">${(typeof loan !== 'undefined' ? loan : 0).toLocaleString()} ₪</b>
+                <div class="progress-container" style="height:10px;">
+                    <div class="progress-bar" style="width:${ld.progressPercent}%; background:var(--green); box-shadow: 0 0 10px var(--green);"></div>
                 </div>
             </div>
-
-            <div class="card" style="margin-top:15px; font-size:13px; background:rgba(255,255,255,0.01); padding:12px; border:1px dashed var(--border);">
-                <div style="margin-bottom:8px;">🎓 <b>כישורים:</b> <span style="color:var(--blue)">${(typeof skills !== 'undefined' && skills.length > 0) ? skills.join(", ") : "ללא הכשרה"}</span></div>
-                <div>🚗 <b>רכב:</b> <span style="color:var(--yellow)">${(typeof cars !== 'undefined' && cars.length > 0) ? cars[cars.length-1] : "הולך ברגל"}</span></div>
-            </div>
-
-            <div class="card" style="margin-top:15px; padding:12px; background:rgba(0,0,0,0.1);">
-                <small style="opacity:0.6; display:block; margin-bottom:10px;">📦 הציוד שלי:</small>
-                <div id="inventory-list" style="display:flex; gap:10px; overflow-x:auto; min-height:55px; padding-bottom:5px; align-items:center;">
-                    ${(typeof inventory !== 'undefined' && inventory.length > 0) 
-                        ? inventory.map(item => `<div class="inv-item-icon">📦</div>`).join('') 
-                        : '<span style="opacity:0.4; font-size:12px; font-style:italic;">אין פריטים...</span>'}
-                </div>
-            </div>
-
-            <div id="install-container" style="margin-top:20px;"></div>
-
-            <button class="sys-btn" style="border:1px solid #451a1a; color:#ef4444; margin-top:25px; font-size:11px; padding:10px; width:100%;" onclick="resetGame()">🗑️ איפוס חשבון</button>
         </div>
-    `;
-    renderInstallBtn();
+
+        <div class="grid-2">
+            <div class="card" style="border-right:4px solid var(--green);">
+                <small>הכנסה פסיבית</small>
+                <div style="font-size:18px; font-weight:bold; color:var(--green);">+${Math.floor(passive).toLocaleString()}₪ <span style="font-size:10px; opacity:0.6;">/שעה</span></div>
+            </div>
+            <div class="card" style="border-right:4px solid var(--red);">
+                <small>חובות לבנק</small>
+                <div style="font-size:18px; font-weight:bold; color:var(--red);">${Math.floor(loan).toLocaleString()}₪</div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:15px;">
+            <h4>📦 המחסן שלי</h4>
+            <div id="mini-inventory" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                ${inventory.length === 0 ? '<small style="opacity:0.5;">המחסן ריק...</small>' : ''}
+            </div>
+        </div>
+    </div>`;
+    
+    c.innerHTML = html;
+    
+    // הוספת פריטים למחסן
+    const invDiv = document.getElementById('mini-inventory');
+    if (invDiv) {
+        inventory.slice(-6).forEach(item => {
+            const span = document.createElement('span');
+            span.className = 'inv-item-icon';
+            span.innerHTML = item.i;
+            span.title = item.n;
+            span.style = "font-size:24px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px;";
+            invDiv.appendChild(span);
+        });
+    }
 }
 
-function renderInstallBtn() {
-    const cont = document.getElementById("install-container");
-    if(!cont) return;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if(!isStandalone && deferredPrompt) {
-        cont.innerHTML = `<button class="action" style="background:var(--blue); color:#fff; font-weight:bold; width:100%; padding:12px; border-radius:8px; border:none;" onclick="triggerInstall()">📲 התקן כאפליקציה (PWA)</button>`;
-    } else { cont.innerHTML = ""; }
+// --- 3. ניהול הבנק (Bank UI) ---
+function drawBank(c) {
+    let html = `
+    <div class="card fade-in">
+        <h3 style="color:var(--blue);">🏦 בנק לאומי סמארט</h3>
+        <p style="font-size:13px; opacity:0.8;">נהל את החסכונות וההלוואות שלך בריבית שעתית.</p>
+        
+        <div class="bank-stats" style="display:flex; gap:10px; margin:20px 0;">
+            <div class="card" style="flex:1; text-align:center; background:rgba(59,130,246,0.1);">
+                <small>יתרה בבנק</small>
+                <div style="font-size:20px; font-weight:bold;">${Math.floor(bank).toLocaleString()}₪</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <button onclick="deposit('all')" class="action" style="background:var(--blue);">הפקד הכל</button>
+            <button onclick="withdraw('all')" class="action" style="background:var(--green);">משוך הכל</button>
+        </div>
+
+        <hr style="margin:20px 0; border:0; border-top:1px solid var(--border);">
+        
+        <h4>💰 הלוואות</h4>
+        <div class="card" style="background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.2);">
+            <p>חוב נוכחי: <b>${Math.floor(loan).toLocaleString()}₪</b></p>
+            <div class="grid-2">
+                <button onclick="takeLoan(50000)" class="sys-btn" style="color:var(--yellow);">בקש 50K</button>
+                <button onclick="payLoan('all')" class="sys-btn" style="color:var(--green);">סגור חוב</button>
+            </div>
+        </div>
+    </div>`;
+    c.innerHTML = html;
 }
 
-async function triggerInstall() {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') { deferredPrompt = null; renderInstallBtn(); }
+// --- 4. פונקציות עזר ועדכון (Core UI Logic) ---
+function showMsg(msg, color = 'var(--blue)') {
+    const bar = document.getElementById('status-bar');
+    if (!bar) return;
+    bar.innerText = msg;
+    bar.style.backgroundColor = color;
+    bar.style.opacity = "1";
+    bar.style.transform = "translateY(0)";
+    
+    setTimeout(() => {
+        bar.style.opacity = "0";
+        bar.style.transform = "translateY(-10px)";
+    }, 3000);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => { openTab('home'); }, 150);
-});
+function renderUIUpdate(ld) {
+    // פונקציה זו נקראת מה-Economy בכל Tick
+    const moneyTop = document.getElementById('top-money');
+    const bankTop = document.getElementById('top-bank');
+    
+    if (moneyTop) moneyTop.innerText = Math.floor(money).toLocaleString() + " ₪";
+    if (bankTop) bankTop.innerText = Math.floor(bank).toLocaleString() + " ₪";
+
+    // אם אנחנו בדף הבית, נרענן את פס ההתקדמות בזמן אמת
+    const progBar = document.querySelector('.profile-card .progress-bar');
+    if (progBar) {
+        progBar.style.width = ld.progressPercent + "%";
+    }
+}
+
+// --- 5. ערכות נושא (Theme Toggle) ---
+function toggleTheme() {
+    document.body.classList.toggle('light-theme');
+    const isLight = document.body.classList.contains('light-theme');
+    showMsg(isLight ? "מצב יום הופעל" : "מצב לילה הופעל");
+}
+
+// --- 6. פונקציות מערכת ---
+function forceUpdate() {
+    if(confirm("לבדוק עדכוני גרסה? המשחק יתרענן.")) {
+        location.reload(true);
+    }
+}
