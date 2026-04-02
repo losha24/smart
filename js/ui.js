@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.7.2 - Admin Dev & Debug Update */
+/* Smart Money Pro - js/ui.js - v6.7.3 - Admin, Debug & System Check Update */
 
 let deferredPrompt;
 let currentTab = 'home'; 
@@ -76,7 +76,7 @@ window.openTab = function(t) {
     }, 100);
 };
 
-// --- דף הבית המלא (v6.7.2) ---
+// --- דף הבית המלא ---
 window.drawHome = function(c) {
     const ld = (typeof getLevelData === 'function') 
                ? getLevelData(window.lifeXP || 0) 
@@ -87,7 +87,7 @@ window.drawHome = function(c) {
             <div id="admin-box" class="admin-box">
                 <button class="edit-admin-btn" onclick="window.editAdminMsg()">✏️</button>
                 📢 <b>הודעה מהמערכת:</b><br>
-                <span style="font-size:13px;">${window.adminMsgText || "שלום אלכסיי! מערכת הדיבאג והצ'יטים זמינה כעת בעריכה."}</span>
+                <span style="font-size:13px;">${window.adminMsgText || "שלום אלכסיי! מערכת הניהול והדיבאג המורחבת זמינה כעת."}</span>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -197,16 +197,17 @@ async function triggerInstall() {
     if (outcome === 'accepted') { deferredPrompt = null; renderInstallBtn(); }
 }
 
-// עריכת הודעת מנהל + כלי דיבאג וצ'יטים
+// עריכת הודעת מנהל + כלי דיבאג וצ'יטים (v6.7.3)
 window.editAdminMsg = function() {
     const pass = prompt("שלום אלכסיי, הכנס סיסמת מנהל:");
     if (pass === "1234") { 
         const action = prompt(
             "--- תפריט מנהל ---\n" +
             "1 - עריכת הודעת מערכת\n" +
-            "2 - בדיקת דיבאג (נתונים חיים)\n" +
+            "2 - בדיקת דיבאג מהירה (Alert)\n" +
             "3 - הוספת כסף (Cheat)\n" +
-            "4 - הוספת ניסיון (XP Boost)", 
+            "4 - הוספת ניסיון (XP Boost)\n" +
+            "5 - הרצת בדיקת מערכת מקיפה (debug.js)", 
             "1"
         );
         
@@ -230,7 +231,7 @@ window.editAdminMsg = function() {
 🚀 פסיבי: ${window.passive.toFixed(2)}₪/ש
 🎒 נכסים: ${window.inventory ? window.inventory.length : 0}
 🏎️ מהירות רכב: ${window.carSpeed || 1}
-📱 גרסה: 6.7.2
+📱 גרסה: 6.7.3
 -------------------`;
                 alert(debugInfo);
                 break;
@@ -239,9 +240,9 @@ window.editAdminMsg = function() {
                 const moneyAdd = prompt("כמה כסף להוסיף?", "100000");
                 if (moneyAdd && !isNaN(moneyAdd)) {
                     window.money += parseInt(moneyAdd);
-                    if(typeof showMsg === 'function') showMsg(`💸 נוספו ${parseInt(moneyAdd).toLocaleString()}₪!`, "var(--blue)");
                     if(typeof updateUI === 'function') updateUI();
                     if(typeof saveGame === 'function') saveGame();
+                    if(typeof showMsg === 'function') showMsg(`💸 נוספו ${parseInt(moneyAdd).toLocaleString()}₪!`, "var(--blue)");
                     window.openTab('home');
                 }
                 break;
@@ -250,11 +251,29 @@ window.editAdminMsg = function() {
                 const xpAdd = prompt("כמה XP להוסיף?", "1000");
                 if (xpAdd && !isNaN(xpAdd)) {
                     window.lifeXP += parseInt(xpAdd);
-                    if(typeof showMsg === 'function') showMsg(`✨ נוספו ${parseInt(xpAdd)} XP!`, "var(--purple)");
                     if(typeof updateUI === 'function') updateUI();
                     if(typeof saveGame === 'function') saveGame();
+                    if(typeof showMsg === 'function') showMsg(`✨ נוספו ${parseInt(xpAdd)} XP!`, "var(--purple)");
                     window.openTab('home');
                 }
+                break;
+
+            case "5":
+                // טעינה דינמית של קובץ הדיבאג החיצוני
+                console.log("Loading js/debug.js...");
+                const script = document.createElement('script');
+                script.src = 'js/debug.js?v=' + Date.now(); // מניעת Cache בעזרת timestamp
+                script.onload = () => {
+                    if(typeof window.runSystemCheck === 'function') {
+                        window.runSystemCheck();
+                    } else {
+                        if(typeof showMsg === 'function') showMsg("קובץ debug.js נטען אך לא נמצאה פונקציה runSystemCheck", "var(--yellow)");
+                    }
+                };
+                script.onerror = () => {
+                    if(typeof showMsg === 'function') showMsg("שגיאה: קובץ js/debug.js לא נמצא!", "var(--red)");
+                };
+                document.body.appendChild(script);
                 break;
         }
     } else if (pass !== null) alert("סיסמה שגויה!");
