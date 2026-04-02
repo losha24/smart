@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v6.9.0 - The Ultimate Update */
+/* Smart Money Pro - js/activities.js - v7.4.0 - Grid & Passive Boost Update */
 
 // --- מאגרי נתונים משולבים ומורחבים ---
 const jobList = [
@@ -26,13 +26,16 @@ const estateList = [
 ];
 
 const businessList = [
-    { id: 'biz_stand', name: 'דוכן פיצוחים', price: 15000, passive: 80, icon: '🥜' },
-    { id: 'biz_kiosk', name: 'קיוסק שכונתי', price: 45000, passive: 280, icon: '🏪' },
-    { id: 'biz_falafel', name: 'דוכן פלאפל', price: 85000, passive: 650, icon: '🥙' },
-    { id: 'biz_cafe', name: 'בית קפה', price: 250000, passive: 2100, icon: '☕' },
-    { id: 'biz_garage', name: 'מוסך רכב', price: 650000, passive: 5800, icon: '🔧' },
-    { id: 'biz_hall', name: 'אולם אירועים', price: 2200000, passive: 24000, icon: '🎊' },
-    { id: 'biz_tech', name: 'חברת הייטק', price: 12000000, passive: 150000, icon: '🚀' }
+    { id: 'biz_gum', name: 'מכונת מסטיקים', price: 1200, passive: 30, icon: '🍬' },
+    { id: 'biz_lemon', name: 'דוכן לימונדה', price: 4500, passive: 90, icon: '🍋' },
+    { id: 'biz_hotdog', name: 'דוכן נקניקיות', price: 9000, passive: 180, icon: '🌭' },
+    { id: 'biz_stand', name: 'דוכן פיצוחים', price: 15000, passive: 160, icon: '🥜' },
+    { id: 'biz_kiosk', name: 'קיוסק שכונתי', price: 45000, passive: 560, icon: '🏪' },
+    { id: 'biz_falafel', name: 'דוכן פלאפל', price: 85000, passive: 1300, icon: '🥙' },
+    { id: 'biz_cafe', name: 'בית קפה', price: 250000, passive: 4200, icon: '☕' },
+    { id: 'biz_garage', name: 'מוסך רכב', price: 650000, passive: 11600, icon: '🔧' },
+    { id: 'biz_hall', name: 'אולם אירועים', price: 2200000, passive: 48000, icon: '🎊' },
+    { id: 'biz_tech', name: 'חברת הייטק', price: 12000000, passive: 300000, icon: '🚀' }
 ];
 
 const stockList = [
@@ -132,7 +135,6 @@ window.startWork = function(id) {
     setTimeout(() => { if(bar) { bar.style.transition = `width ${actualTime}ms linear`; bar.style.width = "100%"; } }, 50);
 
     setTimeout(() => {
-        // חישוב אחוז פסיבי מדורג 30% עד 50%
         const jobLevel = parseInt(j.id.replace('j', ''));
         const passivePercent = 0.30 + (jobLevel - 1) * (0.20 / (jobList.length - 1));
         const passiveAdd = j.pay * passivePercent;
@@ -179,24 +181,23 @@ window.buyEstate = function(id) {
     saveGame(); updateUI(); drawEstate(document.getElementById('content'));
 }
 
-// --- פונקציות עסקים ---
+// --- פונקציות עסקים (מעודכן: 2 בשורה + פסיבי כפול) ---
 window.drawBusiness = function(c) {
-    let html = `<h3>💼 הקמת אימפריית עסקים</h3><div class="grid-1">`;
+    let html = `<h3>💼 אימפריית עסקים</h3><div class="grid-2">`;
     businessList.forEach(b => {
         const level = window.inventory.filter(item => item === b.id).length;
         const currentPrice = b.price * (level + 1);
         const currentPassive = b.passive * level;
         html += `
-            <div class="card fade-in" style="display:flex; justify-content:space-between; align-items:center; border-left: 4px solid ${level > 0 ? 'var(--purple)' : '#444'}">
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <div style="font-size:35px;">${b.icon}</div>
-                    <div>
-                        <div style="font-weight:bold;">${b.name} ${level > 0 ? `<span style="color:var(--purple)">[רמה ${level}]</span>` : ''}</div>
-                        <div style="font-size:12px; color:var(--green);">הכנסה פסיבית: ${currentPassive.toLocaleString()}₪ / שעה</div>
-                    </div>
+            <div class="card fade-in" style="text-align:center; border-top: 4px solid ${level > 0 ? 'var(--purple)' : '#444'}">
+                <div style="font-size:35px; margin-bottom:10px;">${b.icon}</div>
+                <div>
+                    <div style="font-weight:bold; font-size:14px;">${b.name}</div>
+                    ${level > 0 ? `<div style="color:var(--purple); font-size:11px;">רמה ${level}</div>` : ''}
+                    <div style="font-size:11px; color:var(--green); margin:5px 0;">פסיבי: ${currentPassive.toLocaleString()}₪/שעה</div>
                 </div>
-                <button class="sys-btn" style="min-width:120px;" onclick="buyBusiness('${b.id}', ${currentPrice}, ${b.passive})">
-                    ${level === 0 ? `הקם: ${currentPrice.toLocaleString()}₪` : `שדרג: ${currentPrice.toLocaleString()}₪`}
+                <button class="sys-btn" style="width:100%; margin-top:10px; font-size:12px;" onclick="buyBusiness('${b.id}', ${currentPrice}, ${b.passive})">
+                    ${currentPrice.toLocaleString()}₪
                 </button>
             </div>`;
     });
@@ -209,31 +210,29 @@ window.buyBusiness = function(id, price, passAdd) {
         window.money -= price;
         window.passive += passAdd;
         window.inventory.push(id); 
-        showMsg(`💼 ${b.name} שודרג/הוקם!`, "var(--purple)");
+        showMsg(`💼 ${b.name} שודרג!`, "var(--purple)");
         saveGame(); updateUI(); drawBusiness(document.getElementById('content'));
-    } else { showMsg("אין מספיק כסף להשקעה!", "var(--red)"); }
+    } else { showMsg("אין מספיק כסף!", "var(--red)"); }
 }
 
-// --- פונקציית הבורסה ---
+// --- פונקציית הבורסה (מעודכן: 2 בשורה) ---
 window.drawInvest = function(c) {
-    let html = `<h3 class="fade-in">📈 מסחר בבורסה (Live)</h3><div class="grid-1">`;
+    let html = `<h3 class="fade-in">📈 מסחר בבורסה</h3><div class="grid-2">`;
     stockList.forEach(s => {
         const owned = window.invOwned[s.id] || 0;
         const color = s.trend >= 0 ? 'var(--green)' : 'var(--red)';
         const arrow = s.trend >= 0 ? '▲' : '▼';
         html += `
-            <div class="card fade-in" style="display:flex; justify-content:space-between; align-items:center; border-right: 4px solid ${color}">
-                <div>
-                    <div style="font-weight:bold;">${s.name}</div>
-                    <div style="font-size:11px; opacity:0.6;">בבעלותך: <b>${owned}</b></div>
+            <div class="card fade-in" style="text-align:center; border-bottom: 3px solid ${color}">
+                <div style="font-weight:bold;">${s.name}</div>
+                <div style="font-size:10px; opacity:0.6;">שלך: ${owned}</div>
+                <div style="margin:8px 0;">
+                    <div style="color:${color}; font-weight:bold; font-size:15px;">${s.price.toFixed(2)}₪</div>
+                    <small style="color:${color}; font-size:9px;">${arrow} ${(s.trend*100).toFixed(2)}%</small>
                 </div>
-                <div style="text-align:center;">
-                    <div style="color:${color}; font-weight:bold;">${s.price.toLocaleString(undefined, {maximumFractionDigits:2})}₪</div>
-                    <small style="color:${color}; font-size:10px;">${arrow} ${(s.trend*100).toFixed(2)}%</small>
-                </div>
-                <div style="display:flex; gap:5px;">
-                    <button class="sys-btn" style="padding:8px; min-width:50px; background:rgba(34,197,94,0.1);" onclick="buyStock('${s.id}')">קנה</button>
-                    <button class="sys-btn" style="padding:8px; min-width:50px; background:rgba(239,68,68,0.1);" onclick="sellStock('${s.id}')">מכור</button>
+                <div style="display:flex; gap:4px;">
+                    <button class="sys-btn" style="flex:1; padding:6px; background:rgba(34,197,94,0.15);" onclick="buyStock('${s.id}')">קנה</button>
+                    <button class="sys-btn" style="flex:1; padding:6px; background:rgba(239,68,68,0.15);" onclick="sellStock('${s.id}')">מכור</button>
                 </div>
             </div>`;
     });
@@ -259,7 +258,7 @@ window.sellStock = function(id) {
         showMsg(`💰 מכרת ${s.name}`, "var(--green)");
         saveGame(); updateUI(); 
         if (currentTab === 'invest') window.drawInvest(document.getElementById('content'));
-    } else { showMsg("אין לך יחידות למכירה!", "var(--red)"); }
+    } else { showMsg("אין לך יחידות!", "var(--red)"); }
 }
 
 // --- פונקציית חנות (Shop) ---
@@ -293,7 +292,7 @@ window.buyShopItem = function(id) {
     } else { showMsg("אין לך מספיק כסף!", "var(--red)"); }
 };
 
-// --- פונקציות בנק עם צבעים וריבית מדורגת ---
+// --- פונקציות בנק ---
 window.drawBank = function(c) {
     const currentTaxPercent = (window.bankTaxRate * 100).toFixed(1);
     c.innerHTML = `
@@ -330,7 +329,7 @@ window.bankDeposit = function() {
         showMsg(`💰 הפקדת 10k (עמלה: ${tax.toFixed(0)}₪)`, "var(--blue)");
         if (window.bankTaxRate < 0.05) window.bankTaxRate += 0.005;
         saveGame(); updateUI(); drawBank(document.getElementById('content'));
-    } else { showMsg(`חסר מזומן! דרוש ${totalToDeduct.toLocaleString()}₪`, "var(--red)"); }
+    } else { showMsg(`חסר מזומן!`, "var(--red)"); }
 }
 
 window.bankWithdraw = function() {
