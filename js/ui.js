@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v6.5.2 - Shop Edition Update */
+/* Smart Money Pro - js/ui.js - v6.7.0 - Investment & Shop Swap Edition */
 
 let deferredPrompt;
 let currentTab = 'home'; 
@@ -9,7 +9,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     renderInstallBtn();
 });
 
-// --- עדכון ויזואלי (נקרא מה-Core כל 1000ms למניעת עומס וקפיצות) ---
+// --- עדכון ויזואלי (נקרא מה-Core כל 1000ms) ---
 function renderUIUpdate(ld) {
     if (!ld && typeof getLevelData === 'function') {
         ld = getLevelData(window.lifeXP || 0);
@@ -39,16 +39,16 @@ function renderUIUpdate(ld) {
     }
 }
 
-// --- מערכת ניווט עם הגנת גלילה (Anti-Jump) מותאמת לחנות ---
+// --- מערכת ניווט עם הגנת גלילה (Anti-Jump) מותאמת לבורסה ---
 window.openTab = function(t) {
-    // מניעת רענון כפול אם הקריאה הגיעה מטיימר אוטומטי
+    // מניעת רענון כפול אם הקריאה הגיעה מה-setInterval של הבורסה
     const isAuto = new Error().stack.includes('setInterval');
     if (t === currentTab && isAuto) return;
 
     currentTab = t; 
     document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
     
-    // זיהוי כפתור ה-ID (למשל btnShop)
+    // זיהוי כפתור ה-ID הדינמי (למשל btnInvest או btnShop)
     const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
     const btn = document.getElementById(btnId);
     if(btn) btn.classList.add("active");
@@ -61,18 +61,19 @@ window.openTab = function(t) {
     setTimeout(() => {
         c.innerHTML = "";
         
-        // ניסיון להריץ פונקציית ציור (למשל drawShop)
+        // ניסיון להריץ פונקציית ציור מה-activities.js (למשל drawInvest)
         const drawFunc = window["draw" + t.charAt(0).toUpperCase() + t.slice(1)];
         if (typeof drawFunc === 'function') {
             drawFunc(c);
         } else {
+            // ברירת מחדל אם הפונקציה לא קיימת
             window.drawHome(c);
         }
         
         c.style.opacity = "1";
 
-        // הגנה קריטית: אם אנחנו בחנות (shop), אל תגלול למעלה!
-        if (t !== 'shop') {
+        // הגנה קריטית: אם אנחנו בבורסה (invest), אל תגלול למעלה כדי למנוע קפיצות רענון!
+        if (t !== 'invest') {
             window.scrollTo(0,0);
         }
 
@@ -80,7 +81,7 @@ window.openTab = function(t) {
     }, 100);
 };
 
-// --- דף הבית המלא (v6.5.2) ---
+// --- דף הבית המלא (v6.7.0) ---
 window.drawHome = function(c) {
     const ld = (typeof getLevelData === 'function') 
                ? getLevelData(window.lifeXP || 0) 
@@ -91,12 +92,12 @@ window.drawHome = function(c) {
             <div id="admin-box" class="admin-box">
                 <button class="edit-admin-btn" onclick="window.editAdminMsg()">✏️</button>
                 📢 <b>הודעה מהמערכת:</b><br>
-                <span style="font-size:13px;">${window.adminMsgText || "שלום אלכסיי! מערכת החנות החדשה הופעלה."}</span>
+                <span style="font-size:13px;">${window.adminMsgText || "שלום אלכסיי! הבורסה עברה למקומה החדש והמרכזי."}</span>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h3 style="margin:0;">🏠 מרכז שליטה</h3>
-                <button onclick="forceUpdate()" class="sys-btn" style="padding:5px 12px; font-size:12px;">🔄 רענן</button>
+                <button onclick="if(window.saveGame) saveGame(); location.reload();" class="sys-btn" style="padding:5px 12px; font-size:12px;">🔄 רענן</button>
             </div>
             
             <div class="card" style="background:rgba(255,255,255,0.03); margin-bottom:15px; padding:12px; border:1px solid rgba(255,255,255,0.1);">
@@ -137,7 +138,7 @@ window.drawHome = function(c) {
 
             <div id="install-container" style="margin-top:20px;"></div>
 
-            <button class="sys-btn" style="border:1px solid #451a1a; color:#ef4444; margin-top:25px; font-size:11px; padding:10px; width:100%; opacity:0.7;" onclick="resetGame()">🗑️ איפוס חשבון</button>
+            <button class="sys-btn" style="border:1px solid #451a1a; color:#ef4444; margin-top:25px; font-size:11px; padding:10px; width:100%; opacity:0.7;" onclick="if(confirm('האם אתה בטוח שברצונך לאפס הכל?')) resetGame()">🗑️ איפוס חשבון</button>
         </div>
     `;
     startGiftTimer();
