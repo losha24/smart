@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.5.0</title>
+    <title>Smart Money Pro | v6.6.8</title>
     
-    <link rel="manifest" href="manifest.json?v=6.5.0">
+    <link rel="manifest" href="manifest.json?v=6.6.8">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.5.0">
+    <link rel="stylesheet" href="style.css?v=6.6.8">
     <style>
+        /* תיקוני מודל ועיצוב מקומיים */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
-        .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid var(--blue); }
+        .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid #3b82f6; }
         
         .admin-box {
             background: rgba(59, 130, 246, 0.15);
@@ -33,10 +34,12 @@
             font-size: 16px; position: absolute; left: 10px; top: 10px;
             opacity: 0.6; transition: opacity 0.2s;
         }
-        .edit-admin-btn:hover { opacity: 1; }
 
-        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .fade-in { animation: fadeIn 0.4s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* מניעת בחירת טקסט בטעות בנייד */
+        body { -webkit-user-select: none; user-select: none; }
     </style>
 </head>
 <body class="dark-theme">
@@ -55,7 +58,7 @@
 
     <nav class="topbar">
         <div class="nav-row">
-            <button onclick="window.openTab('home')" id="btnHome" class="active">🏠 בית</button>
+            <button onclick="window.openTab('home')" id="btnHome">🏠 בית</button>
             <button onclick="window.openTab('work')" id="btnWork">⚒️ עבודות</button>
             <button onclick="window.openTab('tasks')" id="btnTasks">🎰 קזינו</button>
         </div>
@@ -72,7 +75,7 @@
         <div class="nav-row">
             <button onclick="window.openTab('market')" id="btnMarket">🛒 שוק</button>
             <button onclick="document.getElementById('installModal').style.display='flex'" class="sys-btn">📲</button>
-            <button onclick="if(window.forceUpdate) window.forceUpdate()" class="sys-btn">🔄</button>
+            <button onclick="if(window.openTab) window.openTab('home')" class="sys-btn">🔄</button>
             <button onclick="if(window.toggleTheme) window.toggleTheme()" class="sys-btn">🌓</button>
         </div>
     </nav>
@@ -81,41 +84,47 @@
 
     <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
         <div class="modal-card" onclick="event.stopPropagation()">
-            <h3>📲 התקנה</h3>
-            <p id="android-instr">לחץ על 3 הנקודות בתפריט ובחר "התקן אפליקציה".</p>
-            <p id="ios-instr" style="display:none;">לחץ על "שתף" ואז "הוסף למסך הבית".</p>
-            <button class="action" onclick="closeInstallGuide()" style="background:#ef4444; color:#fff; width:100%;">סגור</button>
+            <h3>📲 התקנת אפליקציה</h3>
+            <p id="android-instr">לחץ על 3 הנקודות בדפדפן<br>ובחר "התקן אפליקציה".</p>
+            <p id="ios-instr" style="display:none;">לחץ על כפתור ה"שתף" (חץ למעלה)<br>ואז בחר "הוסף למסך הבית".</p>
+            <button class="action" onclick="closeInstallGuide()" style="background:#ef4444; color:#fff; width:100%; margin-top:15px; border-radius:8px;">סגור</button>
         </div>
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.5.0 | אלכסיי זבודיסקר
+        © 2026 Smart Money Pro v6.6.8 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.5.0"></script>
-    <script src="js/activities.js?v=6.5.0"></script>
-    <script src="js/economy.js?v=6.5.0"></script>
-    <script src="js/ui.js?v=6.5.0"></script>
-    <script src="js/debug.js?v=1.3.0"></script>
+    <script src="js/core.js?v=6.6.8"></script>
+    <script src="js/activities.js?v=6.6.8"></script>
+    <script src="js/economy.js?v=6.6.8"></script>
+    <script src="js/ui.js?v=6.6.8"></script>
 
     <script>
-        // הודעת מנהל ראשונית
-        window.adminMsgText = "ברוכים הבאים אלכסיי! המערכת מסונכרנת לגרסה 6.5.0.";
+        // הודעת מנהל ברירת מחדל
+        window.adminMsgText = "שלום אלכסיי, המערכת מוכנה לגרסה 6.6.8 יציבה.";
 
-        function closeInstallGuide() { document.getElementById('installModal').style.display = 'none'; }
+        function closeInstallGuide() { 
+            document.getElementById('installModal').style.display = 'none'; 
+        }
 
-        // הפעלה ראשונית
-        document.addEventListener('DOMContentLoaded', () => {
-            // המתנה קלה לטעינת כל ה-Scripts החיצוניים
-            setTimeout(() => {
-                if (window.openTab) {
+        // הפעלה ראשונית מבוקרת
+        window.addEventListener('load', () => {
+            // בדיקה ש-ui.js נטען וש-openTab קיימת
+            if (window.openTab) {
+                // מפעיל את דף הבית רק אם התוכן ריק
+                const content = document.getElementById("content");
+                if (content && content.innerHTML === "") {
                     window.openTab('home');
                 }
-            }, 300);
+            }
             
+            // התאמה לאייפון במידת הצורך
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                document.getElementById('android-instr').style.display = 'none';
-                document.getElementById('ios-instr').style.display = 'block';
+                const androidEl = document.getElementById('android-instr');
+                const iosEl = document.getElementById('ios-instr');
+                if(androidEl) androidEl.style.display = 'none';
+                if(iosEl) iosEl.style.display = 'block';
             }
         });
     </script>
