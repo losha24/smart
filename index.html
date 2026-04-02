@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.7.0 Investment Edition</title>
+    <title>Smart Money Pro | v6.7.2 Admin & Invest</title>
     
-    <link rel="manifest" href="manifest.json?v=6.7.0">
+    <link rel="manifest" href="manifest.json?v=6.7.2">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.7.0">
+    <link rel="stylesheet" href="style.css?v=6.7.2">
     <style>
         /* תיקוני מודל ועיצוב מקומיים */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
@@ -27,13 +27,15 @@
             color: #fff;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             position: relative;
+            text-align: right;
         }
 
         .edit-admin-btn {
             background: none; border: none; color: #3b82f6; cursor: pointer;
-            font-size: 16px; position: absolute; left: 10px; top: 10px;
-            opacity: 0.6; transition: opacity 0.2s;
+            font-size: 18px; position: absolute; left: 10px; top: 10px;
+            opacity: 0.7; transition: opacity 0.2s;
         }
+        .edit-admin-btn:hover { opacity: 1; }
 
         .fade-in { animation: fadeIn 0.4s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -41,8 +43,12 @@
         /* מניעת בחירת טקסט בטעות בנייד */
         body { -webkit-user-select: none; user-select: none; }
         
-        /* הדגשה לכפתור בורסה החדש */
-        #btnInvest { border-bottom: 2px solid var(--blue); font-weight: bold; }
+        /* עיצוב כפתורי ניווט פעילים */
+        .topbar button.active { 
+            background: rgba(59, 130, 246, 0.2); 
+            border-bottom: 2px solid #3b82f6; 
+            color: #fff;
+        }
     </style>
 </head>
 <body class="dark-theme">
@@ -63,12 +69,12 @@
         <div class="nav-row">
             <button onclick="window.openTab('home')" id="btnHome">🏠 בית</button>
             <button onclick="window.openTab('work')" id="btnWork">⚒️ עבודות</button>
-            <button onclick="window.openTab('tasks')" id="btnTasks">🎰 קזינו</button>
+            <button onclick="window.openTab('invest')" id="btnInvest">📈 בורסה</button>
         </div>
         <div class="nav-row">
-            <button onclick="window.openTab('invest')" id="btnInvest">📈 בורסה</button>
-            <button onclick="window.openTab('business')" id="btnBusiness">🏢 עסקים</button>
             <button onclick="window.openTab('estate')" id="btnEstate">🏠 נדל"ן</button>
+            <button onclick="window.openTab('business')" id="btnBusiness">🏢 עסקים</button>
+            <button onclick="window.openTab('tasks')" id="btnTasks">🎰 קזינו</button>
         </div>
         <div class="nav-row">
             <button onclick="window.openTab('skills')" id="btnSkills">🎓 כישורים</button>
@@ -77,9 +83,8 @@
         </div>
         <div class="nav-row">
             <button onclick="window.openTab('shop')" id="btnShop">🛒 חנות</button>
-            
             <button onclick="document.getElementById('installModal').style.display='flex'" class="sys-btn">📲</button>
-            <button onclick="if(window.openTab) window.openTab('home')" class="sys-btn">🔄</button>
+            <button onclick="location.reload()" class="sys-btn">🔄</button>
             <button onclick="if(window.toggleTheme) window.toggleTheme()" class="sys-btn">🌓</button>
         </div>
     </nav>
@@ -96,29 +101,31 @@
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.7.0 | אלכסיי זבודיסקר
+        © 2026 Smart Money Pro v6.7.2 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.7.0"></script>
-    <script src="js/activities.js?v=6.7.0"></script>
-    <script src="js/economy.js?v=6.7.0"></script>
-    <script src="js/ui.js?v=6.7.0"></script>
+    <script src="js/core.js?v=6.7.2"></script>
+    <script src="js/activities.js?v=6.7.2"></script>
+    <script src="js/ui.js?v=6.7.2"></script>
 
     <script>
-        window.adminMsgText = "שלום אלכסיי! הבורסה עברה למקומה החדש והמרכזי. החנות בשיפוצים.";
+        // הודעת ברירת מחדל למנהל
+        window.adminMsgText = "שלום אלכסיי! מערכת הניהול (דיבאג + צ'יטים) זמינה כעת דרך כפתור העריכה בבית.";
 
         function closeInstallGuide() { 
             document.getElementById('installModal').style.display = 'none'; 
         }
 
         window.addEventListener('load', () => {
-            if (window.openTab) {
+            // אתחול טאב בית במידה והתוכן ריק
+            setTimeout(() => {
                 const content = document.getElementById("content");
-                if (content && content.innerHTML === "") {
+                if (content && content.innerHTML === "" && window.openTab) {
                     window.openTab('home');
                 }
-            }
+            }, 200);
             
+            // זיהוי מכשירי אפל להוראות התקנה
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const androidEl = document.getElementById('android-instr');
                 const iosEl = document.getElementById('ios-instr');
