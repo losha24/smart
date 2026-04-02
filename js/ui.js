@@ -1,9 +1,8 @@
-/* Smart Money Pro - js/ui.js - v6.9.1 - Final Fixed */
+/* Smart Money Pro - js/ui.js - v7.1.0 - Updated Layout */
 
 // --- 1. ניהול טאבים וניווט ---
 function openTab(tabName) {
-    if (typeof currentTab !== 'undefined') currentTab = tabName;
-    
+    window.currentTab = tabName;
     const content = document.getElementById('content');
     if (!content) return;
 
@@ -14,143 +13,146 @@ function openTab(tabName) {
 
     content.innerHTML = ""; 
 
-    // ניתוב לכל הפונקציות (מוודא שהן קיימות)
+    // ניתוב לכל הפונקציות (כולל בורסה, שוק, עסקים וכו')
     switch(tabName) {
         case 'home': drawHome(content); break;
-        case 'work': (typeof drawWork === 'function') ? drawWork(content) : content.innerHTML = "טוען עבודות..."; break;
-        case 'market': (typeof drawMarket === 'function') ? drawMarket(content) : content.innerHTML = "טוען בורסה..."; break;
-        case 'estate': (typeof drawEstate === 'function') ? drawEstate(content) : content.innerHTML = "טוען נדל\"ן..."; break;
-        case 'tasks': (typeof drawTasks === 'function') ? drawTasks(content) : content.innerHTML = "טוען משימות..."; break;
-        case 'skills': (typeof drawSkills === 'function') ? drawSkills(content) : content.innerHTML = "טוען יכולות..."; break;
+        case 'work': drawWork(content); break;
+        case 'tasks': (typeof drawCasino === 'function') ? drawCasino(content) : drawTasks(content); break;
+        case 'market': drawMarket(content); break; // בורסה (מניות)
+        case 'shop': drawShop(content); break; // שוק (חפצים)
+        case 'business': drawBusiness(content); break; 
+        case 'estate': drawEstate(content); break;
+        case 'skills': drawSkills(content); break;
         case 'bank': drawBank(content); break;
-        case 'cars': (typeof drawCars === 'function') ? drawCars(content) : content.innerHTML = "טוען רכבים..."; break;
+        case 'cars': drawCars(content); break;
         default: drawHome(content);
     }
     
-    updateUI();
+    if (typeof window.updateUI === 'function') window.updateUI();
     window.scrollTo(0,0);
 }
 
-// --- 2. דף הבית (Home) - נקי ללא פרופיל ---
+// --- 2. דף הבית (Home) - מעוצב ומוקטן ---
 function drawHome(c) {
-    const ld = getLevelData(lifeXP);
+    const ld = getLevelData(window.lifeXP);
     
     c.innerHTML = `
     <div class="fade-in">
-        <div class="card" style="background: linear-gradient(135deg, #1e293b, #0f172a); border-bottom: 4px solid var(--blue); padding: 20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0; color:var(--blue);">📊 לוח בקרה</h3>
-                <span class="badge" style="background:var(--blue); padding:4px 12px; border-radius:15px; font-weight:bold;">רמה ${ld.level}</span>
+        <div class="card" style="background: linear-gradient(135deg, #1e293b, #0f172a); border-bottom: 3px solid var(--blue); padding: 12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+                <b style="color:var(--blue);">📊 התקדמות</b>
+                <span>רמה ${ld.level} (${Math.floor(ld.progressPercent)}%)</span>
             </div>
             
-            <div style="margin-top:15px;">
-                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; opacity:0.8;">
-                    <span>התקדמות לרמה ${ld.level + 1}</span>
-                    <span>${Math.floor(ld.progressPercent)}%</span>
+            <div style="margin-top:8px;">
+                <div class="progress-container" style="height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                    <div class="progress-bar" style="width:${ld.progressPercent}%; height:100%; background:var(--green);"></div>
                 </div>
-                <div class="progress-container" style="height:10px; background:rgba(255,255,255,0.1); border-radius:5px; overflow:hidden;">
-                    <div class="progress-bar" style="width:${ld.progressPercent}%; height:100%; background:var(--green); transition:0.8s ease-out;"></div>
+                <div style="text-align:center; margin-top:10px;">
+                    <button onclick="claimDailyGift()" style="background:none; border:1px solid var(--blue); color:var(--blue); font-size:10px; padding:2px 12px; border-radius:12px; cursor:pointer; font-weight:bold;">
+                        🎁 קבל מתנה יומית
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="grid-2" style="margin-top:15px;">
-            <div class="card" style="border-right:3px solid var(--green);">
-                <small style="color:var(--green);">הכנסה פסיבית</small>
-                <div style="font-size:18px; font-weight:bold;">+${Math.floor(passive).toLocaleString()}₪</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">
+            <div class="card" style="padding:10px; text-align:center; border-right:2px solid var(--green);">
+                <small style="font-size:10px; color:var(--green); display:block;">הכנסה פסיבית</small>
+                <b style="font-size:14px;">+${Math.floor(window.passive).toLocaleString()}₪</b>
             </div>
-            <div class="card" style="border-right:3px solid var(--red);">
-                <small style="color:var(--red);">חוב לבנק</small>
-                <div style="font-size:18px; font-weight:bold;">${Math.floor(loan).toLocaleString()}₪</div>
-            </div>
-        </div>
-
-        <div class="card" style="margin-top:15px;">
-            <h4 style="margin:0 0 10px 0;">📦 פריטים אחרונים</h4>
-            <div id="mini-inventory" style="display:flex; gap:10px; flex-wrap:wrap; min-height:40px;">
-                ${inventory.length === 0 ? '<small style="opacity:0.5;">המחסן ריק</small>' : ''}
+            <div class="card" style="padding:10px; text-align:center; border-right:2px solid var(--red);">
+                <small style="font-size:10px; color:var(--red); display:block;">חוב לבנק</small>
+                <b style="font-size:14px;">${Math.floor(window.loan).toLocaleString()}₪</b>
             </div>
         </div>
 
-        <button onclick="claimDailyGift()" class="action" style="width:100%; margin-top:20px; padding:15px; background:var(--blue); color:white; border:none; border-radius:10px; font-weight:bold; box-shadow: 0 4px 10px rgba(59,130,246,0.3);">
-            🎁 קבל מתנה יומית
+        <div class="card" style="margin-top:10px; padding:12px;">
+            <h5 style="margin:0 0 8px 0; font-size:12px; opacity:0.8;">📦 פריטים, כישורים ורכבים</h5>
+            <div id="mini-inventory" style="display:flex; gap:6px; flex-wrap:wrap;">
+                ${renderFullInventory()}
+            </div>
+        </div>
+
+        <button onclick="location.reload()" class="action" style="width:100%; margin-top:15px; padding:10px; font-size:11px; opacity:0.6; background:none; border:1px solid var(--border);">
+            🔄 בדיקת עדכוני מערכת
         </button>
     </div>`;
-
-    const invDiv = document.getElementById('mini-inventory');
-    if (invDiv && inventory.length > 0) {
-        inventory.slice(-6).forEach(item => {
-            const s = document.createElement('span');
-            s.innerHTML = item.i || '📦';
-            s.style = "font-size:24px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);";
-            invDiv.appendChild(s);
-        });
-    }
 }
 
-// --- 3. בנק (Bank) - החזרת ההלוואות ---
+// פונקציית עזר למחסן שמשלבת הכל
+function renderFullInventory() {
+    let items = "";
+    // רכבים
+    if (window.cars && window.cars.length > 0) {
+        window.cars.forEach(() => items += `<span style="font-size:20px; background:rgba(59,130,246,0.1); padding:6px; border-radius:8px;">🚗</span>`);
+    }
+    // כישורים
+    if (window.skills && window.skills.length > 0) {
+        window.skills.forEach(() => items += `<span style="font-size:20px; background:rgba(16,185,129,0.1); padding:6px; border-radius:8px;">🎓</span>`);
+    }
+    // חפצים מהשוק
+    if (window.inventory && window.inventory.length > 0) {
+        window.inventory.slice(-8).forEach(item => {
+            items += `<span style="font-size:20px; background:rgba(255,255,255,0.05); padding:6px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">${item.i || '📦'}</span>`;
+        });
+    }
+    return items || '<small style="opacity:0.4;">המחסן ריק</small>';
+}
+
+// --- 3. תוכן הכפתורים (מסודר 2 בשורה) ---
+
+function drawWork(c) {
+    c.innerHTML = `<h4>⚒️ מרכז תעסוקה</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="card"><b>אבטחה</b><br><button onclick="doWork('guard')" class="action">עבוד</button></div>
+        <div class="card"><b>פיקוח</b><br><button onclick="doWork('inspect')" class="action">עבוד</button></div>
+        <div class="card"><b>משטרה</b><br><button onclick="doWork('police')" class="action">עבוד</button></div>
+        <div class="card"><b>הייטק</b><br><button onclick="doWork('dev')" class="action">עבוד</button></div>
+    </div>`;
+}
+
+function drawMarket(c) {
+    c.innerHTML = `<h4>📈 בורסה (מניות)</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="card"><b>AAPL</b><br><button onclick="buyStock('AAPL')" class="action">קנה</button></div>
+        <div class="card"><b>TSLA</b><br><button onclick="buyStock('TSLA')" class="action">קנה</button></div>
+    </div>`;
+}
+
+function drawShop(c) {
+    c.innerHTML = `<h4>🏪 שוק (חפצים)</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="card"><b>שעון</b><br><button onclick="buyItem('watch')" class="action">קנה</button></div>
+        <div class="card"><b>טלפון</b><br><button onclick="buyItem('phone')" class="action">קנה</button></div>
+    </div>`;
+}
+
 function drawBank(c) {
-    c.innerHTML = `
-    <div class="card fade-in">
-        <h3 style="color:var(--blue); margin-top:0;">🏦 בנק סמארט</h3>
-        
-        <div style="text-align:center; padding:25px; background:rgba(59,130,246,0.05); border-radius:15px; margin:15px 0; border:1px solid rgba(59,130,246,0.1);">
-            <small style="display:block; margin-bottom:5px;">יתרה בחיסכון</small>
-            <div style="font-size:28px; color:var(--blue); font-weight:900;">${Math.floor(bank).toLocaleString()}₪</div>
-        </div>
-
-        <div class="grid-2">
-            <button onclick="deposit('all')" class="action" style="padding:12px;">הפקד הכל</button>
-            <button onclick="withdraw('all')" class="action" style="background:var(--green); padding:12px;">משוך הכל</button>
-        </div>
-
-        <div class="card" style="margin-top:20px; border:1px solid rgba(239,68,68,0.2); background:rgba(239,68,68,0.02);">
-            <h4 style="margin:0 0 10px 0; color:var(--red);">🚨 ניהול חובות</h4>
-            <p>חוב נוכחי: <b>${Math.floor(loan).toLocaleString()}₪</b></p>
-            <div class="grid-2">
-                <button onclick="takeLoan(50000)" class="sys-btn" style="color:var(--yellow); border:1px solid var(--yellow);">בקש 50K</button>
-                <button onclick="payLoan('all')" class="sys-btn" style="color:var(--green); border:1px solid var(--green);">סגור חוב</button>
-            </div>
+    c.innerHTML = `<h4>🏦 בנק</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="card"><b>הפקדה</b><br><button onclick="deposit('all')" class="action">הכל</button></div>
+        <div class="card"><b>משיכה</b><br><button onclick="withdraw('all')" class="action" style="background:var(--green);">הכל</button></div>
+        <div class="card" style="grid-column: span 2;">
+            <b>חוב: ${Math.floor(window.loan)}₪</b><br>
+            <button onclick="takeLoan(10000)" class="sys-btn">הלוואה 10K</button>
+            <button onclick="payLoan('all')" class="sys-btn">סגור חוב</button>
         </div>
     </div>`;
 }
 
 // --- 4. עדכון UI גלובלי ---
-function renderUIUpdate(ld) {
+window.renderUIUpdate = function(ld) {
     const mTop = document.getElementById('top-money');
     const bTop = document.getElementById('top-bank');
     const lTop = document.getElementById('life-level-ui');
     
-    if (mTop) mTop.innerText = Math.floor(money).toLocaleString() + " ₪";
-    if (bTop) bTop.innerText = Math.floor(bank).toLocaleString() + " ₪";
+    if (mTop) mTop.innerText = Math.floor(window.money).toLocaleString() + " ₪";
+    if (bTop) bTop.innerText = Math.floor(window.bank).toLocaleString() + " ₪";
     if (lTop && ld) lTop.innerText = ld.level;
 
-    // עדכון פרוגרס-בר אם אנחנו בבית
     const progBar = document.querySelector('.progress-bar');
-    if (progBar && ld && (typeof currentTab !== 'undefined' && currentTab === 'home')) {
+    if (progBar && ld && window.currentTab === 'home') {
         progBar.style.width = ld.progressPercent + "%";
     }
-}
-
-// --- 5. הודעות מערכת ---
-function showMsg(msg, color = 'var(--blue)') {
-    const bar = document.getElementById('status-bar');
-    if (!bar) return;
-    bar.innerText = msg;
-    bar.style.background = color;
-    bar.style.opacity = "1";
-    bar.style.transform = "translateY(0)";
-    
-    setTimeout(() => {
-        bar.style.opacity = "0";
-        bar.style.transform = "translateY(-10px)";
-    }, 3000);
-}
-
-// --- 6. הגדרות ---
-function toggleTheme() {
-    document.body.classList.toggle('light-theme');
-    const isLight = document.body.classList.contains('light-theme');
-    localStorage.setItem('theme', isLight ? 'light' : 'dark');
-    showMsg(isLight ? "☀️ מצב יום" : "🌙 מצב לילה");
-}
+};
