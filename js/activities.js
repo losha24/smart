@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v6.5.2 - Shop & Business Empire */
+/* Smart Money Pro - js/activities.js - v6.7.0 - Investment & Shop Swap Edition */
 
 // --- מאגרי נתונים ---
 const jobList = [
@@ -55,7 +55,7 @@ const carList = [
     { name: 'פרארי', price: 1800000, speed: 8, icon: '🏎️' }
 ];
 
-// --- מנוע עדכון בורסה חי - מותאם לחנות (Shop) ---
+// --- מנוע עדכון בורסה חי - מעדכן את טאב ה-Invest ---
 setInterval(() => {
     stockList.forEach(s => {
         const change = (Math.random() * 0.05) - 0.024;
@@ -63,12 +63,12 @@ setInterval(() => {
         if (s.price < 1) s.price = 1;
         s.trend = change;
     });
-    // עדכון רק אם המשתמש נמצא פיזית בטאב החנות
-    if (typeof currentTab !== 'undefined' && currentTab === 'shop') {
+    // עדכון חי רק אם המשתמש נמצא בטאב הבורסה (Invest)
+    if (typeof currentTab !== 'undefined' && currentTab === 'invest') {
         const content = document.getElementById('content');
-        if (content) drawShop(content);
+        if (content) window.drawInvest(content);
     }
-}, 4000); // הגדלת זמן העדכון ל-4 שניות ליציבות בנייד
+}, 4000);
 
 // --- פונקציות עבודה ---
 function drawWork(c) {
@@ -187,9 +187,9 @@ function buyBusiness(id, price, passAdd) {
     } else { showMsg("אין מספיק כסף להשקעה!", "var(--red)"); }
 }
 
-// --- פונקציות חנות (Shop) - מחליף את ה-Market המקורי ---
-window.drawShop = function(c) {
-    let html = `<h3>🛒 חנות מוצרים והשקעות</h3><div class="grid-1">`;
+// --- פונקציית הבורסה (Invest) - המנוע החדש ---
+window.drawInvest = function(c) {
+    let html = `<h3 class="fade-in">📈 מסחר בבורסה (Live)</h3><div class="grid-1">`;
     stockList.forEach(s => {
         const owned = invOwned[s.id] || 0;
         const color = s.trend >= 0 ? 'var(--green)' : 'var(--red)';
@@ -205,8 +205,8 @@ window.drawShop = function(c) {
                     <small style="color:${color}; font-size:10px;">${arrow} ${(s.trend*100).toFixed(2)}%</small>
                 </div>
                 <div style="display:flex; gap:5px;">
-                    <button class="sys-btn" style="padding:5px; min-width:45px; background:rgba(34,197,94,0.1);" onclick="buyStock('${s.id}')">קנה</button>
-                    <button class="sys-btn" style="padding:5px; min-width:45px; background:rgba(239,68,68,0.1);" onclick="sellStock('${s.id}')">מכור</button>
+                    <button class="sys-btn" style="padding:8px; min-width:50px; background:rgba(34,197,94,0.1);" onclick="buyStock('${s.id}')">קנה</button>
+                    <button class="sys-btn" style="padding:8px; min-width:50px; background:rgba(239,68,68,0.1);" onclick="sellStock('${s.id}')">מכור</button>
                 </div>
             </div>`;
     });
@@ -219,7 +219,8 @@ function buyStock(id) {
         money -= s.price;
         invOwned[id] = (invOwned[id] || 0) + 1;
         showMsg(`📈 קנית ${s.name}`, "var(--blue)");
-        saveGame(); updateUI(); drawShop(document.getElementById('content'));
+        saveGame(); updateUI(); 
+        if (currentTab === 'invest') window.drawInvest(document.getElementById('content'));
     } else { showMsg("חסר מזומן!", "var(--red)"); }
 }
 
@@ -229,9 +230,22 @@ function sellStock(id) {
         money += s.price;
         invOwned[id] -= 1;
         showMsg(`💰 מכרת ${s.name}`, "var(--green)");
-        saveGame(); updateUI(); drawShop(document.getElementById('content'));
+        saveGame(); updateUI(); 
+        if (currentTab === 'invest') window.drawInvest(document.getElementById('content'));
     } else { showMsg("אין לך יחידות למכירה!", "var(--red)"); }
 }
+
+// --- פונקציית חנות (Shop) - ריקה כרגע לבקשתך ---
+window.drawShop = function(c) {
+    c.innerHTML = `
+        <div class="card fade-in" style="text-align:center; padding:40px;">
+            <div style="font-size:50px; margin-bottom:20px;">🛒</div>
+            <h3>החנות בשיפוצים...</h3>
+            <p style="opacity:0.6;">אלכסיי, כאן נפתח את החנות החדשה בהמשך.</p>
+            <button class="sys-btn" onclick="window.openTab('home')">חזור הביתה</button>
+        </div>
+    `;
+};
 
 // --- פונקציות בנק ---
 function drawBank(c) {
@@ -308,5 +322,3 @@ function drawCars(c) {
 function buyCar(name, price, speed) {
     if (money >= price) { money -= price; cars.push(name); carSpeed = speed; saveGame(); updateUI(); drawCars(document.getElementById('content')); }
 }
-
-function drawInvest(c) { c.innerHTML = "<h3>💰 השקעות</h3><p>בקרוב...</p>"; }
