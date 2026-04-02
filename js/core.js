@@ -1,23 +1,23 @@
-/* Smart Money Pro - js/core.js - v6.3.0 - Dynamic XP Scaling (25%) */
+/* Smart Money Pro - js/core.js - v6.5.0 - Pro Debug Sync */
 
-const VERSION = "6.3.0";
+const VERSION = "6.5.0";
 const SAVE_KEY = "smartMoneySave_v6_main";
 
-// --- משתנים גלובליים ---
-let money = 1200; 
-let bank = 0;
-let loan = 0;
-let lifeXP = 0;
-let passive = 0;
-let lastGift = 0;
-let skills = [];
-let cars = [];
-let inventory = []; 
-let invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, META:0, ELAL:0 };
-let carSpeed = 1;
-let totalEarned = 0;
-let lastSaveTime = Date.now();
-let lastKnownLevel = 0; 
+// --- אתחול משתנים גלובליים (מוצמדים ל-window עבור הדיבאג) ---
+window.money = 1200; 
+window.bank = 0;
+window.loan = 0;
+window.lifeXP = 0;
+window.passive = 0;
+window.lastGift = 0;
+window.skills = [];
+window.cars = [];
+window.inventory = []; 
+window.invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:0, META:0, ELAL:0 };
+window.carSpeed = 1;
+window.totalEarned = 0;
+window.lastSaveTime = Date.now();
+window.lastKnownLevel = 0; 
 
 let msgTimer; 
 
@@ -27,7 +27,6 @@ function getLevelData(xp) {
     let xpForNext = 1000; // רמה 1 דורשת 1000 XP
     let totalXPStack = 0;
 
-    // לולאה שמחשבת את הרמה לפי ה-XP המצטבר
     while (xp >= totalXPStack + xpForNext) {
         totalXPStack += xpForNext;
         level++;
@@ -52,37 +51,36 @@ function loadGame() {
         if (saved) {
             const data = JSON.parse(saved);
             
-            money = data.money ?? 1200;
-            bank = data.bank ?? 0;
-            loan = data.loan ?? 0;
-            lifeXP = data.lifeXP ?? 0;
-            passive = data.passive ?? 0;
-            lastGift = data.lastGift ?? 0;
-            skills = data.skills ?? [];
-            cars = data.cars ?? [];
-            inventory = data.inventory ?? [];
-            invOwned = data.invOwned ?? invOwned;
-            carSpeed = data.carSpeed ?? 1;
-            totalEarned = data.totalEarned ?? 0;
+            window.money = data.money ?? 1200;
+            window.bank = data.bank ?? 0;
+            window.loan = data.loan ?? 0;
+            window.lifeXP = data.lifeXP ?? 0;
+            window.passive = data.passive ?? 0;
+            window.lastGift = data.lastGift ?? 0;
+            window.skills = data.skills ?? [];
+            window.cars = data.cars ?? [];
+            window.inventory = data.inventory ?? [];
+            window.invOwned = data.invOwned ?? window.invOwned;
+            window.carSpeed = data.carSpeed ?? 1;
+            window.totalEarned = data.totalEarned ?? 0;
             
-            // הגדרת הרמה מיד עם הטעינה לפי הנוסחה החדשה
-            lastKnownLevel = getLevelData(lifeXP).level;
+            window.lastKnownLevel = getLevelData(window.lifeXP).level;
             
-            if (data.lastSaveTime && passive > 0) {
+            if (data.lastSaveTime && window.passive > 0) {
                 const now = Date.now();
                 let msPassed = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
-                const offlineEarnings = (msPassed / (1000 * 60 * 60)) * passive;
+                const offlineEarnings = (msPassed / (1000 * 60 * 60)) * window.passive;
                 
                 if (offlineEarnings > 1) {
-                    money += offlineEarnings;
-                    totalEarned += offlineEarnings;
+                    window.money += offlineEarnings;
+                    window.totalEarned += offlineEarnings;
                     setTimeout(() => {
                         showMsg(`💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()}₪ בזמן שלא היית!`, "var(--yellow)");
                     }, 1500);
                 }
             }
         } else {
-            lastKnownLevel = 1;
+            window.lastKnownLevel = 1;
         }
         
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -92,11 +90,21 @@ function loadGame() {
 }
 
 function saveGame() {
-    lastSaveTime = Date.now();
+    window.lastSaveTime = Date.now();
     const data = { 
-        money, bank, loan, lifeXP, passive, lastGift, 
-        skills, cars, inventory, invOwned, carSpeed, 
-        totalEarned, lastSaveTime 
+        money: window.money, 
+        bank: window.bank, 
+        loan: window.loan, 
+        lifeXP: window.lifeXP, 
+        passive: window.passive, 
+        lastGift: window.lastGift, 
+        skills: window.skills, 
+        cars: window.cars, 
+        inventory: window.inventory, 
+        invOwned: window.invOwned, 
+        carSpeed: window.carSpeed, 
+        totalEarned: window.totalEarned, 
+        lastSaveTime: window.lastSaveTime 
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
@@ -123,26 +131,23 @@ function updateUI() {
     const bEl = document.getElementById('bank');
     const lEl = document.getElementById('life-level-ui');
 
-    if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
-    if(bEl) bEl.innerText = Math.floor(bank).toLocaleString();
+    if(mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
+    if(bEl) bEl.innerText = Math.floor(window.bank).toLocaleString();
     
-    // קבלת נתוני הרמה העדכניים
-    const ld = getLevelData(lifeXP);
-    
+    const ld = getLevelData(window.lifeXP);
     if(lEl) lEl.innerText = ld.level;
 
-    // העברת נתוני הרמה ל-UI.js כדי לעדכן את ה-Progress Bar
     if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate(ld);
     
     checkLevelUp(ld.level);
 }
 
 function checkLevelUp(currentLevel) {
-    if (currentLevel > lastKnownLevel && lastKnownLevel > 0) {
+    if (currentLevel > window.lastKnownLevel && window.lastKnownLevel > 0) {
         const bonus = currentLevel * 1000;
-        money += bonus;
+        window.money += bonus;
         showMsg(`🎊 מזל טוב! עלית לרמה ${currentLevel}! קיבלת בונוס של ${bonus.toLocaleString()}₪ 🎊`, "var(--purple)");
-        lastKnownLevel = currentLevel;
+        window.lastKnownLevel = currentLevel;
         updateUI();
     }
 }
@@ -168,18 +173,18 @@ function resetGame() {
     }
 }
 
-// --- מנועי זמן ---
+// --- מנועי זמן (Passive Income) ---
 setInterval(() => {
-    if (passive > 0) {
-        const tickIncome = passive / 72000; 
-        money += tickIncome;
-        totalEarned += tickIncome;
+    if (window.passive > 0) {
+        const tickIncome = window.passive / 72000; 
+        window.money += tickIncome;
+        window.totalEarned += tickIncome;
         
         const mEl = document.getElementById('money');
-        if(mEl) mEl.innerText = Math.floor(money).toLocaleString();
+        if(mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
 
         if (typeof window.renderUIUpdate === 'function') {
-            const ld = getLevelData(lifeXP);
+            const ld = getLevelData(window.lifeXP);
             window.renderUIUpdate(ld);
         }
     }
@@ -190,5 +195,5 @@ setInterval(saveGame, 15000);
 document.addEventListener("DOMContentLoaded", () => {
     loadGame();
     updateUI();
-    console.log(`Smart Money Engine v${VERSION} Loaded.`);
+    console.log(`Smart Money Engine v${VERSION} Fully Loaded and Synced.`);
 });
