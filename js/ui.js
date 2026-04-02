@@ -1,159 +1,161 @@
-/* Smart Money Pro - js/ui.js - v7.4.0 - Full UI Sync */
+/* Smart Money Pro - js/ui.js - v6.3.0 - Dynamic XP Scaling UI */
 
-// --- 1. ניהול טאבים וניווט ---
-window.openTab = function(tabName) {
-    window.currentTab = tabName;
-    const content = document.getElementById('content');
-    if (!content) return;
+let deferredPrompt;
+let currentTab = 'home'; 
 
-    // עדכון ויזואלי של הכפתורים בתפריט
-    document.querySelectorAll('.topbar button').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.getElementById('btn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
-    if (activeBtn) activeBtn.classList.add('active');
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    renderInstallBtn();
+});
 
-    content.innerHTML = ""; 
-
-    // ניתוב לכל חלקי המערכת
-    switch(tabName) {
-        case 'home': drawHome(content); break;
-        case 'work': drawWork(content); break;
-        case 'tasks': drawCasino(content); break; 
-        case 'shop': drawShop(content); break; 
-        case 'market': drawMarket(content); break; 
-        case 'business': drawBusiness(content); break; 
-        case 'estate': drawEstate(content); break; 
-        case 'skills': drawSkills(content); break;
-        case 'bank': drawBank(content); break;
-        case 'cars': drawCars(content); break;
-        default: drawHome(content);
+// --- עדכון ויזואלי מהיר (נקרא מה-Core ושולח אובייקט ld) ---
+function renderUIUpdate(ld) {
+    // אם לא נשלח אובייקט ld מה-Core, ננסה לחשב אותו מקומית כגיבוי
+    if (!ld && typeof getLevelData === 'function') {
+        ld = getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0);
     }
+
+    if (currentTab === 'home' && ld) {
+        const passiveEl = document.getElementById('passive-display');
+        const progressEl = document.getElementById('xp-progress-bar');
+        const xpTextEl = document.getElementById('xp-text-detail');
+        const levelValEl = document.getElementById('home-level-val');
+        
+        // הצגת הכנסה פסיבית
+        if (passiveEl) {
+            const currentPassive = typeof passive !== 'undefined' ? passive : 0;
+            passiveEl.innerText = currentPassive.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " ₪/ש";
+        }
+        
+        // עדכון בר התקדמות דינמי (לפי נוסחת 25% מה-Core)
+        if (progressEl) {
+            progressEl.style.width = ld.progressPercent + "%";
+        }
+        
+        if (xpTextEl) {
+            xpTextEl.innerText = `${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP`;
+        }
+        
+        // עדכון מספר הרמה
+        if (levelValEl) {
+            levelValEl.innerText = ld.level;
+        }
+    }
+}
+
+// --- מערכת ניווט ---
+function openTab(t) {
+    currentTab = t; 
+    document.querySelectorAll(".topbar button").forEach(b => b.classList.remove("active"));
+    const btnId = "btn" + t.charAt(0).toUpperCase() + t.slice(1);
+    const btn = document.getElementById(btnId);
+    if(btn) btn.classList.add("active");
     
-    if (typeof window.updateUI === 'function') window.updateUI();
-    window.scrollTo(0,0);
-};
+    const c = document.getElementById("content"); 
+    if(!c) return;
+    
+    c.style.opacity = "0";
+    
+    setTimeout(() => {
+        c.innerHTML = "";
+        switch(t) {
+            case 'home':       drawHome(c); break;
+            case 'work':       if(typeof drawWork === 'function') drawWork(c); break;
+            case 'tasks':      if(typeof drawTasks === 'function') drawTasks(c); break; 
+            case 'invest':     
+            case 'market':     if(typeof drawMarket === 'function') drawMarket(c); 
+                               else if(typeof drawInvest === 'function') drawInvest(c); break;
+            case 'bank':       if(typeof drawBank === 'function') drawBank(c); break;
+            case 'skills':     if(typeof drawSkills === 'function') drawSkills(c); break;
+            case 'cars':       if(typeof drawCars === 'function') drawCars(c); break;
+            case 'estate':     if(typeof drawEstate === 'function') drawEstate(c); break; 
+            case 'business':   if(typeof drawBusiness === 'function') drawBusiness(c); break;
+            default:           drawHome(c);
+        }
+        
+        c.style.opacity = "1";
+        window.scrollTo(0,0);
+        if(typeof updateUI === 'function') updateUI();
+    }, 120);
+}
 
-// --- 2. דף הבית (Home) ---
+// --- דף הבית ---
 function drawHome(c) {
-    const ld = getLevelData(window.lifeXP || 0);
+    // קבלת נתוני רמה מה-Core (דורש core.js v6.3.0)
+    const ld = (typeof getLevelData === 'function') 
+               ? getLevelData(typeof lifeXP !== 'undefined' ? lifeXP : 0) 
+               : { level: 1, xpInCurrentLevel: 0, xpForNext: 1000, progressPercent: 0 };
+
     c.innerHTML = `
-    <div class="fade-in">
-        <div class="card" style="background: linear-gradient(135deg, #1e293b, #0f172a); border-bottom: 3px solid var(--blue); padding: 12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;">
-                <b style="color:var(--blue);">📊 סטטוס רמה</b>
-                <span>רמה ${ld.level} (${Math.floor(ld.progressPercent)}%)</span>
-            </div>
-            <div style="margin-top:8px;">
-                <div class="progress-container" style="height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
-                    <div class="progress-bar" style="width:${ld.progressPercent}%; height:100%; background:var(--green);"></div>
-                </div>
-                <div style="text-align:center; margin-top:10px;">
-                    <button onclick="claimDailyGift()" style="background:none; border:1px solid var(--blue); color:var(--blue); font-size:10px; padding:2px 12px; border-radius:12px; font-weight:bold;">🎁 קבל מתנה יומית</button>
+        <div class="card fade-in">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">🏠 מרכז שליטה</h3>
+                <div style="display:flex; gap:8px;">
+                     <button onclick="getDailyGift()" class="sys-btn" style="padding:5px 12px; font-size:12px; background:var(--yellow); color:black;">🎁 מתנה</button>
+                     <button onclick="forceUpdate()" class="sys-btn" style="padding:5px 12px; font-size:12px;">🔄 רענן</button>
                 </div>
             </div>
-        </div>
+            
+            <div class="card" style="background:rgba(255,255,255,0.03); margin-bottom:15px; padding:12px; border:1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px;">
+                    <span>רמת חיים <b id="home-level-val">${ld.level}</b></span>
+                    <span id="xp-text-detail" style="opacity:0.8;">${Math.floor(ld.xpInCurrentLevel).toLocaleString()} / ${Math.floor(ld.xpForNext).toLocaleString()} XP</span>
+                </div>
+                <div style="height:10px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
+                    <div id="xp-progress-bar" style="width:${ld.progressPercent}%; height:100%; background:linear-gradient(90deg, var(--blue), #60a5fa); transition: width 0.3s ease;"></div>
+                </div>
+            </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">
-            <div class="card" style="padding:10px; text-align:center; border-right:2px solid var(--green);">
-                <small style="font-size:10px; color:var(--green); display:block;">הכנסה פסיבית</small>
-                <b style="font-size:14px;">+${Math.floor(window.passive || 0).toLocaleString()}₪</b>
+            <div class="grid-2">
+                <div class="card" style="margin:0; padding:12px; text-align:center; border: 1px solid rgba(34, 197, 94, 0.2); background:rgba(34, 197, 94, 0.02);">
+                    <small style="opacity:0.7; font-size:10px; display:block; margin-bottom:4px;">💰 הכנסה פסיבית</small>
+                    <b id="passive-display" style="color:var(--green); font-size:15px;">${(typeof passive !== 'undefined' ? passive : 0).toLocaleString()} ₪/ש</b>
+                </div>
+                <div class="card" style="margin:0; padding:12px; text-align:center; border: 1px solid rgba(239, 68, 68, 0.2); background:rgba(239, 68, 68, 0.02);">
+                    <small style="opacity:0.7; font-size:10px; display:block; margin-bottom:4px;">🏦 חוב לבנק</small>
+                    <b style="color:var(--red); font-size:15px;">${(typeof loan !== 'undefined' ? loan : 0).toLocaleString()} ₪</b>
+                </div>
             </div>
-            <div class="card" style="padding:10px; text-align:center; border-right:2px solid var(--red);">
-                <small style="font-size:10px; color:var(--red); display:block;">חוב לבנק</small>
-                <b style="font-size:14px;">${Math.floor(window.loan || 0).toLocaleString()}₪</b>
-            </div>
-        </div>
 
-        <div class="card" style="margin-top:10px; padding:12px;">
-            <h5 style="margin:0 0 8px 0; font-size:12px; opacity:0.8;">📦 פריטים וכישורים</h5>
-            <div id="mini-inventory" style="display:flex; gap:6px; flex-wrap:wrap;">
-                ${renderFullInventory()}
+            <div class="card" style="margin-top:15px; font-size:13px; background:rgba(255,255,255,0.01); padding:12px; border:1px dashed var(--border);">
+                <div style="margin-bottom:8px;">🎓 <b>כישורים:</b> <span style="color:var(--blue)">${(typeof skills !== 'undefined' && skills.length > 0) ? skills.join(", ") : "ללא הכשרה"}</span></div>
+                <div>🚗 <b>רכב:</b> <span style="color:var(--yellow)">${(typeof cars !== 'undefined' && cars.length > 0) ? cars[cars.length-1] : "הולך ברגל"}</span></div>
             </div>
+
+            <div class="card" style="margin-top:15px; padding:12px; background:rgba(0,0,0,0.1);">
+                <small style="opacity:0.6; display:block; margin-bottom:10px;">📦 הציוד שלי:</small>
+                <div id="inventory-list" style="display:flex; gap:10px; overflow-x:auto; min-height:55px; padding-bottom:5px; align-items:center;">
+                    ${(typeof inventory !== 'undefined' && inventory.length > 0) 
+                        ? inventory.map(item => `<div class="inv-item-icon">📦</div>`).join('') 
+                        : '<span style="opacity:0.4; font-size:12px; font-style:italic;">אין פריטים...</span>'}
+                </div>
+            </div>
+
+            <div id="install-container" style="margin-top:20px;"></div>
+
+            <button class="sys-btn" style="border:1px solid #451a1a; color:#ef4444; margin-top:25px; font-size:11px; padding:10px; width:100%;" onclick="resetGame()">🗑️ איפוס חשבון</button>
         </div>
-    </div>`;
+    `;
+    renderInstallBtn();
 }
 
-// --- 3. פונקציות התוכן (כולן ב-Grid 2) ---
-
-window.drawCasino = function(c) {
-    c.innerHTML = `<h4>🎰 קזינו</h4><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <div class="card">🎰 <b>מכונות</b><br><button onclick="playGame('slots')" class="action">המר 100</button></div>
-        <div class="card">🃏 <b>בלאק ג'ק</b><br><button onclick="playGame('bj')" class="action">המר 500</button></div>
-    </div>`;
-};
-
-window.drawShop = function(c) {
-    c.innerHTML = `<h4>🏪 שוק חפצים</h4><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <div class="card">⌚ <b>שעון</b><br><button onclick="buyItem('watch', 5000)" class="action">5K ₪</button></div>
-        <div class="card">📱 <b>אייפון</b><br><button onclick="buyItem('phone', 4500)" class="action">4.5K ₪</button></div>
-    </div>`;
-};
-
-window.drawBusiness = function(c) {
-    c.innerHTML = `<h4>🏢 ניהול עסקים</h4><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <div class="card">🛒 <b>קיוסק</b><br><button onclick="buyBiz('kiosk', 50000)" class="action">פתח 50K</button></div>
-        <div class="card">🔧 <b>מוסך</b><br><button onclick="buyBiz('garage', 200000)" class="action">פתח 200K</button></div>
-    </div>`;
-};
-
-window.drawMarket = function(c) {
-    c.innerHTML = `<h4>📈 בורסה</h4><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <div class="card">🍏 <b>AAPL</b><br><button onclick="buyStock('AAPL')" class="action">קנה</button></div>
-        <div class="card">🚗 <b>TSLA</b><br><button onclick="buyStock('TSLA')" class="action">קנה</button></div>
-    </div>`;
-};
-
-window.drawEstate = function(c) {
-    c.innerHTML = `<h4>🏘️ נדל"ן</h4><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <div class="card">🏠 <b>דירה</b><br><button onclick="buyEstate('apt', 500000)" class="action">500K</button></div>
-        <div class="card">🏘️ <b>וילה</b><br><button onclick="buyEstate('villa', 1500000)" class="action">1.5M</button></div>
-    </div>`;
-};
-
-window.drawWork = function(c) {
-    c.innerHTML = `<h4>⚒️ עבודה</h4><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <div class="card">👮 <b>אבטחה</b><br><button onclick="doWork('guard')" class="action">עבוד</button></div>
-        <div class="card">🚔 <b>משטרה</b><br><button onclick="doWork('police')" class="action">עבוד</button></div>
-    </div>`;
-};
-
-window.drawSkills = function(c) {
-    c.innerHTML = `<h4>🎓 כישורים</h4><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <div class="card">📚 <b>ניהול</b><br><button onclick="buySkill('mgm')" class="action">למד</button></div>
-        <div class="card">💻 <b>תכנות</b><br><button onclick="buySkill('code')" class="action">למד</button></div>
-    </div>`;
-};
-
-window.drawCars = function(c) {
-    c.innerHTML = `<h4>🚗 רכבים</h4><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <div class="card">🚗 <b>מאזדה</b><br><button onclick="buyCar('mazda')" class="action">קנה</button></div>
-        <div class="card">⚡ <b>טסלה</b><br><button onclick="buyCar('tesla')" class="action">קנה</button></div>
-    </div>`;
-};
-
-window.drawBank = function(c) {
-    c.innerHTML = `<h4>🏦 בנק</h4><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        <div class="card">💰 <b>הפקדה</b><br><button onclick="deposit('all')" class="action">הכל</button></div>
-        <div class="card">💸 <b>משיכה</b><br><button onclick="withdraw('all')" class="action">הכל</button></div>
-    </div>`;
-};
-
-// --- 4. עזרי תצוגה ---
-
-function renderFullInventory() {
-    let items = "";
-    if (window.cars?.length) window.cars.forEach(() => items += `<span style="font-size:20px; background:rgba(59,130,246,0.1); padding:6px; border-radius:8px;">🚗</span>`);
-    if (window.skills?.length) window.skills.forEach(() => items += `<span style="font-size:20px; background:rgba(16,185,129,0.1); padding:6px; border-radius:8px;">🎓</span>`);
-    if (window.inventory?.length) window.inventory.slice(-8).forEach(item => items += `<span style="font-size:20px; background:rgba(255,255,255,0.05); padding:6px; border-radius:8px;">${item.i || '📦'}</span>`);
-    return items || '<small style="opacity:0.4;">המחסן ריק</small>';
+function renderInstallBtn() {
+    const cont = document.getElementById("install-container");
+    if(!cont) return;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if(!isStandalone && deferredPrompt) {
+        cont.innerHTML = `<button class="action" style="background:var(--blue); color:#fff; font-weight:bold; width:100%; padding:12px; border-radius:8px; border:none;" onclick="triggerInstall()">📲 התקן כאפליקציה (PWA)</button>`;
+    } else { cont.innerHTML = ""; }
 }
 
-window.renderUIUpdate = function(ld) {
-    const mTop = document.getElementById('top-money');
-    const bTop = document.getElementById('top-bank');
-    const lTop = document.getElementById('life-level-ui');
-    if (mTop) mTop.innerText = Math.floor(window.money || 0).toLocaleString() + " ₪";
-    if (bTop) bTop.innerText = Math.floor(window.bank || 0).toLocaleString() + " ₪";
-    if (lTop && ld) lTop.innerText = ld.level;
-    const progBar = document.querySelector('.progress-bar');
-    if (progBar && ld && window.currentTab === 'home') progBar.style.width = ld.progressPercent + "%";
-};
+async function triggerInstall() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') { deferredPrompt = null; renderInstallBtn(); }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => { openTab('home'); }, 150);
+});
