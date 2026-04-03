@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v7.5.6 - Passive Income Display Fix */
+/* Smart Money Pro - js/activities.js - v7.5.7 - UI Optimization & Home Fix */
 
 // --- 1. מאגרי נתונים ---
 const jobList = [
@@ -81,27 +81,36 @@ const carList = [
     { name: 'מטוס פרטי', price: 15000000, speed: 25, icon: '🛩️' }
 ];
 
-// --- 2. אתחול ומנוע בורסה חי ---
+// --- 2. מנועי זמן אמת (דינמיות משופרת) ---
 if (window.bankTaxRate === undefined) window.bankTaxRate = 0.01;
 
+// מנוע בורסה - מעדכן רק אלמנטים קיימים בלי לצייר מחדש הכל
 setInterval(() => {
     stockList.forEach(s => {
         const change = (Math.random() * 0.05) - 0.024;
         s.price *= (1 + change);
         if (s.price < 1) s.price = 1;
         s.trend = change;
+
+        // עדכון דינמי של הטקסט אם המשתמש נמצא בדף הבורסה
+        const priceEl = document.getElementById(`stock-price-${s.id}`);
+        if (priceEl) {
+            priceEl.textContent = s.price.toFixed(2) + "₪";
+            priceEl.style.color = s.trend >= 0 ? 'var(--green)' : 'var(--red)';
+        }
     });
-    if (typeof currentTab !== 'undefined' && currentTab === 'invest') {
-        const content = document.getElementById('content');
-        if (content) window.drawInvest(content);
-    }
 }, 4000);
 
-// --- 3. דף הבית ---
+// מנוע הכנסה פסיבית - מעדכן את הכסף כל שניה (חלקי 3600)
+setInterval(() => {
+    if (window.passive > 0) {
+        window.money += (window.passive / 3600);
+        if (typeof updateUI === 'function') updateUI();
+    }
+}, 1000);
+
+// --- 3. דף הבית (מעודכן: ארון ציוד נקי) ---
 window.drawHome = function(c) {
-    const hasItem = (id, name) => window.inventory.includes(id) || window.inventory.includes(name);
-    const itemIcons = shopItems.filter(si => hasItem(si.id, si.name))
-        .map(si => `<span title="${si.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${si.icon}</span>`).join('');
     const carIcons = carList.filter(car => window.cars.includes(car.name))
         .map(car => `<span title="${car.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${car.icon}</span>`).join('');
     const skillIcons = skillList.filter(sk => window.skills.includes(sk.name))
@@ -110,14 +119,16 @@ window.drawHome = function(c) {
     c.innerHTML = `
         <div class="fade-in">
             <h3 style="margin-bottom:15px; text-align:center;">🏠 מרכז שליטה אישי</h3>
+            
             <div class="card" style="margin-bottom:12px; border-right: 4px solid var(--purple);">
-                <div style="font-weight:bold; color:var(--purple); font-size:14px; margin-bottom:10px;">📦 ארון ציוד וחפצים</div>
-                <div style="display:flex; flex-wrap:wrap; gap:5px; min-height:45px;">${itemIcons || '<small style="opacity:0.4;">הארון ריק...</small>'}</div>
+                <div style="font-weight:bold; color:var(--purple); font-size:14px;">📦 ארון ציוד וחפצים</div>
             </div>
+
             <div class="card" style="margin-bottom:12px; border-right: 4px solid var(--blue);">
                 <div style="font-weight:bold; color:var(--blue); font-size:14px; margin-bottom:10px;">🏎️ החניה שלי</div>
                 <div style="display:flex; flex-wrap:wrap; gap:5px; min-height:45px;">${carIcons || '<small style="opacity:0.4;">אין רכבים בחניה</small>'}</div>
             </div>
+            
             <div class="card" style="border-right: 4px solid var(--green);">
                 <div style="font-weight:bold; color:var(--green); font-size:14px; margin-bottom:10px;">🎓 הסמכות וכישורים</div>
                 <div style="display:flex; flex-wrap:wrap; gap:5px; min-height:45px;">${skillIcons || '<small style="opacity:0.4;">טרם נרכשו כישורים</small>'}</div>
@@ -126,7 +137,7 @@ window.drawHome = function(c) {
     `;
 }
 
-// --- 4. מנוע עבודה (מתוקן עם תצוגת הכנסה פסיבית) ---
+// --- 4. מנוע עבודה ---
 window.drawWork = function(c) {
     let html = `<h3>⚒️ מרכז תעסוקה</h3><div class="grid-2">`;
     jobList.forEach(j => {
@@ -162,14 +173,11 @@ window.startWork = function(id) {
     setTimeout(() => { if(bar) { bar.style.transition = `width ${actualTime}ms linear`; bar.style.width = "100%"; } }, 50);
 
     setTimeout(() => {
-        // חישוב בונוס פסיבי (30% מהשכר כבונוס קבוע לפסיביות שלך)
         const passiveAdd = (j.pay * 0.3);
-        
         window.money += j.pay; 
         window.lifeXP += j.xp;
         window.passive += passiveAdd;
 
-        // הודעת סיכום הכוללת הכנסה פסיבית
         showMsg(`💰 +${j.pay}₪ | ✨ +${j.xp} XP | 🚀 פסיבי: +${passiveAdd.toFixed(1)}₪`, "var(--green)");
         
         if(btn) btn.disabled = false;
@@ -234,7 +242,7 @@ window.buyBusiness = function(id, price, passAdd) {
     } else { showMsg("אין מספיק כסף!", "var(--red)"); }
 }
 
-// --- 7. בנק (v7.5.6 - ממשק מחובר וברור) ---
+// --- 7. בנק ---
 window.drawBank = function(c) {
     const tax = (window.bankTaxRate * 100).toFixed(1);
     const loanLimit = 250000;
@@ -246,11 +254,11 @@ window.drawBank = function(c) {
             <div style="display:flex; gap:10px; margin-bottom:15px;">
                 <div class="card" style="flex:1; text-align:center; padding:10px; border-bottom:3px solid var(--blue);">
                     <small style="opacity:0.6; display:block; font-size:10px;">יתרה בבנק</small>
-                    <b style="color:var(--blue); font-size:16px;">${window.bank.toLocaleString()} ₪</b>
+                    <b id="bank-balance-display" style="color:var(--blue); font-size:16px;">${window.bank.toLocaleString()} ₪</b>
                 </div>
                 <div class="card" style="flex:1; text-align:center; padding:10px; border-bottom:3px solid var(--red);">
                     <small style="opacity:0.6; display:block; font-size:10px;">חוב פעיל</small>
-                    <b style="color:var(--red); font-size:16px;">${window.loan.toLocaleString()} ₪</b>
+                    <b id="bank-loan-display" style="color:var(--red); font-size:16px;">${window.loan.toLocaleString()} ₪</b>
                 </div>
             </div>
 
@@ -319,7 +327,7 @@ window.repayLoan = function() {
     saveGame(); updateUI(); drawBank(document.getElementById('content'));
 }
 
-// --- 8. בורסה ---
+// --- 8. בורסה (דינמיות מלאה עם IDs) ---
 window.drawInvest = function(c) {
     let html = `<h3>📈 מסחר בבורסה</h3><div class="grid-2">`;
     stockList.forEach(s => {
@@ -328,8 +336,8 @@ window.drawInvest = function(c) {
         html += `
             <div class="card fade-in" style="text-align:center; border-bottom: 3px solid ${color}">
                 <div style="font-weight:bold;">${s.name}</div>
-                <div style="font-size:10px; opacity:0.6;">שלך: ${owned}</div>
-                <div style="color:${color}; font-weight:bold; font-size:15px; margin:8px 0;">${s.price.toFixed(2)}₪</div>
+                <div style="font-size:10px; opacity:0.6;">שלך: <span id="stock-owned-${s.id}">${owned}</span></div>
+                <div id="stock-price-${s.id}" style="color:${color}; font-weight:bold; font-size:15px; margin:8px 0;">${s.price.toFixed(2)}₪</div>
                 <div style="display:flex; gap:4px;">
                     <button class="sys-btn" style="flex:1; padding:6px; background:rgba(34,197,94,0.15);" onclick="buyStock('${s.id}')">קנה</button>
                     <button class="sys-btn" style="flex:1; padding:6px; background:rgba(239,68,68,0.15);" onclick="sellStock('${s.id}')">מכור</button>
@@ -343,7 +351,9 @@ window.buyStock = function(id) {
     const s = stockList.find(x => x.id === id);
     if (window.money >= s.price) {
         window.money -= s.price; window.invOwned[id] = (window.invOwned[id] || 0) + 1;
-        saveGame(); updateUI(); drawInvest(document.getElementById('content'));
+        saveGame(); updateUI();
+        const ownedEl = document.getElementById(`stock-owned-${id}`);
+        if (ownedEl) ownedEl.textContent = window.invOwned[id];
     }
 }
 
@@ -351,7 +361,9 @@ window.sellStock = function(id) {
     if (window.invOwned[id] > 0) {
         const s = stockList.find(x => x.id === id);
         window.money += s.price; window.invOwned[id] -= 1;
-        saveGame(); updateUI(); drawInvest(document.getElementById('content'));
+        saveGame(); updateUI();
+        const ownedEl = document.getElementById(`stock-owned-${id}`);
+        if (ownedEl) ownedEl.textContent = window.invOwned[id];
     }
 }
 
