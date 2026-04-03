@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v7.5.3 - UI & Inventory Fix */
+/* Smart Money Pro - js/activities.js - v7.5.6 - Passive Income Display Fix */
 
 // --- 1. מאגרי נתונים ---
 const jobList = [
@@ -97,34 +97,27 @@ setInterval(() => {
     }
 }, 4000);
 
-// --- 3. דף הבית (מרכז שליטה) - מתוקן להצגת אייקונים ---
+// --- 3. דף הבית ---
 window.drawHome = function(c) {
-    // פונקציית עזר לבדיקה אם פריט קיים (לפי שם או ID)
     const hasItem = (id, name) => window.inventory.includes(id) || window.inventory.includes(name);
-
     const itemIcons = shopItems.filter(si => hasItem(si.id, si.name))
         .map(si => `<span title="${si.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${si.icon}</span>`).join('');
-
     const carIcons = carList.filter(car => window.cars.includes(car.name))
         .map(car => `<span title="${car.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${car.icon}</span>`).join('');
-
     const skillIcons = skillList.filter(sk => window.skills.includes(sk.name))
         .map(sk => `<span title="${sk.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${sk.icon}</span>`).join('');
 
     c.innerHTML = `
         <div class="fade-in">
             <h3 style="margin-bottom:15px; text-align:center;">🏠 מרכז שליטה אישי</h3>
-            
             <div class="card" style="margin-bottom:12px; border-right: 4px solid var(--purple);">
                 <div style="font-weight:bold; color:var(--purple); font-size:14px; margin-bottom:10px;">📦 ארון ציוד וחפצים</div>
                 <div style="display:flex; flex-wrap:wrap; gap:5px; min-height:45px;">${itemIcons || '<small style="opacity:0.4;">הארון ריק...</small>'}</div>
             </div>
-
             <div class="card" style="margin-bottom:12px; border-right: 4px solid var(--blue);">
                 <div style="font-weight:bold; color:var(--blue); font-size:14px; margin-bottom:10px;">🏎️ החניה שלי</div>
                 <div style="display:flex; flex-wrap:wrap; gap:5px; min-height:45px;">${carIcons || '<small style="opacity:0.4;">אין רכבים בחניה</small>'}</div>
             </div>
-
             <div class="card" style="border-right: 4px solid var(--green);">
                 <div style="font-weight:bold; color:var(--green); font-size:14px; margin-bottom:10px;">🎓 הסמכות וכישורים</div>
                 <div style="display:flex; flex-wrap:wrap; gap:5px; min-height:45px;">${skillIcons || '<small style="opacity:0.4;">טרם נרכשו כישורים</small>'}</div>
@@ -133,14 +126,13 @@ window.drawHome = function(c) {
     `;
 }
 
-// --- 4. מנוע עבודה ---
+// --- 4. מנוע עבודה (מתוקן עם תצוגת הכנסה פסיבית) ---
 window.drawWork = function(c) {
     let html = `<h3>⚒️ מרכז תעסוקה</h3><div class="grid-2">`;
     jobList.forEach(j => {
         const hasSkill = !j.req || window.skills.includes(j.req);
         const hasCar = !j.reqCar || window.cars.length > 0;
         const canWork = hasSkill && hasCar;
-
         html += `
             <div class="card fade-in" style="text-align:center; opacity:${canWork ? 1 : 0.6}; border-top: 3px solid ${canWork ? 'var(--blue)' : '#444'}">
                 <div style="font-size:26px; margin-bottom:5px;">${j.icon}</div>
@@ -170,19 +162,19 @@ window.startWork = function(id) {
     setTimeout(() => { if(bar) { bar.style.transition = `width ${actualTime}ms linear`; bar.style.width = "100%"; } }, 50);
 
     setTimeout(() => {
-        const jobLevel = parseInt(j.id.replace('j', ''));
-        const passivePercent = 0.30 + (jobLevel - 1) * (0.20 / (jobList.length - 1));
-        const passiveAdd = j.pay * passivePercent;
-
-        window.money += j.pay;
+        // חישוב בונוס פסיבי (30% מהשכר כבונוס קבוע לפסיביות שלך)
+        const passiveAdd = (j.pay * 0.3);
+        
+        window.money += j.pay; 
         window.lifeXP += j.xp;
-        window.passive += passiveAdd; 
+        window.passive += passiveAdd;
 
-        if(typeof showMsg === 'function') showMsg(`💰 +${j.pay}₪ | ✨ +${j.xp} XP | 🚀 פסיבי: +${passiveAdd.toFixed(1)}`, "var(--green)");
+        // הודעת סיכום הכוללת הכנסה פסיבית
+        showMsg(`💰 +${j.pay}₪ | ✨ +${j.xp} XP | 🚀 פסיבי: +${passiveAdd.toFixed(1)}₪`, "var(--green)");
+        
         if(btn) btn.disabled = false;
         if(container) container.style.display = "none";
         if(bar) { bar.style.transition = "none"; bar.style.width = "0%"; }
-        
         updateUI(); saveGame();
     }, actualTime);
 }
@@ -209,10 +201,8 @@ window.drawEstate = function(c) {
 window.buyEstate = function(id) {
     const e = estateList.find(x => x.id === id);
     if (!e || window.money < e.price) return showMsg("אין מספיק כסף!", "var(--red)");
-    window.money -= e.price;
-    window.passive += e.passive;
-    window.inventory.push(e.name);
-    showMsg(`🏠 תתחדש! רכשת ${e.name}`, "var(--green)");
+    window.money -= e.price; window.passive += e.passive; window.inventory.push(e.name);
+    showMsg(`🏠 רכשת ${e.name}`, "var(--green)");
     saveGame(); updateUI(); drawEstate(document.getElementById('content'));
 }
 
@@ -226,12 +216,9 @@ window.drawBusiness = function(c) {
         html += `
             <div class="card fade-in" style="text-align:center; border-top: 4px solid ${level > 0 ? 'var(--purple)' : '#444'}">
                 <div style="font-size:35px; margin-bottom:10px;">${b.icon}</div>
-                <div>
-                    <div style="font-weight:bold; font-size:14px;">${b.name}</div>
-                    ${level > 0 ? `<div style="color:var(--purple); font-size:11px;">רמה ${level}</div>` : ''}
-                    <div style="font-size:11px; color:var(--green); margin:5px 0;">פסיבי: ${currentPassive.toLocaleString()}₪/שעה</div>
-                </div>
-                <button class="sys-btn" style="width:100%; margin-top:10px; font-size:12px;" onclick="buyBusiness('${b.id}', ${currentPrice}, ${b.passive})">
+                <div style="font-weight:bold; font-size:14px;">${b.name} ${level > 0 ? `<small>(רמה ${level})</small>` : ''}</div>
+                <div style="font-size:11px; color:var(--green); margin:5px 0;">פסיבי: ${currentPassive.toLocaleString()}₪/שעה</div>
+                <button class="sys-btn" style="width:100%; margin-top:10px;" onclick="buyBusiness('${b.id}', ${currentPrice}, ${b.passive})">
                     ${currentPrice.toLocaleString()}₪
                 </button>
             </div>`;
@@ -240,36 +227,59 @@ window.drawBusiness = function(c) {
 }
 
 window.buyBusiness = function(id, price, passAdd) {
-    const b = businessList.find(x => x.id === id);
     if (window.money >= price) {
-        window.money -= price;
-        window.passive += passAdd;
-        window.inventory.push(id); 
-        showMsg(`💼 ${b.name} שודרג!`, "var(--purple)");
+        window.money -= price; window.passive += passAdd; window.inventory.push(id);
+        showMsg("💼 עסק שודרג!", "var(--purple)");
         saveGame(); updateUI(); drawBusiness(document.getElementById('content'));
     } else { showMsg("אין מספיק כסף!", "var(--red)"); }
 }
 
-// --- 7. בנק (מתוקן עם ריענון ממשק) ---
+// --- 7. בנק (v7.5.6 - ממשק מחובר וברור) ---
 window.drawBank = function(c) {
     const tax = (window.bankTaxRate * 100).toFixed(1);
+    const loanLimit = 250000;
+    
     c.innerHTML = `
-        <div class="card fade-in" style="text-align:center; border-top: 4px solid var(--blue);">
-            <h3>🏦 בנק הפועלים</h3>
-            <div class="grid-2" style="margin-bottom:15px;">
-                <div class="card" style="background:rgba(0,0,0,0.2);"><small>יתרה בבנק</small><h4 style="color:var(--blue);">${window.bank.toLocaleString()}₪</h4></div>
-                <div class="card" style="background:rgba(0,0,0,0.2);"><small>חוב הלוואה</small><h4 style="color:var(--red);">${window.loan.toLocaleString()}₪</h4></div>
-            </div>
-            <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px;">
-                <input type="number" id="bank-amt" placeholder="הכנס סכום פעולה..." style="width:100%; padding:12px; margin-bottom:12px; text-align:center; background:#000; color:#fff; border:1px solid #333; border-radius:8px;">
-                <div class="grid-2" style="gap:10px;">
-                    <button class="sys-btn" style="background:#2563eb; height:45px;" onclick="bankProcess('deposit')">הפקד</button>
-                    <button class="sys-btn" style="background:#a855f7; height:45px;" onclick="bankProcess('withdraw')">משוך</button>
+        <div class="fade-in" style="font-family: sans-serif; max-width:400px; margin:auto;">
+            <h3 style="text-align:center; margin-bottom:15px;">🏦 מרכז פיננסי</h3>
+            
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <div class="card" style="flex:1; text-align:center; padding:10px; border-bottom:3px solid var(--blue);">
+                    <small style="opacity:0.6; display:block; font-size:10px;">יתרה בבנק</small>
+                    <b style="color:var(--blue); font-size:16px;">${window.bank.toLocaleString()} ₪</b>
                 </div>
-                <div style="font-size:11px; margin-top:8px; opacity:0.6;">עמלה: ${tax}%</div>
+                <div class="card" style="flex:1; text-align:center; padding:10px; border-bottom:3px solid var(--red);">
+                    <small style="opacity:0.6; display:block; font-size:10px;">חוב פעיל</small>
+                    <b style="color:var(--red); font-size:16px;">${window.loan.toLocaleString()} ₪</b>
+                </div>
             </div>
-            <button class="action" style="background:#451a1a; width:100%; margin-top:15px; padding:12px;" onclick="repayLoan()">💰 החזר חוב מהמזומן</button>
-            <button class="action" style="background:#1e293b; width:100%; margin-top:10px;" onclick="takeLoan()">🏦 בקש הלוואה (50,000₪)</button>
+
+            <div class="card" style="margin-bottom:15px; background: rgba(255,255,255,0.03);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="font-size:12px; font-weight:bold;">ניהול מזומנים</span>
+                    <span style="font-size:10px; color:var(--yellow);">עמלה: ${tax}%</span>
+                </div>
+                <input type="number" id="bank-amt" placeholder="סכום פעולה" 
+                    style="width:100%; padding:10px; background:#000; color:#fff; border:1px solid #333; border-radius:6px; margin-bottom:10px; text-align:center;">
+                <div style="display:flex; gap:8px;">
+                    <button class="sys-btn" style="flex:1; background:#3b82f6; color:white;" onclick="bankProcess('deposit')">הפקדה</button>
+                    <button class="sys-btn" style="flex:1; background:#64748b; color:white;" onclick="bankProcess('withdraw')">משיכה</button>
+                </div>
+            </div>
+
+            <div class="card" style="background: rgba(255,255,255,0.03); border-right: 3px solid var(--yellow);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="font-size:12px; font-weight:bold; color:var(--yellow);">מרכז אשראי והלוואות</span>
+                    <span style="font-size:10px; opacity:0.6;">תקרה: ${loanLimit.toLocaleString()} ₪</span>
+                </div>
+                <input type="number" id="loan-amt" placeholder="סכום הלוואה" 
+                    style="width:100%; padding:10px; background:#000; color:var(--yellow); border:1px solid #444; border-radius:6px; margin-bottom:10px; text-align:center;">
+                
+                <div style="display:grid; gap:8px;">
+                    <button class="action" style="background:#f59e0b; color:#000; font-weight:bold; border:none;" onclick="takeCustomLoan()">💰 קבל הלוואה</button>
+                    <button class="action" style="background:#ef4444; color:#fff; font-weight:bold; border:none;" onclick="repayLoan()">✅ החזר חוב מהיר</button>
+                </div>
+            </div>
         </div>
     `;
 }
@@ -278,32 +288,34 @@ window.bankProcess = function(mode) {
     const val = parseInt(document.getElementById('bank-amt').value);
     if(!val || val <= 0) return showMsg("נא להזין סכום תקין", "var(--red)");
     const fee = val * window.bankTaxRate;
-
     if(mode === 'deposit') {
-        if(window.money >= (val + fee)) {
-            window.money -= (val + fee); window.bank += val;
-            showMsg(`הופקד בהצלחה!`, "var(--blue)");
-        } else return showMsg("אין מספיק מזומן", "var(--red)");
+        if(window.money >= (val + fee)) { window.money -= (val + fee); window.bank += val; showMsg("הופקד בהצלחה!", "var(--blue)"); }
+        else return showMsg("אין מספיק מזומן", "var(--red)");
     } else {
-        if(window.bank >= val) {
-            window.bank -= val; window.money += (val - fee);
-            showMsg(`נמשך בהצלחה!`, "var(--purple)");
-        } else return showMsg("אין מספיק יתרה", "var(--red)");
+        if(window.bank >= val) { window.bank -= val; window.money += (val - fee); showMsg("נמשך בהצלחה!", "var(--purple)"); }
+        else return showMsg("אין מספיק יתרה", "var(--red)");
     }
     saveGame(); updateUI(); drawBank(document.getElementById('content'));
 }
 
-window.repayLoan = function() {
-    const amountToPay = Math.min(window.money, window.loan);
-    if(amountToPay > 0) {
-        window.money -= amountToPay; window.loan -= amountToPay;
-        showMsg(`שילמת ${amountToPay.toLocaleString()}₪`, "var(--green)");
-        saveGame(); updateUI(); drawBank(document.getElementById('content'));
-    }
+window.takeCustomLoan = function() {
+    const amt = parseInt(document.getElementById('loan-amt').value);
+    const loanLimit = 250000;
+    if (!amt || amt <= 0) return showMsg("נא להזין סכום תקין", "var(--red)");
+    if (window.loan + amt > loanLimit) return showMsg(`חריגה! מקסימום: ${loanLimit.toLocaleString()}₪`, "var(--red)");
+    window.bankTaxRate += (amt / 10000) * 0.005;
+    window.loan += amt; window.money += amt;
+    showMsg(`✅ הלוואה אושרה!`, "var(--green)");
+    saveGame(); updateUI(); drawBank(document.getElementById('content'));
 }
 
-window.takeLoan = function() {
-    window.loan += 50000; window.money += 50000;
+window.repayLoan = function() {
+    if (window.loan <= 0) return showMsg("אין חובות", "var(--green)");
+    const toPay = Math.min(window.money, window.loan);
+    if (toPay <= 0) return showMsg("אין לך מזומן להחזר", "var(--red)");
+    window.money -= toPay; window.loan -= toPay;
+    window.bankTaxRate = Math.max(0.01, window.bankTaxRate - 0.005);
+    showMsg(`שילמת ${toPay.toLocaleString()} ₪`, "var(--green)");
     saveGame(); updateUI(); drawBank(document.getElementById('content'));
 }
 
@@ -313,15 +325,11 @@ window.drawInvest = function(c) {
     stockList.forEach(s => {
         const owned = window.invOwned[s.id] || 0;
         const color = s.trend >= 0 ? 'var(--green)' : 'var(--red)';
-        const arrow = s.trend >= 0 ? '▲' : '▼';
         html += `
             <div class="card fade-in" style="text-align:center; border-bottom: 3px solid ${color}">
                 <div style="font-weight:bold;">${s.name}</div>
                 <div style="font-size:10px; opacity:0.6;">שלך: ${owned}</div>
-                <div style="margin:8px 0;">
-                    <div style="color:${color}; font-weight:bold; font-size:15px;">${s.price.toFixed(2)}₪</div>
-                    <small style="color:${color}; font-size:9px;">${arrow} ${(s.trend*100).toFixed(2)}%</small>
-                </div>
+                <div style="color:${color}; font-weight:bold; font-size:15px; margin:8px 0;">${s.price.toFixed(2)}₪</div>
                 <div style="display:flex; gap:4px;">
                     <button class="sys-btn" style="flex:1; padding:6px; background:rgba(34,197,94,0.15);" onclick="buyStock('${s.id}')">קנה</button>
                     <button class="sys-btn" style="flex:1; padding:6px; background:rgba(239,68,68,0.15);" onclick="sellStock('${s.id}')">מכור</button>
@@ -334,8 +342,7 @@ window.drawInvest = function(c) {
 window.buyStock = function(id) {
     const s = stockList.find(x => x.id === id);
     if (window.money >= s.price) {
-        window.money -= s.price;
-        window.invOwned[id] = (window.invOwned[id] || 0) + 1;
+        window.money -= s.price; window.invOwned[id] = (window.invOwned[id] || 0) + 1;
         saveGame(); updateUI(); drawInvest(document.getElementById('content'));
     }
 }
@@ -343,23 +350,21 @@ window.buyStock = function(id) {
 window.sellStock = function(id) {
     if (window.invOwned[id] > 0) {
         const s = stockList.find(x => x.id === id);
-        window.money += s.price;
-        window.invOwned[id] -= 1;
+        window.money += s.price; window.invOwned[id] -= 1;
         saveGame(); updateUI(); drawInvest(document.getElementById('content'));
     }
 }
 
 // --- 9. חנות מותגים ---
 window.drawShop = function(c) {
-    let html = `<h3 class="fade-in">🛒 חנות מותגים</h3><div class="grid-2">`;
+    let html = `<h3>🛒 חנות מותגים</h3><div class="grid-2">`;
     shopItems.forEach(item => {
         const hasItem = window.inventory.includes(item.id) || window.inventory.includes(item.name);
         html += `
             <div class="card fade-in" style="text-align:center; border: 1px solid ${hasItem ? 'var(--green)' : 'var(--border)'};">
                 <div style="font-size:35px; margin-bottom:10px;">${item.icon}</div>
                 <div style="font-weight:bold; font-size:14px;">${item.name}</div>
-                <div style="color:var(--purple); font-size:11px; margin-bottom:10px;">✨ +${item.xp} XP</div>
-                <button class="sys-btn" style="width:100%; font-size:13px;" onclick="buyShopItem('${item.id}')" ${hasItem ? 'disabled' : ''}>
+                <button class="sys-btn" style="width:100%;" onclick="buyShopItem('${item.id}')" ${hasItem ? 'disabled' : ''}>
                     ${hasItem ? 'בבעלותך' : item.price.toLocaleString() + ' ₪'}
                 </button>
             </div>`;
@@ -370,10 +375,8 @@ window.drawShop = function(c) {
 window.buyShopItem = function(id) {
     const item = shopItems.find(x => x.id === id);
     if (window.money >= item.price) {
-        window.money -= item.price;
-        window.lifeXP += item.xp;
-        window.inventory.push(item.id);
-        showMsg(`👜 תתחדש!`, "var(--purple)");
+        window.money -= item.price; window.lifeXP += item.xp; window.inventory.push(item.id);
+        showMsg("👜 תתחדש!", "var(--purple)");
         saveGame(); updateUI(); drawShop(document.getElementById('content'));
     }
 };
@@ -383,11 +386,10 @@ window.drawTasks = function(c) {
     c.innerHTML = `
         <div class="card fade-in" style="text-align:center; padding:25px; border: 2px dashed var(--yellow);">
             <div style="font-size:55px; margin-bottom:10px;">🎰</div>
-            <h3 style="color:var(--yellow); margin-top:0; font-size:24px;">Royal Casino</h3>
-            <p style="font-size:12px; opacity:0.8;">המר על מזלך - פי 2 או כלום!</p>
+            <h3 style="color:var(--yellow);">Royal Casino</h3>
             <input type="number" id="gamble-amt" placeholder="כמה להמר?" style="width:85%; padding:12px; margin-bottom:15px; text-align:center; background:#000; color:#fff; border:1px solid #444; border-radius:8px;">
             <div id="casino-status" style="height:30px; font-weight:bold; margin-bottom:10px;"></div>
-            <button class="action" style="background:var(--yellow); color:black; width:100%; font-weight:bold; height:50px; font-size:18px;" onclick="runCasino()">סובב גלגל!</button>
+            <button class="action" style="background:var(--yellow); color:black; width:100%; font-weight:bold;" onclick="runCasino()">סובב גלגל!</button>
         </div>`;
 }
 
@@ -395,17 +397,11 @@ window.runCasino = function() {
     const amt = parseInt(document.getElementById('gamble-amt').value);
     const status = document.getElementById('casino-status');
     if(!amt || amt <= 0 || amt > window.money) return showMsg("סכום לא תקין", "var(--red)");
-    
     window.money -= amt; updateUI();
-    status.innerHTML = `<span style="color:white;">🎲🎲🎲 מסובב...</span>`;
-    
+    status.innerHTML = `🎲 מסובב...`;
     setTimeout(() => {
-        if (Math.random() > 0.58) {
-            window.money += amt * 2;
-            status.innerHTML = `<span style="color:var(--green);">💎 זכית ב-${amt*2}₪! 💎</span>`;
-        } else {
-            status.innerHTML = `<span style="color:var(--red);">💀 הפסדת הכל... 💀</span>`;
-        }
+        if (Math.random() > 0.58) { window.money += amt * 2; status.innerHTML = `<span style="color:var(--green);">זכית ב-${amt*2}₪!</span>`; }
+        else { status.innerHTML = `<span style="color:var(--red);">הפסדת...</span>`; }
         updateUI(); saveGame();
     }, 1200);
 }
