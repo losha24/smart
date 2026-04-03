@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v7.5.7 - Advanced Inventory & Sell System */
+/* Smart Money Pro - js/activities.js - v7.5.6 - Passive Income Display Fix */
 
 // --- 1. מאגרי נתונים ---
 const jobList = [
@@ -97,27 +97,13 @@ setInterval(() => {
     }
 }, 4000);
 
-// --- 3. דף הבית (v7.5.7 - Inventory Sell Fix) ---
+// --- 3. דף הבית ---
 window.drawHome = function(c) {
     const hasItem = (id, name) => window.inventory.includes(id) || window.inventory.includes(name);
-
-    // עיבוד פריטי חנות עם אפשרות מכירה
     const itemIcons = shopItems.filter(si => hasItem(si.id, si.name))
-        .map(si => {
-            const count = window.inventory.filter(id => id === si.id || id === si.name).length;
-            const sellPrice = Math.floor(si.price * 0.7);
-            return `
-                <div onclick="confirmSellItem('${si.id}', '${si.name}', ${sellPrice})" 
-                     title="${si.name} | לחץ למכירה ב-${sellPrice.toLocaleString()}₪" 
-                     style="position:relative; display:inline-block; margin:5px; padding:10px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1); border-radius:12px; cursor:pointer; transition:transform 0.2s;">
-                    <span style="font-size:32px;">${si.icon}</span>
-                    ${count > 1 ? `<b style="position:absolute; top:-5px; right:-5px; background:var(--purple); color:white; font-size:10px; padding:2px 6px; border-radius:10px; border:1px solid #000;">${count}</b>` : ''}
-                </div>`;
-        }).join('');
-
+        .map(si => `<span title="${si.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${si.icon}</span>`).join('');
     const carIcons = carList.filter(car => window.cars.includes(car.name))
         .map(car => `<span title="${car.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${car.icon}</span>`).join('');
-    
     const skillIcons = skillList.filter(sk => window.skills.includes(sk.name))
         .map(sk => `<span title="${sk.name}" style="font-size:32px; background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:inline-block; margin:4px;">${sk.icon}</span>`).join('');
 
@@ -125,10 +111,7 @@ window.drawHome = function(c) {
         <div class="fade-in">
             <h3 style="margin-bottom:15px; text-align:center;">🏠 מרכז שליטה אישי</h3>
             <div class="card" style="margin-bottom:12px; border-right: 4px solid var(--purple);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div style="font-weight:bold; color:var(--purple); font-size:14px;">📦 ארון ציוד וחפצים</div>
-                    <small style="opacity:0.5; font-size:9px;">מכירה ב-70% ערך</small>
-                </div>
+                <div style="font-weight:bold; color:var(--purple); font-size:14px; margin-bottom:10px;">📦 ארון ציוד וחפצים</div>
                 <div style="display:flex; flex-wrap:wrap; gap:5px; min-height:45px;">${itemIcons || '<small style="opacity:0.4;">הארון ריק...</small>'}</div>
             </div>
             <div class="card" style="margin-bottom:12px; border-right: 4px solid var(--blue);">
@@ -143,19 +126,7 @@ window.drawHome = function(c) {
     `;
 }
 
-window.confirmSellItem = function(id, name, price) {
-    if(confirm(`למכור את "${name}" תמורת ${price.toLocaleString()}₪?`)) {
-        const index = window.inventory.findIndex(x => x === id || x === name);
-        if(index > -1) {
-            window.inventory.splice(index, 1);
-            window.money += price;
-            showMsg(`💰 נמכר: +${price}₪`, "var(--yellow)");
-            updateUI(); saveGame(); drawHome(document.getElementById('content'));
-        }
-    }
-}
-
-// --- 4. מנוע עבודה ---
+// --- 4. מנוע עבודה (מתוקן עם תצוגת הכנסה פסיבית) ---
 window.drawWork = function(c) {
     let html = `<h3>⚒️ מרכז תעסוקה</h3><div class="grid-2">`;
     jobList.forEach(j => {
@@ -191,11 +162,16 @@ window.startWork = function(id) {
     setTimeout(() => { if(bar) { bar.style.transition = `width ${actualTime}ms linear`; bar.style.width = "100%"; } }, 50);
 
     setTimeout(() => {
+        // חישוב בונוס פסיבי (30% מהשכר כבונוס קבוע לפסיביות שלך)
         const passiveAdd = (j.pay * 0.3);
+        
         window.money += j.pay; 
         window.lifeXP += j.xp;
         window.passive += passiveAdd;
+
+        // הודעת סיכום הכוללת הכנסה פסיבית
         showMsg(`💰 +${j.pay}₪ | ✨ +${j.xp} XP | 🚀 פסיבי: +${passiveAdd.toFixed(1)}₪`, "var(--green)");
+        
         if(btn) btn.disabled = false;
         if(container) container.style.display = "none";
         if(bar) { bar.style.transition = "none"; bar.style.width = "0%"; }
@@ -258,13 +234,15 @@ window.buyBusiness = function(id, price, passAdd) {
     } else { showMsg("אין מספיק כסף!", "var(--red)"); }
 }
 
-// --- 7. בנק ---
+// --- 7. בנק (v7.5.6 - ממשק מחובר וברור) ---
 window.drawBank = function(c) {
     const tax = (window.bankTaxRate * 100).toFixed(1);
     const loanLimit = 250000;
+    
     c.innerHTML = `
         <div class="fade-in" style="font-family: sans-serif; max-width:400px; margin:auto;">
             <h3 style="text-align:center; margin-bottom:15px;">🏦 מרכז פיננסי</h3>
+            
             <div style="display:flex; gap:10px; margin-bottom:15px;">
                 <div class="card" style="flex:1; text-align:center; padding:10px; border-bottom:3px solid var(--blue);">
                     <small style="opacity:0.6; display:block; font-size:10px;">יתרה בבנק</small>
@@ -275,29 +253,35 @@ window.drawBank = function(c) {
                     <b style="color:var(--red); font-size:16px;">${window.loan.toLocaleString()} ₪</b>
                 </div>
             </div>
+
             <div class="card" style="margin-bottom:15px; background: rgba(255,255,255,0.03);">
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                     <span style="font-size:12px; font-weight:bold;">ניהול מזומנים</span>
                     <span style="font-size:10px; color:var(--yellow);">עמלה: ${tax}%</span>
                 </div>
-                <input type="number" id="bank-amt" placeholder="סכום פעולה" style="width:100%; padding:10px; background:#000; color:#fff; border:1px solid #333; border-radius:6px; margin-bottom:10px; text-align:center;">
+                <input type="number" id="bank-amt" placeholder="סכום פעולה" 
+                    style="width:100%; padding:10px; background:#000; color:#fff; border:1px solid #333; border-radius:6px; margin-bottom:10px; text-align:center;">
                 <div style="display:flex; gap:8px;">
                     <button class="sys-btn" style="flex:1; background:#3b82f6; color:white;" onclick="bankProcess('deposit')">הפקדה</button>
                     <button class="sys-btn" style="flex:1; background:#64748b; color:white;" onclick="bankProcess('withdraw')">משיכה</button>
                 </div>
             </div>
+
             <div class="card" style="background: rgba(255,255,255,0.03); border-right: 3px solid var(--yellow);">
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                     <span style="font-size:12px; font-weight:bold; color:var(--yellow);">מרכז אשראי והלוואות</span>
                     <span style="font-size:10px; opacity:0.6;">תקרה: ${loanLimit.toLocaleString()} ₪</span>
                 </div>
-                <input type="number" id="loan-amt" placeholder="סכום הלוואה" style="width:100%; padding:10px; background:#000; color:var(--yellow); border:1px solid #444; border-radius:6px; margin-bottom:10px; text-align:center;">
+                <input type="number" id="loan-amt" placeholder="סכום הלוואה" 
+                    style="width:100%; padding:10px; background:#000; color:var(--yellow); border:1px solid #444; border-radius:6px; margin-bottom:10px; text-align:center;">
+                
                 <div style="display:grid; gap:8px;">
                     <button class="action" style="background:#f59e0b; color:#000; font-weight:bold; border:none;" onclick="takeCustomLoan()">💰 קבל הלוואה</button>
                     <button class="action" style="background:#ef4444; color:#fff; font-weight:bold; border:none;" onclick="repayLoan()">✅ החזר חוב מהיר</button>
                 </div>
             </div>
-        </div>`;
+        </div>
+    `;
 }
 
 window.bankProcess = function(mode) {
