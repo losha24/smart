@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v6.7.2 Admin & Invest</title>
+    <title>Smart Money Pro | v7.5.9 Clean Dash</title>
     
-    <link rel="manifest" href="manifest.json?v=6.7.2">
+    <link rel="manifest" href="manifest.json?v=7.5.9">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=6.7.2">
+    <link rel="stylesheet" href="style.css?v=7.5.9">
     <style>
         /* תיקוני מודל ועיצוב מקומיים */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
@@ -101,23 +101,28 @@
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v6.7.2 | אלכסיי זבודיסקר
+        © 2026 Smart Money Pro v7.5.9 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=6.7.2"></script>
-    <script src="js/activities.js?v=6.7.2"></script>
-    <script src="js/ui.js?v=6.7.2"></script>
+    <script src="js/core.js?v=7.5.9"></script>
+    <script src="js/activities.js?v=7.5.9"></script>
+    <script src="js/ui.js?v=7.5.9"></script>
 
     <script>
         // הודעת ברירת מחדל למנהל
-        window.adminMsgText = "שלום אלכסיי! מערכת הניהול (דיבאג + צ'יטים) זמינה כעת דרך כפתור העריכה בבית.";
+        window.adminMsgText = "שלום אלכסיי! המערכת מעודכנת לגרסה 7.5.9. ה-Dashboard נקי כפי שביקשת.";
 
         function closeInstallGuide() { 
             document.getElementById('installModal').style.display = 'none'; 
         }
 
+        // רישום Service Worker מעודכן
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js?v=7.5.9')
+            .then(() => console.log("SW v7.5.9 Registered"));
+        }
+
         window.addEventListener('load', () => {
-            // אתחול טאב בית במידה והתוכן ריק
             setTimeout(() => {
                 const content = document.getElementById("content");
                 if (content && content.innerHTML === "" && window.openTab) {
@@ -125,7 +130,6 @@
                 }
             }, 200);
             
-            // זיהוי מכשירי אפל להוראות התקנה
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const androidEl = document.getElementById('android-instr');
                 const iosEl = document.getElementById('ios-instr');
