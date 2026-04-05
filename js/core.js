@@ -1,7 +1,7 @@
-/* Smart Money Pro - js/core.js - v6.5.1 - Stable Mobile Sync */
+/* Smart Money Pro - js/core.js - v7.9.8 - Firebase Cloud Integration */
 
-const VERSION = "6.5.1";
-const SAVE_KEY = "smartMoneySave_v6_main";
+const VERSION = "7.9.8";
+const SAVE_KEY = "smartMoneySave_v7_cloud";
 
 // --- אתחול משתנים גלובליים ---
 window.money = 1200; 
@@ -17,129 +17,109 @@ window.invOwned = { AAPL:0, TSLA:0, NVDA:0, BTC:0, GOOG:0, AMZN:0, MSFT:0, NFLX:
 window.carSpeed = 1;
 window.totalEarned = 0;
 window.lastSaveTime = Date.now();
-window.lastKnownLevel = 0; 
+window.lastKnownLevel = 1; 
 
 let msgTimer; 
+let saveTimeout; // לניהול Auto-Save חכם לענן
 
-// --- מנוע חישוב רמות דינמי (25% קושי עולה) ---
+// --- מנוע חישוב רמות דינמי ---
 function getLevelData(xp) {
     let level = 1;
     let xpForNext = 1000; 
     let totalXPStack = 0;
-
     while (xp >= totalXPStack + xpForNext) {
         totalXPStack += xpForNext;
         level++;
         xpForNext = Math.floor(xpForNext * 1.25); 
     }
-
-    let xpInCurrentLevel = xp - totalXPStack;
-    let progressPercent = (xpInCurrentLevel / xpForNext) * 100;
-
-    return { 
-        level, 
-        xpInCurrentLevel, 
-        xpForNext, 
-        progressPercent 
-    };
+    return { level, xpInCurrentLevel: xp - totalXPStack, xpForNext, progressPercent: ((xp - totalXPStack) / xpForNext) * 100 };
 }
 
-// --- ניהול זיכרון ושמירה ---
-function loadGame() {
-    try {
-        const saved = localStorage.getItem(SAVE_KEY);
-        if (saved) {
-            const data = JSON.parse(saved);
-            
-            window.money = data.money ?? 1200;
-            window.bank = data.bank ?? 0;
-            window.loan = data.loan ?? 0;
-            window.lifeXP = data.lifeXP ?? 0;
-            window.passive = data.passive ?? 0;
-            window.lastGift = data.lastGift ?? 0;
-            window.skills = data.skills ?? [];
-            window.cars = data.cars ?? [];
-            window.inventory = data.inventory ?? [];
-            window.invOwned = data.invOwned ?? window.invOwned;
-            window.carSpeed = data.carSpeed ?? 1;
-            window.totalEarned = data.totalEarned ?? 0;
-            
-            window.lastKnownLevel = getLevelData(window.lifeXP).level;
-            
-            if (data.lastSaveTime && window.passive > 0) {
-                const now = Date.now();
-                let msPassed = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
-                const offlineEarnings = (msPassed / (1000 * 60 * 60)) * window.passive;
-                
-                if (offlineEarnings > 1) {
-                    window.money += offlineEarnings;
-                    window.totalEarned += offlineEarnings;
-                    setTimeout(() => {
-                        if(typeof showMsg === 'function') showMsg(`💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()}₪ בזמן שלא היית!`, "var(--yellow)");
-                    }, 1500);
-                }
-            }
-        } else {
-            window.lastKnownLevel = 1;
-        }
-        
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        document.body.className = savedTheme + '-theme';
-        
-    } catch (e) { console.error("שגיאה בטעינה:", e); }
-}
+// --- [חדש] טעינה מהענן (Firebase) ---
+window.loadGameFromCloud = async function() {
+    return new Promise((resolve) => {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    const doc = await db.collection("players").doc(user.uid).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        // סנכרון משתנים מהענן למשחק
+                        window.money = data.money ?? 1200;
+                        window.bank = data.bank ?? 0;
+                        window.loan = data.loan ?? 0;
+                        window.lifeXP = data.lifeXP ?? 0;
+                        window.passive = data.passive ?? 0;
+                        window.lastGift = data.lastGift ?? 0;
+                        window.skills = data.skills ?? [];
+                        window.cars = data.cars ?? [];
+                        window.invOwned = data.invOwned ?? window.invOwned;
+                        window.totalEarned = data.totalEarned ?? 0;
+                        window.lastKnownLevel = getLevelData(window.lifeXP).level;
+                        
+                        // חישוב רווח לא מקוון (Offline Earnings)
+                        if (data.lastSaveTime && window.passive > 0) {
+                            const msPassed = Math.min(Date.now() - data.lastSaveTime, 12 * 60 * 60 * 1000);
+                            const offlineEarnings = (msPassed / 3600000) * window.passive;
+                            if (offlineEarnings > 5) {
+                                window.money += offlineEarnings;
+                                setTimeout(() => showMsg(`💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()}₪ בזמן שלא היית!`, "var(--yellow)"), 2000);
+                            }
+                        }
+                        resolve(true);
+                    } else resolve(false);
+                } catch (e) { console.error("Cloud Load Error:", e); resolve(false); }
+            } else resolve(false);
+        });
+    });
+};
 
-function saveGame() {
+// --- [מעודכן] שמירה משולבת: Local + Cloud ---
+window.saveGame = function() {
     window.lastSaveTime = Date.now();
     const data = { 
-        money: window.money, 
-        bank: window.bank, 
-        loan: window.loan, 
-        lifeXP: window.lifeXP, 
-        passive: window.passive, 
-        lastGift: window.lastGift, 
-        skills: window.skills, 
-        cars: window.cars, 
-        inventory: window.inventory, 
-        invOwned: window.invOwned, 
-        carSpeed: window.carSpeed, 
-        totalEarned: window.totalEarned, 
-        lastSaveTime: window.lastSaveTime 
+        money: window.money, bank: window.bank, loan: window.loan, lifeXP: window.lifeXP, 
+        passive: window.passive, lastGift: window.lastGift, skills: window.skills, 
+        cars: window.cars, invOwned: window.invOwned, totalEarned: window.totalEarned, 
+        lastSaveTime: window.lastSaveTime, name: localStorage.getItem('gameUserName') || "שחקן"
     };
+
+    // 1. שמירה מקומית (מהירה)
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-}
+
+    // 2. שמירה לענן (Firebase) - רק אם המשתמש מחובר
+    const user = auth.currentUser;
+    if (user) {
+        db.collection("players").doc(user.uid).set(data, { merge: true })
+            .then(() => console.log("Cloud sync complete"))
+            .catch(e => console.error("Cloud sync failed:", e));
+    }
+};
+
+// שמירה אוטומטית חכמה (מונעת עומס על ה-API)
+window.autoSave = function() {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(window.saveGame, 5000); // שומר לענן 5 שניות אחרי הפעולה האחרונה
+};
 
 // --- מערכת הודעות ---
 function showMsg(txt, color = "var(--blue)") {
     const bar = document.getElementById('status-bar');
     if (!bar) return;
     clearTimeout(msgTimer); 
-    bar.innerText = txt;
-    bar.style.opacity = "1";
-    bar.style.transform = "translateY(0)";
-    bar.style.color = color;
-    bar.style.borderColor = color;
-    msgTimer = setTimeout(() => {
-        bar.style.opacity = "0";
-        bar.style.transform = "translateY(-5px)";
-    }, 3500);
+    bar.innerText = txt; bar.style.opacity = "1"; bar.style.transform = "translateY(0)";
+    bar.style.color = color; bar.style.borderColor = color;
+    msgTimer = setTimeout(() => { bar.style.opacity = "0"; bar.style.transform = "translateY(-5px)"; }, 3500);
 }
 
-// --- פונקציות מערכת ותצוגה ---
+// --- עדכון UI ---
 function updateUI() {
-    const mEl = document.getElementById('money');
-    const bEl = document.getElementById('bank');
-    const lEl = document.getElementById('life-level-ui');
-
+    const mEl = document.getElementById('money'), bEl = document.getElementById('bank'), lEl = document.getElementById('life-level-ui');
     if(mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
     if(bEl) bEl.innerText = Math.floor(window.bank).toLocaleString();
-    
     const ld = getLevelData(window.lifeXP);
     if(lEl) lEl.innerText = ld.level;
-
-    // עדכון UI כבד (גרפיקה ורמות) - רק אם הפונקציה קיימת ב-UI.js
     if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate(ld);
-    
     checkLevelUp(ld.level);
 }
 
@@ -147,60 +127,43 @@ function checkLevelUp(currentLevel) {
     if (currentLevel > window.lastKnownLevel && window.lastKnownLevel > 0) {
         const bonus = currentLevel * 1000;
         window.money += bonus;
-        showMsg(`🎊 מזל טוב! עלית לרמה ${currentLevel}! קיבלת בונוס של ${bonus.toLocaleString()}₪ 🎊`, "var(--purple)");
+        showMsg(`🎊 רמה ${currentLevel}! בונוס: ${bonus.toLocaleString()}₪ 🎊`, "var(--purple)");
         window.lastKnownLevel = currentLevel;
-        updateUI();
+        window.saveGame();
     }
 }
 
 function toggleTheme() {
-    const isLight = document.body.classList.contains('light-theme');
-    const next = isLight ? 'dark' : 'light';
+    const next = document.body.classList.contains('light-theme') ? 'dark' : 'light';
     document.body.className = next + '-theme';
     localStorage.setItem('theme', next);
-    showMsg(`עברת למצב ${next === 'light' ? 'יום' : 'לילה'}`, "var(--blue)");
-}
-
-function forceUpdate() {
-    saveGame();
-    showMsg("מרענן נתונים...", "var(--yellow)");
-    setTimeout(() => { location.reload(true); }, 500);
+    showMsg(`מצב ${next === 'light' ? 'יום' : 'לילה'}`);
 }
 
 function resetGame() {
-    if (confirm("⚠️ אזהרה: כל ההתקדמות תימחק. האם אתה בטוח?")) {
-        localStorage.removeItem(SAVE_KEY);
+    if (confirm("⚠️ לאפס הכל? כל הנתונים בענן ימחקו.")) {
+        const user = auth.currentUser;
+        if (user) db.collection("players").doc(user.uid).delete();
+        localStorage.clear();
         location.reload();
     }
 }
 
-// --- מנועי זמן (Passive Income) ---
-
-// 1. עדכון כסף מהיר (20 פעם בשנייה) - לא גורם לקפיצות כי הוא מעדכן רק טקסט
+// --- מנועי זמן ---
+// עדכון כסף פסיבי מהיר (למראה חלק)
 setInterval(() => {
     if (window.passive > 0) {
-        const tickIncome = window.passive / 72000; 
-        window.money += tickIncome;
-        window.totalEarned += tickIncome;
-        
+        const tick = window.passive / 72000; 
+        window.money += tick;
         const mEl = document.getElementById('money');
         if(mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
     }
 }, 50); 
 
-// 2. עדכון UI גרפי כבד (פעם בשנייה) - המפתח למניעת קפיצות בשוק
-setInterval(() => {
-    if (typeof window.renderUIUpdate === 'function') {
-        const ld = getLevelData(window.lifeXP);
-        window.renderUIUpdate(ld);
-    }
-}, 1000); 
-
-// 3. שמירה אוטומטית כל 15 שניות
-setInterval(saveGame, 15000);
+// שמירה אוטומטית קבועה כל 30 שניות כגיבוי
+setInterval(window.saveGame, 30000);
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadGame();
-    updateUI();
-    console.log(`Smart Money Engine v${VERSION} Fully Loaded and Synced.`);
+    // אתחול המשחק מתבצע מתוך ui.js דרך initApp()
+    console.log(`Smart Money Engine v${VERSION} Cloud-Ready.`);
 });
