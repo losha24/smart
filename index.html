@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v7.5.9 Clean Dash</title>
+    <title>Smart Money Pro | v7.9.8 Cloud</title>
     
-    <link rel="manifest" href="manifest.json?v=7.5.9">
+    <link rel="manifest" href="manifest.json?v=7.9.8">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     
-    <link rel="stylesheet" href="style.css?v=7.5.9">
+    <link rel="stylesheet" href="style.css?v=7.9.8">
     <style>
         /* תיקוני מודל ועיצוב מקומיים */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
@@ -40,10 +40,8 @@
         .fade-in { animation: fadeIn 0.4s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* מניעת בחירת טקסט בטעות בנייד */
         body { -webkit-user-select: none; user-select: none; }
         
-        /* עיצוב כפתורי ניווט פעילים */
         .topbar button.active { 
             background: rgba(59, 130, 246, 0.2); 
             border-bottom: 2px solid #3b82f6; 
@@ -101,31 +99,51 @@
     </div>
 
     <footer class="main-footer">
-        © 2026 Smart Money Pro v7.5.9 | אלכסיי זבודיסקר
+        © 2026 Smart Money Pro v7.9.8 | אלכסיי זבודיסקר
     </footer>
 
-    <script src="js/core.js?v=7.5.9"></script>
-    <script src="js/activities.js?v=7.5.9"></script>
-    <script src="js/ui.js?v=7.5.9"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <script>
-        // הודעת ברירת מחדל למנהל
-        window.adminMsgText = "שלום אלכסיי! המערכת מעודכנת לגרסה 7.5.9. ה-Dashboard נקי כפי שביקשת.";
+        // אתחול Firebase עם המפתח שלך
+        const firebaseConfig = {
+            apiKey: "AIzaSyBtohjQmS8h2ecDkbNaJbpHTtpWXbm-M5Y",
+            authDomain: "smart-money-pro-69.firebaseapp.com", // וודא שזה תואם לפרויקט שלך
+            projectId: "smart-money-pro-69", 
+            storageBucket: "smart-money-pro-69.appspot.com",
+            messagingSenderId: "338871633519",
+            appId: "1:338871633519:web:538258e7b9587424688404"
+        };
 
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        window.adminMsgText = "המערכת מחוברת לענן (Firebase). הנתונים מסונכרנים בזמן אמת.";
+    </script>
+
+    <script src="js/core.js?v=7.9.8"></script>
+    <script src="js/activities.js?v=7.9.8"></script>
+    <script src="js/ui.js?v=7.9.8"></script>
+
+    <script>
         function closeInstallGuide() { 
             document.getElementById('installModal').style.display = 'none'; 
         }
 
-        // רישום Service Worker מעודכן
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js?v=7.5.9')
-            .then(() => console.log("SW v7.5.9 Registered"));
+            navigator.serviceWorker.register('./sw.js?v=7.9.8')
+            .then(() => console.log("SW v7.9.8 Registered"));
         }
 
         window.addEventListener('load', () => {
+            // קריאה לפונקציית האתחול שנמצאת ב-ui.js (שבודקת חיבור לענן)
             setTimeout(() => {
-                const content = document.getElementById("content");
-                if (content && content.innerHTML === "" && window.openTab) {
+                if (window.initApp) {
+                    window.initApp();
+                } else if (window.openTab) {
                     window.openTab('home');
                 }
             }, 200);
