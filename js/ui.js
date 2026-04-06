@@ -76,6 +76,51 @@ function getDeviceId() {
     return id;
 }
 
+// שמירת הודעת מנהל ב-Firebase (גלובלית לכולם)
+async function fbSaveAdminMsg(msg) {
+    try {
+        await fetch(FB_URL + '/config/adminMsg.json', {
+            method: 'PUT',
+            body: JSON.stringify({ text: msg, ts: Date.now() })
+        });
+    } catch(e) { console.warn('FB adminMsg save failed:', e); }
+}
+
+async function fbLoadAdminMsg() {
+    try {
+        const res = await fetch(FB_URL + '/config/adminMsg.json');
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data ? data.text : null;
+    } catch(e) { return null; }
+}
+
+// שמירת סיסמת מנהל ב-Firebase (לא בטקסט גלוי - hash בלבד)
+async function fbSaveAdminPass(hashVal) {
+    try {
+        await fetch(FB_URL + '/config/adminPassHash.json', {
+            method: 'PUT',
+            body: JSON.stringify({ hash: hashVal, ts: Date.now() })
+        });
+    } catch(e) { console.warn('FB pass save failed:', e); }
+}
+
+async function fbLoadAdminPass() {
+    try {
+        const res = await fetch(FB_URL + '/config/adminPassHash.json');
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data ? data.hash : null;
+    } catch(e) { return null; }
+}
+
+// טעינת הגדרות מנהל מ-Firebase בטעינת האפליקציה
+async function fbLoadConfig() {
+    const [msg, passHash] = await Promise.all([fbLoadAdminMsg(), fbLoadAdminPass()]);
+    if (msg) window.adminMsgText = msg;
+    if (passHash) localStorage.setItem('adminPassHash', passHash);
+}
+
 // ============================================================
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -368,7 +413,11 @@ window.editAdminMsg = function() {
     switch(action) {
         case '1':
             const newMsg = prompt('הכנס הודעה חדשה:', window.adminMsgText || '');
-            if (newMsg !== null) { window.adminMsgText = newMsg; window.openTab('home'); }
+            if (newMsg !== null) {
+                window.adminMsgText = newMsg;
+                fbSaveAdminMsg(newMsg).then(() => showMsg('✅ ההודעה נשמרה לכולם!', 'var(--green)'));
+                window.openTab('home');
+            }
             break;
         case '2':
             const m = prompt('כמה כסף להוסיף?');
@@ -381,8 +430,9 @@ window.editAdminMsg = function() {
         case '4':
             const newPass = prompt('הכנס סיסמה חדשה (מינימום 4 תווים):');
             if (newPass && newPass.length >= 4) {
-                localStorage.setItem('adminPassHash', hashStr(newPass));
-                alert('הסיסמה שונתה בהצלחה!');
+                const newHash = hashStr(newPass);
+                localStorage.setItem('adminPassHash', newHash);
+                fbSaveAdminPass(newHash).then(() => alert('✅ הסיסמה שונתה ונשמרה ב-Firebase!'));
             } else { alert('שגיאה: סיסמה קצרה מדי.'); }
             break;
         case '5':
@@ -394,5 +444,7 @@ window.editAdminMsg = function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => { window.openTab('home'); }, 150);
+    fbLoadConfig().then(() => {
+        setTimeout(() => { window.openTab('home'); }, 150);
+    });
 });
