@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v8.0.0 - Major Update with Feedback Fix */
+/* Smart Money Pro - js/activities.js - v8.0.0 - Major Update */
 
 const jobList = [
     { id: 'j1', name: 'מנקה', pay: 55, xp: 20, time: 3000, icon: '🧹' },
@@ -134,10 +134,11 @@ window.startWork = function(id) {
     if(container) container.style.display = 'block';
     setTimeout(() => { if(bar) { bar.style.transition = 'width ' + actualTime + 'ms linear'; bar.style.width = '100%'; } }, 50);
     setTimeout(() => {
-        const passiveAdd = parseFloat((j.pay * 0.005).toFixed(3));
+        const passiveAdd = parseFloat((j.pay * 0.005).toFixed(3)); // 0.5% מהשכר = ₪/דקה
+        const passiveCap = 500; // תקרת פסיבי מעבודות
         window.money += j.pay;
         window.lifeXP += j.xp;
-        window.passive += passiveAdd;
+        if (window.passive < passiveCap) window.passive = Math.min(passiveCap, window.passive + passiveAdd);
         showMsg('💰 +' + j.pay + '₪ | ✨ +' + j.xp + ' XP | 🚀 +' + passiveAdd.toFixed(3) + '₪/ד\'', 'var(--green)');
         if(btn) btn.disabled = false;
         if(container) container.style.display = 'none';
@@ -171,11 +172,7 @@ window.drawEstate = function(c) {
 
 window.buyEstate = function(id) {
     const e = estateList.find(x => x.id === id);
-    if (!e) return;
-    if (window.money < e.price) {
-        const missing = (e.price - window.money).toLocaleString();
-        return showMsg('חסר לך ' + missing + '₪ לרכישת ' + e.name + '!', 'var(--red)');
-    }
+    if (!e || window.money < e.price) return showMsg('אין מספיק כסף!', 'var(--red)');
     if (!window.estateData) window.estateData = {};
     if (!window.estateData[id]) window.estateData[id] = { count: 0, level: 0 };
     window.money -= e.price;
@@ -192,10 +189,7 @@ window.upgradeEstate = function(id) {
     const eData = window.estateData[id] || { count: 0, level: 0 };
     if (eData.count === 0) return;
     const upgradePrice = Math.floor(e.price * 0.6 * (eData.level + 1));
-    if (window.money < upgradePrice) {
-        const missing = (upgradePrice - window.money).toLocaleString();
-        return showMsg('חסר לך ' + missing + '₪ לשדרוג ' + e.name + '!', 'var(--red)');
-    }
+    if (window.money < upgradePrice) return showMsg('אין מספיק כסף לשדרוג!', 'var(--red)');
     const bonusPassive = e.passive * eData.count * 0.5;
     window.money -= upgradePrice;
     window.estateData[id].level += 1;
@@ -248,10 +242,7 @@ window.buyBusiness = function(id, price, passAdd) {
         window.money -= price; window.passive += passAdd; window.inventory.push(id);
         showMsg('💼 עסק שודרג! +' + passAdd.toFixed(1) + '₪/ד\'', 'var(--purple)');
         saveGame(); updateUI(); drawBusiness(document.getElementById('content'));
-    } else { 
-        const missing = (price - window.money).toLocaleString();
-        showMsg('חסר לך ' + missing + '₪ לשדרוג העסק!', 'var(--red)'); 
-    }
+    } else { showMsg('אין מספיק כסף!', 'var(--red)'); }
 }
 
 window.sellBusiness = function(id) {
@@ -286,19 +277,11 @@ window.bankProcess = function(mode) {
     if(!val || val <= 0) return showMsg('נא להזין סכום תקין', 'var(--red)');
     const fee = val * window.bankTaxRate;
     if(mode === 'deposit') {
-        if(window.money >= (val + fee)) { 
-            window.money -= (val + fee); window.bank += val; showMsg('הופקד בהצלחה!', 'var(--blue)'); 
-        } else {
-            const missing = (val + fee - window.money).toLocaleString();
-            return showMsg('חסר לך ' + missing + '₪ מזומן להפקדה!', 'var(--red)');
-        }
+        if(window.money >= (val + fee)) { window.money -= (val + fee); window.bank += val; showMsg('הופקד בהצלחה!', 'var(--blue)'); }
+        else return showMsg('אין מספיק מזומן', 'var(--red)');
     } else {
-        if(window.bank >= val) { 
-            window.bank -= val; window.money += (val - fee); showMsg('נמשך בהצלחה!', 'var(--purple)'); 
-        } else {
-            const missing = (val - window.bank).toLocaleString();
-            return showMsg('חסר לך ' + missing + '₪ בבנק למשיכה!', 'var(--red)');
-        }
+        if(window.bank >= val) { window.bank -= val; window.money += (val - fee); showMsg('נמשך בהצלחה!', 'var(--purple)'); }
+        else return showMsg('אין מספיק יתרה', 'var(--red)');
     }
     saveGame(); updateUI(); drawBank(document.getElementById('content'));
 }
@@ -307,10 +290,7 @@ window.takeCustomLoan = function() {
     const amt = parseInt(document.getElementById('loan-amt').value);
     const loanLimit = 250000;
     if (!amt || amt <= 0) return showMsg('נא להזין סכום תקין', 'var(--red)');
-    if (window.loan + amt > loanLimit) {
-        const allowed = (loanLimit - window.loan).toLocaleString();
-        return showMsg('חריגה! נשאר לך רק ' + allowed + '₪ לקחת.', 'var(--red)');
-    }
+    if (window.loan + amt > loanLimit) return showMsg('חריגה! מקסימום: ' + loanLimit.toLocaleString() + '₪', 'var(--red)');
     window.bankTaxRate += (amt / 10000) * 0.005;
     window.loan += amt; window.money += amt;
     showMsg('הלוואה אושרה!', 'var(--green)');
@@ -320,9 +300,7 @@ window.takeCustomLoan = function() {
 window.repayLoan = function() {
     if (window.loan <= 0) return showMsg('אין חובות', 'var(--green)');
     const toPay = Math.min(window.money, window.loan);
-    if (toPay <= 0) {
-        return showMsg('אין לך מזומן להחזר!', 'var(--red)');
-    }
+    if (toPay <= 0) return showMsg('אין לך מזומן להחזר', 'var(--red)');
     window.money -= toPay; window.loan -= toPay;
     window.bankTaxRate = Math.max(0.01, window.bankTaxRate - 0.005);
     showMsg('שילמת ' + toPay.toLocaleString() + ' ₪', 'var(--green)');
@@ -342,21 +320,22 @@ window.drawInvest = function(c) {
 
 window.buyStock = function(id) {
     const s = stockList.find(x => x.id === id);
-    if (window.money >= s.price) {
-        window.money -= s.price; window.invOwned[id] = (window.invOwned[id] || 0) + 1;
-        saveGame(); updateUI(); drawInvest(document.getElementById('content'));
-    } else {
-        const missing = (s.price - window.money).toLocaleString();
-        showMsg('חסר לך ' + missing + '₪ לרכישת המניה!', 'var(--red)');
-    }
+    if (!s) return;
+    if (window.money < s.price) return showMsg('אין מספיק כסף לקנות ' + s.name + '!', 'var(--red)');
+    window.money -= s.price;
+    window.invOwned[id] = (window.invOwned[id] || 0) + 1;
+    showMsg('📈 קנית מניית ' + s.name + ' ב-' + s.price.toFixed(2) + '₪', 'var(--green)');
+    saveGame(); updateUI(); drawInvest(document.getElementById('content'));
 }
 
 window.sellStock = function(id) {
-    if (window.invOwned[id] > 0) {
-        const s = stockList.find(x => x.id === id);
-        window.money += s.price; window.invOwned[id] -= 1;
-        saveGame(); updateUI(); drawInvest(document.getElementById('content'));
-    }
+    const s = stockList.find(x => x.id === id);
+    if (!s) return;
+    if (!window.invOwned[id] || window.invOwned[id] <= 0) return showMsg('אין לך מניות של ' + s.name + ' למכור!', 'var(--red)');
+    window.money += s.price;
+    window.invOwned[id] -= 1;
+    showMsg('💸 מכרת מניית ' + s.name + ' ב-' + s.price.toFixed(2) + '₪', 'var(--blue)');
+    saveGame(); updateUI(); drawInvest(document.getElementById('content'));
 }
 
 // חנות
@@ -371,14 +350,11 @@ window.drawShop = function(c) {
 
 window.buyShopItem = function(id) {
     const item = shopItems.find(x => x.id === id);
-    if (window.money >= item.price) {
-        window.money -= item.price; window.lifeXP += item.xp; window.inventory.push(item.id);
-        showMsg('👜 תתחדש!', 'var(--purple)');
-        saveGame(); updateUI(); drawShop(document.getElementById('content'));
-    } else {
-        const missing = (item.price - window.money).toLocaleString();
-        showMsg('חסר לך ' + missing + '₪ לרכישת הפריט!', 'var(--red)');
-    }
+    if (!item) return;
+    if (window.money < item.price) return showMsg('אין מספיק כסף! חסרים ' + Math.ceil(item.price - window.money).toLocaleString() + '₪', 'var(--red)');
+    window.money -= item.price; window.lifeXP += item.xp; window.inventory.push(item.id);
+    showMsg('👜 תתחדש! +' + item.xp + ' XP', 'var(--purple)');
+    saveGame(); updateUI(); drawShop(document.getElementById('content'));
 };
 
 // קזינו
@@ -389,11 +365,7 @@ window.drawTasks = function(c) {
 window.runCasino = function() {
     const amt = parseInt(document.getElementById('gamble-amt').value);
     const status = document.getElementById('casino-status');
-    if(!amt || amt <= 0) return showMsg('סכום לא תקין', 'var(--red)');
-    if(amt > window.money) {
-        const missing = (amt - window.money).toLocaleString();
-        return showMsg('חסר לך ' + missing + '₪ להימור הזה!', 'var(--red)');
-    }
+    if(!amt || amt <= 0 || amt > window.money) return showMsg('סכום לא תקין', 'var(--red)');
     window.money -= amt; updateUI();
     status.innerHTML = '🎲 מסובב...';
     setTimeout(() => {
@@ -414,12 +386,10 @@ window.drawSkills = function(c) {
 }
 
 window.buySkill = function(n, p) {
-    if (window.money >= p) { 
-        window.money -= p; window.skills.push(n); saveGame(); updateUI(); drawSkills(document.getElementById('content')); 
-    } else {
-        const missing = (p - window.money).toLocaleString();
-        showMsg('חסר לך ' + missing + '₪ ללימוד הכישור!', 'var(--red)');
-    }
+    if (window.money < p) return showMsg('אין מספיק כסף! חסרים ' + Math.ceil(p - window.money).toLocaleString() + '₪', 'var(--red)');
+    window.money -= p; window.skills.push(n);
+    showMsg('🎓 למדת: ' + n + '!', 'var(--green)');
+    saveGame(); updateUI(); drawSkills(document.getElementById('content'));
 }
 
 // רכבים - מהירות מצטברת
@@ -443,8 +413,5 @@ window.buyCar = function(n, p, s) {
             .reduce((sum, car) => sum + car.speed, 0);
         showMsg('🚗 ' + n + ' נוסף! מהירות כוללת: x' + window.carSpeed.toFixed(2), 'var(--blue)');
         saveGame(); updateUI(); drawCars(document.getElementById('content'));
-    } else {
-        const missing = (p - window.money).toLocaleString();
-        showMsg('חסר לך ' + missing + '₪ לרכישת הרכב!', 'var(--red)');
     }
 }
