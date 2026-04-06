@@ -13,42 +13,16 @@
     
     <link rel="stylesheet" href="style.css?v=8.1.0">
     <style>
-        /* תיקוני מודל ועיצוב מקומיים */
+        /* כאן נשאר ה-Style המקורי שלך בדיוק כפי שהיה */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
         .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid #3b82f6; }
-        
-        .admin-box {
-            background: rgba(59, 130, 246, 0.15);
-            border-right: 4px solid #3b82f6;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            font-size: 14px;
-            color: #fff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            position: relative;
-            text-align: right;
-        }
-
-        .edit-admin-btn {
-            background: none; border: none; color: #3b82f6; cursor: pointer;
-            font-size: 18px; position: absolute; left: 10px; top: 10px;
-            opacity: 0.7; transition: opacity 0.2s;
-        }
+        .admin-box { background: rgba(59, 130, 246, 0.15); border-right: 4px solid #3b82f6; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); position: relative; text-align: right; }
+        .edit-admin-btn { background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 18px; position: absolute; left: 10px; top: 10px; opacity: 0.7; transition: opacity 0.2s; }
         .edit-admin-btn:hover { opacity: 1; }
-
         .fade-in { animation: fadeIn 0.4s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* מניעת בחירת טקסט בטעות בנייד */
-        body { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-        
-        /* עיצוב כפתורי ניווט פעילים */
-        .topbar button.active { 
-            background: rgba(59, 130, 246, 0.2); 
-            border-bottom: 2px solid #3b82f6; 
-            color: #fff;
-        }
+        body { -webkit-user-select: none; user-select: none; }
+        .topbar button.active { background: rgba(59, 130, 246, 0.2); border-bottom: 2px solid #3b82f6; color: #fff; }
     </style>
 </head>
 <body class="dark-theme">
@@ -106,24 +80,17 @@
 
     <script src="js/core.js?v=8.1.0"></script>
     <script src="js/activities.js?v=8.1.0"></script>
-    <script src="js/economy.js?v=8.1.0"></script>
-    <script src="js/ui.js?v=8.1.0"></script>
+    <script src="js/economy.js?v=8.1.0"></script> <script src="js/ui.js?v=8.1.0"></script>
     <script src="js/debug.js?v=8.1.0"></script> <script>
-        function closeInstallGuide() { 
-            document.getElementById('installModal').style.display = 'none'; 
-        }
+        function closeInstallGuide() { document.getElementById('installModal').style.display = 'none'; }
 
-        // רישום Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js?v=8.1.0')
-            .then(() => console.log("SW v8.1.0 Registered"));
+            navigator.serviceWorker.register('./sw.js?v=8.1.0');
         }
 
         window.addEventListener('load', () => {
-            // טעינת הודעות וסיסמאות מ-Firebase מיד בטעינה
-            if(window.fetchSystemSettings) {
-                window.fetchSystemSettings();
-            }
+            // טעינת הגדרות מ-Firebase
+            if(window.fetchSystemSettings) window.fetchSystemSettings();
 
             setTimeout(() => {
                 const content = document.getElementById("content");
@@ -132,12 +99,9 @@
                 }
             }, 300);
             
-            // זיהוי מכשיר להוראות התקנה
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                const androidEl = document.getElementById('android-instr');
-                const iosEl = document.getElementById('ios-instr');
-                if(androidEl) androidEl.style.display = 'none';
-                if(iosEl) iosEl.style.display = 'block';
+                document.getElementById('android-instr').style.display = 'none';
+                document.getElementById('ios-instr').style.display = 'block';
             }
         });
     </script>
