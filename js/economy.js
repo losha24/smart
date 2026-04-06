@@ -61,7 +61,9 @@ function executeBankOp(type) {
             bank += amt; 
             showMsg(`הופקדו ${amt.toLocaleString()}₪ בהצלחה לחשבון`, "var(--green)"); 
         } else {
-            showMsg("אין עליך מספיק מזומן להפקדה זו!", "var(--red)");
+            // תיקון: הצגת סכום חסר
+            const missing = (amt - money).toLocaleString();
+            showMsg(`אין עליך מספיק מזומן! חסר לך ${missing}₪`, "var(--red)");
             return;
         }
     } else if(type === 'wd') {
@@ -70,7 +72,9 @@ function executeBankOp(type) {
             money += amt; 
             showMsg(`משכת ${amt.toLocaleString()}₪ מהבנק`, "var(--blue)"); 
         } else {
-            showMsg("אין מספיק יתרה בבנק למשיכה זו!", "var(--red)");
+            // תיקון: הצגת סכום חסר בבנק
+            const missing = (amt - bank).toLocaleString();
+            showMsg(`אין מספיק יתרה בבנק! חסר לך ${missing}₪`, "var(--red)");
             return;
         }
     }
@@ -96,7 +100,9 @@ function executeLoanOp(type) {
             loan = Math.max(0, loan - 10000); 
             showMsg("שילמת 10,000₪ מהחוב + 500₪ ריבית.", "var(--green)"); 
         } else {
-            showMsg("אין לך 10,500₪ במזומן להחזר החוב!", "var(--red)");
+            // תיקון: הצגת סכום חסר להחזר הלוואה
+            const missing = (10500 - money).toLocaleString();
+            showMsg(`חסר לך ${missing}₪ מזומן להחזר החוב!`, "var(--red)");
             return;
         }
     }
@@ -171,7 +177,9 @@ function executeStockOp(type, id, price) {
             invOwned[id] = (invOwned[id] || 0) + 1; 
             showMsg(`רכשת ${id} ב-${price.toLocaleString()}₪`, "var(--green)"); 
         } else {
-            showMsg("אין לך מספיק מזומן!", "var(--red)");
+            // תיקון: הצגת סכום חסר במניות
+            const missing = (price - money).toLocaleString();
+            showMsg(`אין לך מספיק מזומן! חסר לך ${missing}₪`, "var(--red)");
             return;
         }
     } else if(type === 'sell') {
@@ -307,6 +315,8 @@ function executeBuy(type, name, cost, value, icon) {
         else if(type === 'estate') drawEstate(content);
         else drawMarket(content);
     } else {
-        showMsg("אין לך מספיק מזומן לרכישה זו!", "var(--red)");
+        // תיקון: הצגת סכום חסר ברכישות נדל"ן, עסקים ושוק
+        const missing = (cost - money).toLocaleString();
+        showMsg(`אין לך מספיק מזומן! חסר לך ${missing}₪`, "var(--red)");
     }
 }
