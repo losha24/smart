@@ -209,6 +209,20 @@ window.openAdminPanel = function() {
         '<button id="adminResetLb" style="width:100%;padding:10px;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid #ef4444;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;margin-top:8px;">⚠️ איפוס דירוג מלא</button>' +
         '</div>' +
 
+        // עריכת שחקן
+        '<div style="background:#1e293b;border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid #334155;">' +
+        '<div style="font-size:12px;color:#94a3b8;margin-bottom:10px;">✏️ עריכת שחקן</div>' +
+        '<div style="font-size:11px;color:#64748b;margin-bottom:8px;">לחץ על שחקן ברשימה למעלה, ואז ערוך:</div>' +
+        '<input id="adminEditName" type="text" placeholder="שם חדש" style="width:100%;padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;margin-bottom:8px;">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+        '<input id="adminEditMoney" type="number" placeholder="כסף חדש" style="padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;width:100%;">' +
+        '<input id="adminEditXp" type="number" placeholder="XP חדש" style="padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;width:100%;">' +
+        '</div>' +
+        '<div id="adminEditTarget" style="font-size:11px;color:#f59e0b;margin-bottom:8px;">לא נבחר שחקן</div>' +
+        '<button id="adminSavePlayer" style="width:100%;padding:10px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">💾 שמור שינויים לשחקן</button>' +
+        '<div id="adminEditMsg" style="font-size:12px;text-align:center;margin-top:6px;"></div>' +
+        '</div>' +
+
         // בדיקת מערכת + איפוס
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
         '<button id="adminDebug" style="padding:12px;background:rgba(56,189,248,0.1);color:#38bdf8;border:1px solid #38bdf8;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;">🔧 בדיקת מערכת</button>' +
@@ -327,6 +341,9 @@ window.openAdminPanel = function() {
         );
     };
 
+    // מאגר שחקנים לעריכה
+    let adminLoadedPlayers = [];
+
     // טען רשימת שחקנים
     document.getElementById('adminLoadPlayers').onclick = async function() {
         const listEl = document.getElementById('adminLbPlayers');
@@ -336,16 +353,30 @@ window.openAdminPanel = function() {
             listEl.innerHTML = '<div style="text-align:center;opacity:0.5;font-size:12px;padding:8px;">אין שחקנים</div>';
             return;
         }
+        adminLoadedPlayers = players;
         listEl.innerHTML = players.map(p =>
-            '<div data-pid="' + p.id + '" class="lb-player-row" style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:#0f172a;border-radius:6px;margin-bottom:4px;font-size:11px;cursor:pointer;">' +
+            '<div data-pid="' + p.id + '" class="lb-player-row" style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:#0f172a;border-radius:6px;margin-bottom:4px;font-size:11px;cursor:pointer;border:1px solid transparent;">' +
             '<span style="color:#fff;">' + p.name + ' (רמה ' + p.level + ')</span>' +
             '<span style="color:#22c55e;">' + Math.floor(p.money).toLocaleString() + '₪</span>' +
             '</div>'
         ).join('');
-        // לחיצה על שורה - ממלא את שדה ה-ID
+        // לחיצה על שורה - בחירת שחקן לעריכה ומחיקה
         listEl.querySelectorAll('.lb-player-row').forEach(function(row) {
             row.onclick = function() {
-                document.getElementById('adminDeleteId').value = this.getAttribute('data-pid');
+                // הסר highlight קודם
+                listEl.querySelectorAll('.lb-player-row').forEach(r => r.style.borderColor = 'transparent');
+                this.style.borderColor = '#3b82f6';
+                const pid = this.getAttribute('data-pid');
+                document.getElementById('adminDeleteId').value = pid;
+                // מלא שדות עריכה
+                const player = adminLoadedPlayers.find(p => p.id === pid);
+                if (player) {
+                    document.getElementById('adminEditName').value = player.name || '';
+                    document.getElementById('adminEditMoney').value = Math.floor(player.money) || 0;
+                    document.getElementById('adminEditXp').value = '';
+                    document.getElementById('adminEditTarget').innerText = 'נבחר: ' + player.name;
+                    document.getElementById('adminEditMsg').innerText = '';
+                }
             };
         });
     };
@@ -377,6 +408,52 @@ window.openAdminPanel = function() {
                 lbAllPlayers = [];
             }
         );
+    };
+
+    // שמירת עריכת שחקן ל-Firebase
+    document.getElementById('adminSavePlayer').onclick = async function() {
+        const pid = document.getElementById('adminDeleteId').value.trim();
+        const msgEl = document.getElementById('adminEditMsg');
+        if (!pid) { msgEl.style.color = '#ef4444'; msgEl.innerText = 'בחר שחקן מהרשימה קודם'; return; }
+
+        const player = adminLoadedPlayers.find(p => p.id === pid);
+        if (!player) { msgEl.style.color = '#ef4444'; msgEl.innerText = 'שחקן לא נמצא — טען שחקנים שוב'; return; }
+
+        const newName = document.getElementById('adminEditName').value.trim();
+        const newMoney = parseInt(document.getElementById('adminEditMoney').value);
+        const addXp = parseInt(document.getElementById('adminEditXp').value) || 0;
+
+        const updated = {
+            name: newName || player.name,
+            money: isNaN(newMoney) ? player.money : newMoney,
+            level: player.level,
+            ts: Date.now()
+        };
+        // חישוב רמה חדשה אם הוסיף XP (לא נשמר XP בדירוג, רק רמה)
+        if (addXp > 0 && typeof getLevelData === 'function') {
+            const fakeXp = (player.level * 1000) + addXp;
+            updated.level = getLevelData(fakeXp).level;
+        }
+
+        this.innerText = '⏳ שומר...';
+        this.disabled = true;
+        try {
+            await fetch(FB_URL + '/leaderboard/' + pid + '.json', {
+                method: 'PUT',
+                body: JSON.stringify(updated)
+            });
+            msgEl.style.color = '#22c55e';
+            msgEl.innerText = '✅ נשמר בהצלחה!';
+            // עדכן מקומי
+            player.name = updated.name;
+            player.money = updated.money;
+            player.level = updated.level;
+        } catch(e) {
+            msgEl.style.color = '#ef4444';
+            msgEl.innerText = '❌ שגיאה בשמירה';
+        }
+        this.innerText = '💾 שמור שינויים לשחקן';
+        this.disabled = false;
     };
 };
 
@@ -496,6 +573,7 @@ window.drawHome = function(c) {
         '<button onclick="changeLPage(1)" id="lbNext" class="sys-btn" style="padding:5px 15px;">▶</button></div></div>' +
 
         '<div id="install-container" style="margin-top:20px;"></div>' +
+        '<button class="sys-btn" style="border:1px solid #451a1a;color:#ef4444;margin-top:15px;font-size:11px;padding:10px;width:100%;opacity:0.7;" onclick="if(confirm(\'לאפס הכל?\')) resetGame()">🗑️ איפוס חשבון</button>' +
         '</div>';
 
     startGiftTimer();
@@ -639,7 +717,7 @@ async function triggerInstall() {
     if (outcome === 'accepted') { deferredPrompt = null; renderInstallBtn(); }
 }
 
-// ============================================================
+// =======================.=====================================
 // אתחול
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
