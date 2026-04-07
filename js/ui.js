@@ -53,7 +53,7 @@ async function fbGetLeaderboard() {
         if (!data) return [];
         return Object.entries(data)
             .map(([id, p]) => ({ ...p, id }))
-            .sort((a, b) => b.money - a.money)
+            .sort((a, b) => b.level - a.level || b.money - a.money)
             .slice(0, 50);
     } catch(e) { return null; }
 }
@@ -602,7 +602,7 @@ async function loadLeaderboard() {
     lbAllPlayers = players.map(p => ({ ...p, isPlayer: p.id === deviceId }));
     if (!lbAllPlayers.find(p => p.isPlayer)) {
         lbAllPlayers.push({ name: localStorage.getItem('playerName') || 'אתה', money: Math.floor(window.money), level: ld.level, isPlayer: true });
-        lbAllPlayers.sort((a,b) => b.money - a.money);
+        lbAllPlayers.sort((a,b) => b.level - a.level || b.money - a.money);
     }
     renderLbFull();
 }
@@ -627,7 +627,8 @@ function renderLbPage() {
             '<div style="display:flex;align-items:center;gap:10px;">' +
             '<span style="font-size:15px;width:24px;">' + medal + '</span>' +
             '<div><div style="font-size:13px;font-weight:bold;color:' + (p.isPlayer ? 'var(--blue)' : '#fff') + ';">' + p.name + (p.isPlayer ? ' (אתה)' : '') + '</div>' +
-            '<div style="font-size:10px;opacity:0.5;">רמה ' + p.level + '</div></div></div>' +
+'<div style="font-size:11px; color:var(--yellow); font-weight:bold;">⭐ רמה ' + p.level + '</div></div></div>'
+ +
             '<div style="font-size:13px;color:var(--green);font-weight:bold;">' + Math.floor(p.money).toLocaleString() + '₪</div></div>';
     }).join('');
 }
