@@ -82,6 +82,8 @@ const carList = [
 
 // אתחולים
 if (window.bankTaxRate === undefined) window.bankTaxRate = 0.01;
+if (!window.itemLevels) window.itemLevels = {};
+if (!window.carLevels) window.carLevels = {};
 if (!window.estateData) window.estateData = {};
 
 // בורסה חיה
@@ -339,11 +341,23 @@ window.sellStock = function(id) {
 }
 
 // חנות
+// חנות מותגים עם שדרוגים
 window.drawShop = function(c) {
     let html = '<h3>🛒 חנות מותגים</h3><div class="grid-2">';
     shopItems.forEach(item => {
         const hasItem = window.inventory.includes(item.id) || window.inventory.includes(item.name);
-        html += '<div class="card fade-in" style="text-align:center;border:1px solid ' + (hasItem ? 'var(--green)' : 'var(--border)') + ';"><div style="font-size:35px;margin-bottom:10px;">' + item.icon + '</div><div style="font-weight:bold;font-size:14px;">' + item.name + '</div><button class="sys-btn" style="width:100%;" onclick="buyShopItem(\'' + item.id + '\')" ' + (hasItem ? 'disabled' : '') + '>' + (hasItem ? 'בבעלותך' : item.price.toLocaleString() + ' ₪') + '</button></div>';
+        const level = (window.itemLevels && window.itemLevels[item.id]) ? window.itemLevels[item.id] : 0;
+        const upgradePrice = Math.floor(item.price * 0.7 * (level + 1));
+
+        html += '<div class="card fade-in" style="text-align:center;border:1px solid ' + (hasItem ? 'var(--green)' : 'var(--border)') + ';">' +
+            '<div style="font-size:35px;margin-bottom:10px;">' + item.icon + '</div>' +
+            '<div style="font-weight:bold;font-size:14px;">' + item.name + (level > 0 ? ' <small style="color:var(--yellow);">(רמה ' + level + ')</small>' : '') + '</div>' +
+            '<button class="sys-btn" style="width:100%;margin-bottom:5px;" onclick="buyShopItem(\'' + item.id + '\')" ' + (hasItem ? 'disabled' : '') + '>' + (hasItem ? 'בבעלותך' : item.price.toLocaleString() + ' ₪') + '</button>';
+
+        if (hasItem) {
+            html += '<button class="sys-btn" style="width:100%;font-size:10px;background:rgba(245,158,11,0.15);color:var(--yellow);border-color:var(--yellow);" onclick="upgradeShopItem(\'' + item.id + '\')">⬆️ שדרג (' + upgradePrice.toLocaleString() + ' ₪)</button>';
+        }
+        html += '</div>';
     });
     c.innerHTML = html + '</div>';
 };
@@ -351,11 +365,28 @@ window.drawShop = function(c) {
 window.buyShopItem = function(id) {
     const item = shopItems.find(x => x.id === id);
     if (!item) return;
-    if (window.money < item.price) return showMsg('אין מספיק כסף! חסרים ' + Math.ceil(item.price - window.money).toLocaleString() + '₪', 'var(--red)');
+    if (window.money < item.price) return showMsg('אין מספיק כסף!', 'var(--red)');
     window.money -= item.price; window.lifeXP += item.xp; window.inventory.push(item.id);
+    if (!window.itemLevels) window.itemLevels = {};
+    window.itemLevels[id] = 0;
     showMsg('👜 תתחדש! +' + item.xp + ' XP', 'var(--purple)');
     saveGame(); updateUI(); drawShop(document.getElementById('content'));
 };
+
+window.upgradeShopItem = function(id) {
+    const item = shopItems.find(x => x.id === id);
+    if (!item) return;
+    const currentLevel = (window.itemLevels && window.itemLevels[id]) ? window.itemLevels[id] : 0;
+    const upgradePrice = Math.floor(item.price * 0.7 * (currentLevel + 1));
+    if (window.money < upgradePrice) return showMsg('חסר כסף לשדרוג!', 'var(--red)');
+    const xpBonus = Math.floor(item.xp * 0.6); 
+    window.money -= upgradePrice;
+    window.itemLevels[id] = currentLevel + 1;
+    window.lifeXP += xpBonus;
+    showMsg('✨ שודרג לרמה ' + window.itemLevels[id] + '! +' + xpBonus + ' XP', 'var(--yellow)');
+    saveGame(); updateUI(); drawShop(document.getElementById('content'));
+};
+
 
 // קזינו
 window.drawTasks = function(c) {
@@ -391,27 +422,67 @@ window.buySkill = function(n, p) {
     showMsg('🎓 למדת: ' + n + '!', 'var(--green)');
     saveGame(); updateUI(); drawSkills(document.getElementById('content'));
 }
-
-// רכבים - מהירות מצטברת
+// רכבים - מהירות מצטברת ושדרוגים
 window.drawCars = function(c) {
     const totalSpeed = window.carSpeed || 1;
-    let html = '<h3>🏎️ סוכנות רכב יוקרה</h3><div class="card" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);padding:12px;margin-bottom:12px;text-align:center;"><div style="font-size:12px;opacity:0.7;margin-bottom:4px;">⚡ מהירות עבודה כוללת</div><div style="font-size:22px;font-weight:bold;color:var(--blue);">x' + totalSpeed.toFixed(2) + '</div><div style="font-size:10px;opacity:0.5;margin-top:2px;">כל רכב מוסיף למהירות הקיימת</div></div><div class="grid-2">';
+    let html = '<h3>🏎️ סוכנות רכב יוקרה</h3><div class="card" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);padding:12px;margin-bottom:12px;text-align:center;"><div style="font-size:12px;opacity:0.7;margin-bottom:4px;">⚡ מהירות עבודה כוללת</div><div style="font-size:22px;font-weight:bold;color:var(--blue);">x' + totalSpeed.toFixed(2) + '</div><div style="font-size:10px;opacity:0.5;margin-top:2px;">כל רכב ושדרוג מוסיפים למהירות</div></div><div class="grid-2">';
+    
     carList.forEach(car => {
         const has = window.cars.includes(car.name);
-        html += '<div class="card" style="text-align:center;border-top:3px solid ' + (has ? 'var(--green)' : 'var(--border)') + ';"><div style="font-size:28px;">' + car.icon + '</div><div style="font-size:12px;font-weight:bold;margin:5px 0;">' + car.name + '</div><div style="font-size:10px;color:var(--yellow);margin-bottom:6px;">+' + car.speed + 'x מהירות</div><button class="sys-btn" onclick="buyCar(\'' + car.name + '\',' + car.price + ',' + car.speed + ')" ' + (has ? 'disabled' : '') + '>' + (has ? '✅ x' + car.speed : car.price.toLocaleString() + '₪') + '</button></div>';
+        const level = (window.carLevels && window.carLevels[car.name]) ? window.carLevels[car.name] : 0;
+        const upgradePrice = Math.floor(car.price * 0.8 * (level + 1));
+        const currentCarSpeed = car.speed * (1 + level * 0.5); // כל רמה מוסיפה 50% מהירות בסיס
+
+        html += '<div class="card" style="text-align:center;border-top:3px solid ' + (has ? 'var(--green)' : 'var(--border)') + ';">' +
+            '<div style="font-size:28px;">' + car.icon + '</div>' +
+            '<div style="font-size:12px;font-weight:bold;margin:5px 0;">' + car.name + (level > 0 ? ' <small style="color:var(--yellow);">(רמה ' + level + ')</small>' : '') + '</div>' +
+            '<div style="font-size:10px;color:var(--yellow);margin-bottom:6px;">+' + currentCarSpeed.toFixed(2) + 'x מהירות</div>' +
+            '<button class="sys-btn" style="width:100%;margin-bottom:5px;" onclick="buyCar(\'' + car.name + '\',' + car.price + ')" ' + (has ? 'disabled' : '') + '>' + (has ? 'בבעלותך' : car.price.toLocaleString() + '₪') + '</button>';
+
+        if (has) {
+            html += '<button class="sys-btn" style="width:100%;font-size:10px;background:rgba(59,130,246,0.15);color:var(--blue);border-color:var(--blue);" onclick="upgradeCar(\'' + car.name + '\')">⬆️ שפר מנוע (' + upgradePrice.toLocaleString() + ' ₪)</button>';
+        }
+        html += '</div>';
     });
     c.innerHTML = html + '</div>';
 }
 
-// מהירות מצטברת - כל רכב מוסיף
-window.buyCar = function(n, p, s) {
+window.buyCar = function(n, p) {
     if (window.money >= p) {
         window.money -= p;
         window.cars.push(n);
-        window.carSpeed = 1 + carList
-            .filter(car => window.cars.includes(car.name))
-            .reduce((sum, car) => sum + car.speed, 0);
-        showMsg('🚗 ' + n + ' נוסף! מהירות כוללת: x' + window.carSpeed.toFixed(2), 'var(--blue)');
+        if (!window.carLevels) window.carLevels = {};
+        window.carLevels[n] = 0;
+        recalculateTotalSpeed();
+        showMsg('🚗 ' + n + ' נרכש בהצלחה!', 'var(--blue)');
         saveGame(); updateUI(); drawCars(document.getElementById('content'));
+    } else {
+        showMsg('אין מספיק כסף!', 'var(--red)');
     }
+}
+
+window.upgradeCar = function(n) {
+    const car = carList.find(x => x.name === n);
+    if (!car) return;
+    const currentLevel = (window.carLevels && window.carLevels[n]) ? window.carLevels[n] : 0;
+    const upgradePrice = Math.floor(car.price * 0.8 * (currentLevel + 1));
+
+    if (window.money < upgradePrice) return showMsg('חסר כסף לשיפור המנוע!', 'var(--red)');
+
+    window.money -= upgradePrice;
+    window.carLevels[n] = currentLevel + 1;
+    recalculateTotalSpeed();
+    
+    showMsg('⚡ המנוע של ' + n + ' שופר! המהירות עלתה.', 'var(--yellow)');
+    saveGame(); updateUI(); drawCars(document.getElementById('content'));
+}
+
+// פונקציית עזר לחישוב מהירות (תשים אותה בסוף הקובץ)
+function recalculateTotalSpeed() {
+    window.carSpeed = 1 + carList
+        .filter(car => window.cars.includes(car.name))
+        .reduce((sum, car) => {
+            const level = (window.carLevels && window.carLevels[car.name]) ? window.carLevels[car.name] : 0;
+            return sum + (car.speed * (1 + level * 0.5));
+        }, 0);
 }
