@@ -1,6 +1,6 @@
-/* Smart Money Pro - js/core.js - v8.0.0 - Passive/min, estateData, cumulative cars */
+/* Smart Money Pro - js/core.js - v8.0.1 - Fixed Persistence */
 
-const VERSION = "8.0.0";
+const VERSION = "8.0.1";
 const SAVE_KEY = "smartMoneySave_v8_main";
 
 window.money = 1200;
@@ -14,10 +14,14 @@ window.cars = [];
 window.inventory = [];
 window.invOwned = { AAPL: 0, TSLA: 0, NVDA: 0, BTC: 0, GOOG: 0, AMZN: 0, MSFT: 0, NFLX: 0, META: 0, ELAL: 0 };
 window.carSpeed = 1;
+window.itemLevels = window.shopData || {}; // קישור למערכת השדרוגים של החנות
+window.carLevels = window.carData || {};   // קישור למערכת השדרוגים של הרכבים
 window.totalEarned = 0;
 window.lastSaveTime = Date.now();
 window.lastKnownLevel = 0;
-window.estateData = {}; // { e1: { count, level }, ... }
+window.estateData = {}; 
+window.shopData = {}; // נתוני שדרוגים לחנות
+window.carData = {};  // נתוני שדרוגים לרכבים
 
 let msgTimer;
 
@@ -51,9 +55,10 @@ function loadGame() {
             window.carSpeed = data.carSpeed ?? 1;
             window.totalEarned = data.totalEarned ?? 0;
             window.estateData = data.estateData ?? {};
+            window.shopData = data.shopData ?? {}; // טעינת שדרוגים
+            window.carData = data.carData ?? {};   // טעינת שדרוגי רכבים
             window.lastKnownLevel = getLevelData(window.lifeXP).level;
 
-            // רווחים offline: passive הוא ₪/דקה
             if (data.lastSaveTime && window.passive > 0) {
                 const now = Date.now();
                 let msPassed = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
@@ -83,7 +88,9 @@ function saveGame() {
         skills: window.skills, cars: window.cars, inventory: window.inventory,
         invOwned: window.invOwned, carSpeed: window.carSpeed,
         totalEarned: window.totalEarned, lastSaveTime: window.lastSaveTime,
-        estateData: window.estateData
+        estateData: window.estateData,
+        shopData: window.shopData, // שמירת שדרוגים
+        carData: window.carData     // שמירת שדרוגי רכבים
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }
@@ -146,10 +153,9 @@ function resetGame() {
     }
 }
 
-// passive הוא ₪/דקה → לכל 50ms = passive/1200
 setInterval(() => {
     if (window.passive > 0) {
-        const tickIncome = window.passive / 1200; // ₪/דקה → tick כל 50ms
+        const tickIncome = window.passive / 1200; 
         window.money += tickIncome;
         window.totalEarned += tickIncome;
         const mEl = document.getElementById('money');
@@ -169,5 +175,4 @@ setInterval(saveGame, 15000);
 document.addEventListener("DOMContentLoaded", () => {
     loadGame();
     updateUI();
-    console.log('Smart Money Engine v' + VERSION + ' Loaded.');
 });
