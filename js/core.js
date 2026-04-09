@@ -90,6 +90,7 @@ if (saveData.hash && checkHash !== saveData.hash) {
 }
 
 const data = saveData.data || saveData;
+window.playerName = data.playerName || window.playerName;
 
 window.money=data.money??1200;
 window.bank=data.bank??0;
@@ -165,6 +166,7 @@ window.lastSaveTime=Date.now();
 
 const data={
 
+playerName:window.playerName,
 money:window.money,
 bank:window.bank,
 loan:window.loan,
