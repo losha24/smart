@@ -123,6 +123,7 @@
         }
 
         window.addEventListener('load', () => {
+            
             setTimeout(() => {
                 const content = document.getElementById("content");
                 if (content && content.innerHTML === "" && window.openTab) {
@@ -137,6 +138,29 @@
                 if(iosEl) iosEl.style.display = 'block';
             }
         });
+   function savePlayerName() {
+    
+    const input = document.getElementById("player-name-input");
+    
+    const name = input.value.trim();
+    
+    if (name.length < 2) {
+        alert("בחר שם שחקן");
+        return;
+    }
+    
+    window.playerName = name;
+    
+    localStorage.setItem("playerName", name);
+    
+    document.getElementById("player-start").style.display = "none";
+    
+    if (typeof saveGame === "function") {
+        saveGame();
+    }
+    
+}
+
     </script>
     <div id="player-start" class="start-screen">
     
