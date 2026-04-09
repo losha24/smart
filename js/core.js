@@ -31,7 +31,22 @@ window.lastKnownLevel = 0;
 
 window.estateData = {};
 
+window.playerName = localStorage.getItem("playerName") || "";
 let msgTimer;
+// --- Anti Cheat Hash ---
+function createHash(data) {
+  
+  let str = JSON.stringify(data);
+  let hash = 0;
+  
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  
+  return hash;
+  
+}
 
 function getLevelData(xp){
 let level=1,xpForNext=1000,totalXPStack=0;
@@ -56,7 +71,25 @@ const saved=localStorage.getItem(SAVE_KEY);
 
 if(saved){
 
-const data=JSON.parse(saved);
+const saveData = JSON.parse(saved);
+
+if (!saveData.hash) {
+  console.warn("Old save detected");
+}
+
+const checkHash = createHash(saveData.data || saveData);
+
+if (saveData.hash && checkHash !== saveData.hash) {
+  
+  alert("⚠️ זוהה שינוי לא חוקי בשמירה");
+  
+  localStorage.removeItem(SAVE_KEY);
+  location.reload();
+  return;
+  
+}
+
+const data = saveData.data || saveData;
 
 window.money=data.money??1200;
 window.bank=data.bank??0;
@@ -158,7 +191,12 @@ carLevels:window.carLevels
 
 };
 
-localStorage.setItem(SAVE_KEY,JSON.stringify(data));
+const savePack = {
+  data: data,
+  hash: createHash(data)
+};
+
+localStorage.setItem(SAVE_KEY, JSON.stringify(savePack));
 
 }
 
@@ -187,6 +225,15 @@ bar.style.transform="translateY(-5px)";
 }
 
 function updateUI(){
+// Anti Cheat - Money limit
+if (window.money > 1000000000) {
+  console.warn("Money cheat detected");
+  window.money = 1000000;
+}
+if (window.lifeXP > 100000000) {
+  console.warn("XP cheat detected");
+  window.lifeXP = 1000;
+}
 
 const mEl=document.getElementById('money');
 const bEl=document.getElementById('bank');
@@ -295,11 +342,51 @@ window.renderUIUpdate(ld);
 },1000);
 
 setInterval(saveGame,15000);
+function checkPlayerName() {
+  
+  const name = localStorage.getItem("playerName");
+  
+  if (!name) {
+    
+    document.getElementById("player-start").style.display = "flex";
+    
+  } else {
+    
+    window.playerName = name;
+    
+  }
+  
+}
 
-document.addEventListener("DOMContentLoaded",()=>{
-
-loadGame();
-
-updateUI();
-
+function savePlayerName() {
+  
+  const input = document.getElementById("player-name-input");
+  
+  const name = input.value.trim();
+  
+  if (name.length < 2) {
+    
+    alert("הכנס שם שחקן");
+    
+    return;
+    
+  }
+  
+  localStorage.setItem("playerName", name);
+  
+  window.playerName = name;
+  
+  document.getElementById("player-start").style.display = "none";
+  
+  showMsg("ברוך הבא " + name + " 🚀");
+  
+}
+document.addEventListener("DOMContentLoaded", () => {
+  
+  checkPlayerName();
+  
+  loadGame();
+  
+  updateUI();
+  
 });
