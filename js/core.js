@@ -30,6 +30,14 @@ window.lastSaveTime = Date.now();
 window.lastKnownLevel = 0;
 
 window.estateData = {};
+// Device ID for cloud save
+if (!localStorage.getItem("deviceID")) {
+  
+  localStorage.setItem("deviceID", crypto.randomUUID());
+  
+}
+
+window.deviceID = localStorage.getItem("deviceID");
 
 window.playerName = localStorage.getItem("playerName") || "";
 let msgTimer;
@@ -166,7 +174,9 @@ window.lastSaveTime=Date.now();
 
 const data={
 
-playerName:window.playerName,
+playerName: window.playerName,
+  level: getLevelData(window.lifeXP).level,
+  device: window.deviceID,
 money:window.money,
 bank:window.bank,
 loan:window.loan,
@@ -199,7 +209,22 @@ const savePack = {
 };
 
 localStorage.setItem(SAVE_KEY, JSON.stringify(savePack));
-
+// Save to Firebase leaderboard
+if (window.firebaseDB && window.playerName) {
+  
+  firebaseDB
+    .collection("leaderboard")
+    .doc(window.deviceID)
+    .set({
+      
+      name: window.playerName,
+      money: window.money,
+      level: getLevelData(window.lifeXP).level,
+      time: Date.now()
+      
+    });
+  
+}
 }
 
 function showMsg(txt,color="var(--blue)"){
