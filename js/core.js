@@ -326,17 +326,22 @@ location.reload(true);
 
 }
 
-function resetGame(){
+function resetGame() {
+    if (confirm('⚠️ אזהרה: כל ההתקדמות תימחק. האם אתה בטוח?')) {
+        // מחיקת נתוני המשחק (כסף, נכסים וכו')
+        localStorage.removeItem(SAVE_KEY);
+        
+        // מחיקת שם השחקן - זה מה שיגרום למסך הפתיחה להופיע
+        localStorage.removeItem("playerName");
+        
+        // אופציונלי: אם תרצה לנקות הכל כולל הגדרות (כמו מצב לילה)
+        // localStorage.clear(); 
 
-if(confirm('⚠️ אזהרה: כל ההתקדמות תימחק. האם אתה בטוח?')){
-
-localStorage.removeItem(SAVE_KEY);
-
-location.reload();
-
+        // רענון הדף
+        location.reload();
+    }
 }
 
-}
 
 setInterval(()=>{
 
