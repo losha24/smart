@@ -158,7 +158,13 @@
     if (typeof saveGame === "function") {
         saveGame();
     }
-    
+    const savedName = localStorage.getItem("playerName");
+
+if (!savedName) {
+    document.getElementById("player-start").style.display = "flex";
+} else {
+    window.playerName = savedName;
+}
 }
 
     </script>
