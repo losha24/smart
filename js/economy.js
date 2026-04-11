@@ -320,3 +320,52 @@ function executeBuy(type, name, cost, value, icon) {
         showMsg(`אין לך מספיק מזומן! חסר לך ${missing}₪`, "var(--red)");
     }
 }
+// מחירי התחלה למניות הישראליות והעולמיות
+window.stockPrices = window.stockPrices || {
+    AAPL: 150, TSLA: 700, BTC: 60000, ELAL: 3.5, ICL: 25, TASE: 1800, LEUMI: 2900, DIS: 350
+};
+
+// עדכון מחירים אוטומטי כל 3 שניות
+setInterval(() => {
+    for (let s in window.stockPrices) {
+        let change = (Math.random() * 0.04) - 0.018; 
+        window.stockPrices[s] *= (1 + change);
+    }
+    // אם הטאב בורסה פתוח - רענן אותו כדי לראות את המחירים זזים
+    if (window.currentTab === 'stock') {
+        const content = document.getElementById("content");
+        if(window.drawStockMarket) window.drawStockMarket(content);
+    }
+}, 3000);
+
+// חישוב שווי התיק
+window.getPortfolioValue = function() {
+    let total = 0;
+    for (let id in window.invOwned) {
+        total += (window.invOwned[id] || 0) * (window.stockPrices[id] || 0);
+    }
+    return total;
+};
+
+// פונקציות קנייה ומכירה
+window.buyStock = function(id) {
+    let price = window.stockPrices[id];
+    if (window.money >= price) {
+        window.money -= price;
+        window.invOwned[id] = (window.invOwned[id] || 0) + 1;
+        showMsg(`קנית מניית ${id}`, "var(--green)");
+        updateUI(); saveGame();
+        drawStockMarket(document.getElementById("content"));
+    } else { showMsg("אין מספיק מזומן!", "var(--red)"); }
+};
+
+window.sellStock = function(id) {
+    if (window.invOwned[id] > 0) {
+        let price = window.stockPrices[id];
+        window.money += price;
+        window.invOwned[id]--;
+        showMsg(`מכרת מניית ${id}`, "var(--yellow)");
+        updateUI(); saveGame();
+        drawStockMarket(document.getElementById("content"));
+    }
+};
