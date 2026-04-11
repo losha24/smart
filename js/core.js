@@ -7,7 +7,8 @@ window.money = 1200;
 window.bank = 0;
 window.loan = 0;
 window.lifeXP = 0;
-window.passive = 0;
+window.passive = 0; // פסיבי כולל
+window.jobPassive = 0; // פסיבי מעבודות בלבד
 window.lastGift = 0;
 window.skills = [];
 window.cars = [];
@@ -72,7 +73,10 @@ function loadGame() {
             window.bank          = data.bank          ?? 0;
             window.loan          = data.loan          ?? 0;
             window.lifeXP        = data.lifeXP        ?? 0;
-            window.passive       = data.passive       ?? 0;
+            
+            window.passive = data.passive ?? 0;
+window.jobPassive = data.jobPassive ?? 0;
+            
             window.lastGift      = data.lastGift      ?? 0;
             window.skills        = data.skills        ?? [];
             window.cars          = data.cars          ?? [];
@@ -112,6 +116,7 @@ function saveGame() {
     window.lastSaveTime = Date.now();
     const data = {
         playerName:   window.playerName,
+        jobPassive: window.jobPassive,
         money:        window.money,
         bank:         window.bank,
         loan:         window.loan,
