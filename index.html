@@ -25,7 +25,6 @@
 </head>
 <body class="dark-theme">
 
-```
 <header class="main-header">
     <img src="logo.png" alt="Smart Money Pro" class="header-logo-big" onclick="if(window.openTab) window.openTab('home')" style="cursor:pointer;">
 </header>
@@ -57,6 +56,11 @@
     <div class="nav-row">
         <button onclick="window.openTab('cars')"     id="btnCars">🚗 רכבים</button>
         <button onclick="window.openTab('shop')"     id="btnShop">🛒 חנות</button>
+        <button class="nav-item" onclick="location.reload(true)">
+    <span class="nav-icon">🔄</span>
+    <span class="nav-text">רענן</span>
+</button>
+
         <button onclick="document.getElementById('installModal').style.display='flex'" class="sys-btn">📲</button>
         <button onclick="if(window.toggleTheme) window.toggleTheme()" class="sys-btn">🌓</button>
     </div>
@@ -103,7 +107,6 @@
         <button onclick="savePlayerName()">התחל משחק</button>
     </div>
 </div>
-```
 
 </body>
 </html>
