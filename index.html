@@ -1,181 +1,109 @@
 <!DOCTYPE html>
+
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v8</title>
-    
-    <link rel="manifest" href="manifest.json?v=7.5.9">
+    <title>Smart Money Pro | v9</title>
+    <link rel="manifest" href="manifest.json?v=9.0.0">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
-    
-    <link rel="stylesheet" href="style.css?v=7.5.9">
+    <link rel="stylesheet" href="style.css?v=9.0.0">
     <style>
-        /* תיקוני מודל ועיצוב מקומיים */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
-        .modal-card { width: 85%; max-width: 320px; text-align: center; padding: 25px; background: #1e293b; border-radius: 15px; border: 1px solid #3b82f6; }
-        
-        .admin-box {
-            background: rgba(59, 130, 246, 0.15);
-            border-right: 4px solid #3b82f6;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            font-size: 14px;
-            color: #fff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            position: relative;
-            text-align: right;
-        }
-
-        .edit-admin-btn {
-            background: none; border: none; color: #3b82f6; cursor: pointer;
-            font-size: 18px; position: absolute; left: 10px; top: 10px;
-            opacity: 0.7; transition: opacity 0.2s;
-        }
-        .edit-admin-btn:hover { opacity: 1; }
-
-        .fade-in { animation: fadeIn 0.4s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* מניעת בחירת טקסט בטעות בנייד */
-        body { -webkit-user-select: none; user-select: none; }
-        
-        /* עיצוב כפתורי ניווט פעילים */
-        .topbar button.active { 
-            background: rgba(59, 130, 246, 0.2); 
-            border-bottom: 2px solid #3b82f6; 
-            color: #fff;
-        }
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; }
+        .modal-card { width:85%; max-width:320px; text-align:center; padding:25px; background:#1e293b; border-radius:15px; border:1px solid #3b82f6; }
+        .admin-box { background:rgba(59,130,246,0.15); border-right:4px solid #3b82f6; padding:15px; border-radius:10px; margin-bottom:15px; font-size:14px; color:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.2); position:relative; text-align:right; }
+        .edit-admin-btn { background:none; border:none; color:#3b82f6; cursor:pointer; font-size:18px; position:absolute; left:10px; top:10px; opacity:0.7; transition:opacity 0.2s; }
+        .edit-admin-btn:hover { opacity:1; }
+        .fade-in { animation:fadeIn 0.4s ease-in; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        body { -webkit-user-select:none; user-select:none; }
+        .topbar button.active { background:rgba(59,130,246,0.2); border-bottom:2px solid #3b82f6; color:#fff; }
     </style>
 </head>
 <body class="dark-theme">
-    
-    <header class="main-header">
-        <img src="logo.png" alt="Smart Money Pro" class="header-logo-big" onclick="if(window.openTab) window.openTab('home')" style="cursor:pointer;">
-    </header>
 
-    <div class="stats-bar-top">
-        <div class="stat-item">💰 <span id="money">0</span>₪</div>
-        <div class="stat-item">🏦 <span id="bank">0</span>₪</div>
-        <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
-    </div>
+```
+<header class="main-header">
+    <img src="logo.png" alt="Smart Money Pro" class="header-logo-big" onclick="if(window.openTab) window.openTab('home')" style="cursor:pointer;">
+</header>
 
-    <div id="status-bar" class="status-msg"></div>
-
-    <nav class="topbar">
-        <div class="nav-row">
-            <button onclick="window.openTab('home')" id="btnHome">🏠 בית</button>
-            <button onclick="window.openTab('work')" id="btnWork">⚒️ עבודות</button>
-            <button onclick="window.openTab('invest')" id="btnInvest">📈 בורסה</button>
-        </div>
-        <div class="nav-row">
-            <button onclick="window.openTab('estate')" id="btnEstate">🏠 נדל"ן</button>
-            <button onclick="window.openTab('business')" id="btnBusiness">🏢 עסקים</button>
-            <button onclick="window.openTab('tasks')" id="btnTasks">🎰 קזינו</button>
-        </div>
-        <div class="nav-row">
-            <button onclick="window.openTab('skills')" id="btnSkills">🎓 כישורים</button>
-            <button onclick="window.openTab('bank')" id="btnBank">🏦 בנק</button>
-            <button onclick="window.openTab('cars')" id="btnCars">🚗 רכבים</button>
-        </div>
-        <div class="nav-row">
-            <button onclick="window.openTab('shop')" id="btnShop">🛒 חנות</button>
-            <button onclick="document.getElementById('installModal').style.display='flex'" class="sys-btn">📲</button>
-            <button onclick="location.reload()" class="sys-btn">🔄</button>
-            <button onclick="if(window.toggleTheme) window.toggleTheme()" class="sys-btn">🌓</button>
-        </div>
-    </nav>
-
-    <main id="content" class="fade-in container"></main>
-
-    <div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <h3>📲 התקנת אפליקציה</h3>
-            <p id="android-instr">לחץ על 3 הנקודות בדפדפן<br>ובחר "התקן אפליקציה".</p>
-            <p id="ios-instr" style="display:none;">לחץ על כפתור ה"שתף" (חץ למעלה)<br>ואז בחר "הוסף למסך הבית".</p>
-            <button class="action" onclick="closeInstallGuide()" style="background:#ef4444; color:#fff; width:100%; margin-top:15px; border-radius:8px;">סגור</button>
-        </div>
-    </div>
-
-    <footer class="main-footer">
-        © 2026 Smart Money Pro v8.0.0 | אלכסיי זבודיסקר
-    </footer>
-
-    <script src="js/core.js?v=8.0.0"></script>
-    <script src="js/activities.js?v=8.0.0"></script>
-    <script src="js/ui.js?v=8.0.0"></script>
-
-    <script>
-        // הודעת ברירת מחדל למנהל
-        window.adminMsgText = "שלום אלכסיי! המערכת עודכנה לגרסה 8.0.0. נדלן עם רמות, מכירת נכסים, מהירות מצטברת ודירוג אמיתי!";
-
-        function closeInstallGuide() { 
-            document.getElementById('installModal').style.display = 'none'; 
-        }
-
-        // רישום Service Worker מעודכן
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js?v=7.5.9')
-            .then(() => console.log("SW v8.0.0 Registered"));
-        }
-
-        window.addEventListener('load', () => {
-            
-            setTimeout(() => {
-                const content = document.getElementById("content");
-                if (content && content.innerHTML === "" && window.openTab) {
-                    window.openTab('home');
-                }
-            }, 200);
-            
-            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                const androidEl = document.getElementById('android-instr');
-                const iosEl = document.getElementById('ios-instr');
-                if(androidEl) androidEl.style.display = 'none';
-                if(iosEl) iosEl.style.display = 'block';
-            }
-        });
-   function savePlayerName() {
-    
-    const input = document.getElementById("player-name-input");
-    
-    const name = input.value.trim();
-    
-    if (name.length < 2) {
-        alert("בחר שם שחקן");
-        return;
-    }
-    
-    window.playerName = name;
-    
-    localStorage.setItem("playerName", name);
-    
-    document.getElementById("player-start").style.display = "none";
-    
-    if (typeof saveGame === "function") {
-        saveGame();
-    }
-    
-}
-
-    </script>
-    <div id="player-start" class="start-screen">
-    
-    <div class="start-box">
-        
-        <h2>ברוך הבא ל Smart Money</h2>
-        
-        <p>בחר שם לשחקן</p>
-        
-        <input id="player-name-input" placeholder="שם שחקן">
-        
-        <button onclick="savePlayerName()">התחל משחק</button>
-        
-    </div>
-    
+<div class="stats-bar-top">
+    <div class="stat-item">💰 <span id="money">0</span>₪</div>
+    <div class="stat-item">🏦 <span id="bank">0</span>₪</div>
+    <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
 </div>
+
+<div id="status-bar" class="status-msg"></div>
+
+<nav class="topbar">
+    <div class="nav-row">
+        <button onclick="window.openTab('home')"     id="btnHome">🏠 בית</button>
+        <button onclick="window.openTab('work')"     id="btnWork">⚒️ עבודות</button>
+        <button onclick="window.openTab('invest')"   id="btnInvest">📈 בורסה</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="window.openTab('estate')"   id="btnEstate">🏠 נדל"ן</button>
+        <button onclick="window.openTab('business')" id="btnBusiness">🏢 עסקים</button>
+        <button onclick="window.openTab('staff')"    id="btnStaff">👥 צוות</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="window.openTab('tasks')"    id="btnTasks">🎰 קזינו</button>
+        <button onclick="window.openTab('skills')"   id="btnSkills">🎓 כישורים</button>
+        <button onclick="window.openTab('bank')"     id="btnBank">🏦 בנק</button>
+    </div>
+    <div class="nav-row">
+        <button onclick="window.openTab('cars')"     id="btnCars">🚗 רכבים</button>
+        <button onclick="window.openTab('shop')"     id="btnShop">🛒 חנות</button>
+        <button onclick="document.getElementById('installModal').style.display='flex'" class="sys-btn">📲</button>
+        <button onclick="if(window.toggleTheme) window.toggleTheme()" class="sys-btn">🌓</button>
+    </div>
+</nav>
+
+<main id="content" class="fade-in container"></main>
+
+<div id="installModal" class="modal-overlay" onclick="closeInstallGuide()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <h3>📲 התקנת אפליקציה</h3>
+        <p id="android-instr">לחץ על 3 הנקודות בדפדפן<br>ובחר "התקן אפליקציה".</p>
+        <p id="ios-instr" style="display:none;">לחץ על כפתור ה"שתף"<br>ואז "הוסף למסך הבית".</p>
+        <button class="action" onclick="closeInstallGuide()" style="background:#ef4444;color:#fff;width:100%;margin-top:15px;border-radius:8px;">סגור</button>
+    </div>
+</div>
+
+<footer class="main-footer">© 2026 Smart Money Pro v9.0.0 | אלכסיי זבודיסקר</footer>
+
+<script src="js/core.js?v=9.0.0"></script>
+<script src="js/activities.js?v=9.0.0"></script>
+<script src="js/ui.js?v=9.0.0"></script>
+
+<script>
+    function closeInstallGuide() {
+        document.getElementById('installModal').style.display = 'none';
+    }
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js?v=9.0.0')
+            .then(function() { console.log("SW v9 Registered"); });
+    }
+    window.addEventListener('load', function() {
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            document.getElementById('android-instr').style.display = 'none';
+            document.getElementById('ios-instr').style.display = 'block';
+        }
+    });
+</script>
+
+<div id="player-start" class="start-screen">
+    <div class="start-box">
+        <h2>ברוך הבא ל Smart Money</h2>
+        <p>בחר שם לשחקן</p>
+        <input id="player-name-input" placeholder="שם שחקן">
+        <button onclick="savePlayerName()">התחל משחק</button>
+    </div>
+</div>
+```
+
 </body>
 </html>
