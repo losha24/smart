@@ -186,7 +186,10 @@ window.startWork = function(id) {
         var passiveCap = 500;
         window.money += j.pay;
         window.lifeXP += j.xp;
-        if (window.passive < passiveCap) window.passive = Math.min(passiveCap, window.passive + passiveAdd);
+        if (window.jobPassive < passiveCap) {
+    window.jobPassive = Math.min(passiveCap, window.jobPassive + passiveAdd);
+}
+window.passive += passiveAdd;
         showMsg('💰 +' + j.pay + '₪ | ✨ +' + j.xp + ' XP | 🚀 +' + passiveAdd.toFixed(3) + '₪/ד\'', 'var(--green)');
         if (btn) btn.disabled = false;
         if (container) container.style.display = 'none';
