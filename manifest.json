@@ -1,28 +1,63 @@
 {
-  "short_name": "Smart Money",
-  "name": "Smart Money Pro - סימולטור ניהול",
+  "id": "/",
+  "short_name": "SmartMoney",
+  "name": "Smart Money Pro - סימולטור ניהול פיננסי",
   "description": "הפוך לשכיר, תשקיע בבורסה ותנהל אימפריה כלכלית.",
   "version": "9.0.0",
-  "icons": [
-    {
-      "src": "logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "start_url": "/index.html",
+
+  "start_url": ".",
+  "scope": "/",
+
   "display": "standalone",
+  "display_override": ["standalone","window-controls-overlay"],
+
   "orientation": "portrait",
+
   "theme_color": "#0f172a",
   "background_color": "#0f172a",
+
   "dir": "rtl",
   "lang": "he",
-  "scope": "/"
+
+  "categories": ["finance","games","business"],
+
+  "icons": [
+    {
+      "src": "icons/icon_192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon_192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "הבורסה",
+      "url": "/index.html#stocks",
+      "description": "כניסה מהירה למסחר במניות"
+    },
+    {
+      "name": "עבודות",
+      "url": "/index.html#jobs",
+      "description": "בצע עבודות להרוויח כסף"
+    }
+  ]
 }
