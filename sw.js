@@ -1,65 +1,45 @@
-/* Smart Money Pro - sw.js - v6.1.2/6.5.0 - Production Stable */
+/* Smart Money Pro - Service Worker v9.0.0 */
+const CACHE_NAME = 'smart-money-v9';
 
-const CACHE_NAME = 'smart-money-v7.5.9';
+// רשימת הנכסים לשמירה (הוספתי את הקבצים המדויקים שלך)
 const ASSETS = [
   './',
   './index.html',
   './style.css',
-  './logo.png',
-  './manifest.json',
   './js/core.js',
   './js/ui.js',
+  './js/activities.js',
   './js/economy.js',
-  './js/activities.js'
+  './manifest.json',
+  './logo.png'
 ];
 
-// התקנה: שמירת נכסי הליבה
-self.addEventListener('install', e => {
-  console.log(`[SW] Installing v6.1.2...`);
-  self.skipWaiting(); 
+// התקנה - שמירת הקבצים בזיכרון
+self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
+    caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
     })
   );
 });
 
-// אקטיבציה: מחיקת כל גרסה ישנה (v6.0.x ומטה)
-self.addEventListener('activate', e => {
-  console.log(`[SW] Purging old caches...`);
+// הפעלה - ניקוי גרסאות ישנות כדי שלא יהיו באגים
+self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then(keys => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
     })
   );
-  return self.clients.claim(); 
 });
 
-// ניהול בקשות רשת
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-
+// אסטרטגיית "Network First" - מנסה להביא מהאינטרנט, אם אין קליטה מביא מהזיכרון
+// זה הכי טוב למשחק שלך כי יש עדכוני בורסה ב-Firebase
+self.addEventListener('fetch', (e) => {
   e.respondWith(
-    caches.match(e.request).then(cachedResponse => {
-      const fetchPromise = fetch(e.request).then(networkResponse => {
-        if (networkResponse && networkResponse.status === 200) {
-          const resClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(e.request, resClone);
-          });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // אופליין - יחזיר מהקאש באופן אוטומטי דרך cachedResponse
-      });
-
-      return cachedResponse || fetchPromise;
+    fetch(e.request).catch(() => {
+      return caches.match(e.request);
     })
   );
 });
