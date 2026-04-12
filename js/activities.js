@@ -601,29 +601,37 @@ window.drawStaff = function(c) {
         '<div class="grid-2">';
 
     staffList.forEach(function(s) {
-        var d            = window.staffData[s.id] || { count: 0, level: 0 };
-        var count        = d.count || 0;
-        var level        = d.level || 0;
-        var currentPass  = (s.passive * (1 + level * 0.4)).toFixed(1);
-        var totalPass    = (s.passive * (1 + level * 0.4) * count).toFixed(1);
-        var upgradePrice = count > 0 ? Math.floor(s.price * 0.5 * (level + 1)) : null;
-        var fireValue    = count > 0 ? Math.floor(s.price * count * 0.6) : 0;
+    var d            = window.staffData[s.id] || { count: 0, level: 0 };
+    var count        = d.count || 0;
+    var level        = d.level || 0;
+    var currentPass  = (s.passive * (1 + level * 0.4)).toFixed(1);
+    var totalPass    = (s.passive * (1 + level * 0.4) * count).toFixed(1);
+    var upgradePrice = count > 0 ? Math.floor(s.price * 0.5 * (level + 1)) : null;
+    var fireValue    = count > 0 ? Math.floor(s.price * count * 0.6) : 0;
 
-        html += '<div class="card fade-in" style="text-align:center;border-top:4px solid ' + (count > 0 ? 'var(--purple)' : 'var(--border)') + ';">' +
-            '<div style="font-size:32px;margin-bottom:6px;">' + s.icon + '</div>' +
-            '<div style="font-weight:bold;font-size:13px;">' + s.name + '</div>' +
-            '<div style="font-size:10px;opacity:0.6;margin-bottom:4px;">' + s.desc + '</div>' +
-            '<div style="font-size:11px;color:var(--purple);margin-bottom:4px;">' + currentPass + '₪/ד\' לעובד</div>' +
+    html += '<div class="card fade-in" style="text-align:center; display:flex; flex-direction:column; justify-content:space-between; border-top:4px solid ' + (count > 0 ? 'var(--purple)' : 'var(--border)') + '; padding: 10px; min-height: 230px;">' +
+        '<div>' +
+            '<div style="font-size:30px; margin-bottom:4px;">' + s.icon + '</div>' +
+            '<div style="font-weight:bold; font-size:13px; line-height:1.2;">' + s.name + '</div>' +
+            '<div style="font-size:10px; opacity:0.6; margin-bottom:4px; height:24px; overflow:hidden;">' + s.desc + '</div>' +
+            '<div style="font-size:11px; color:var(--purple); font-weight:bold;">' + currentPass + ' ₪/ד\'</div>' +
             (count > 0
-                ? '<div style="font-size:10px;color:var(--green);margin-bottom:6px;">צוות: ' + count + ' | רמה ' + level + ' | 💰 ' + totalPass + '₪/ד\'</div>'
-                : '<div style="font-size:10px;opacity:0.5;margin-bottom:6px;">לא מועסק</div>') +
-            '<button class="sys-btn" style="width:100%;margin-bottom:4px;" onclick="hireStaff(\'' + s.id + '\')">👤 גייס (' + s.price.toLocaleString() + '₪)</button>' +
-            (count > 0 ? '<div style="display:flex;gap:4px;">' +
-                '<button class="sys-btn" style="flex:1;font-size:10px;background:rgba(168,85,247,0.15);color:var(--purple);border-color:var(--purple);" onclick="upgradeStaff(\'' + s.id + '\')">⬆️ ' + upgradePrice.toLocaleString() + '₪</button>' +
-                '<button class="sys-btn" style="flex:1;font-size:10px;background:rgba(239,68,68,0.15);color:var(--red);border-color:var(--red);" onclick="fireStaff(\'' + s.id + '\')">🔴 ' + fireValue.toLocaleString() + '₪</button>' +
+                ? '<div style="font-size:10px; color:var(--green); margin:4px 0;">צוות: ' + count + ' | רמה ' + level + '</div>'
+                : '<div style="font-size:10px; opacity:0.5; margin:4px 0;">טרם גויס</div>') +
+        '</div>' +
+        '<div>' +
+            // שימוש באייקון כרטיס עובד במקום פלוס
+            '<button class="sys-btn" style="width:100%; margin-bottom:4px; font-weight:bold; padding:8px 2px; background:rgba(56,189,248,0.1); border-color:var(--blue); color:var(--blue);" onclick="hireStaff(\'' + s.id + '\')">' +
+                '<span style="margin-left:4px;">🤝</span> ' + s.price.toLocaleString() + '₪' +
+            '</button>' +
+            (count > 0 ? '<div style="display:flex; gap:4px;">' +
+                '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(168,85,247,0.15); color:var(--purple); border-color:var(--purple);" onclick="upgradeStaff(\'' + s.id + '\')" title="שדרג">⬆️ ' + upgradePrice.toLocaleString() + '</button>' +
+                '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(239,68,68,0.15); color:var(--red); border-color:var(--red);" onclick="fireStaff(\'' + s.id + '\')" title="פטר">🔴 ' + fireValue.toLocaleString() + '</button>' +
                 '</div>' : '') +
-            '</div>';
-    });
+        '</div>' +
+    '</div>';
+});
+
     c.innerHTML = html + '</div>';
 };
 
