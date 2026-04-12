@@ -1,8 +1,8 @@
 {
   "short_name": "Smart Money",
-  "name": "Smart Money Pro v6.1.2",
-  "description": "סימולטור ניהול כספים וקריירה מתקדם",
-  "version": "6.1.2",
+  "name": "Smart Money Pro - סימולטור ניהול",
+  "description": "הפוך לשכיר, תשקיע בבורסה ותנהל אימפריה כלכלית.",
+  "version": "9.0.0",
   "icons": [
     {
       "src": "logo.png",
@@ -17,11 +17,12 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "index.html?v=6.1.2",
+  "start_url": "/index.html",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#0f172a",
   "background_color": "#0f172a",
   "dir": "rtl",
-  "lang": "he"
+  "lang": "he",
+  "scope": "/"
 }
