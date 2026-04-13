@@ -200,26 +200,48 @@ window.passive += passiveAdd;
 
 // ── נדל"ן ──────────────────────────────────────────────────
 window.drawEstate = function(c) {
-    if (!window.estateData) window.estateData = {};
-    var html = '<h3>🏠 השקעות נדל"ן</h3><div class="grid-2">';
+    if (!c) return;
+    var html = '<div class="grid-2">';
     estateList.forEach(function(e) {
-        var eData = window.estateData[e.id] || { count: 0, level: 0 };
-        var count = eData.count || 0;
-        var level = eData.level || 0;
-        var upgradePrice = count > 0 ? Math.floor(e.price * 0.6 * (level + 1)) : null;
-        var passivePerMin = (e.passive * (1 + level * 0.5) * count).toFixed(1);
+        // שליחת נתונים מהזיכרון - כאן אנחנו מוודאים שיש count ו-level
+        var d = window.estateData[e.id] || { count: 0, level: 0 };
+        var count = d.count || 0;
+        var level = d.level || 0;
+        
+        // חישוב הכנסה: (בסיס * כמות) + בונוס רמה
+        var totalPassive = (e.passive * count * (1 + level * 0.5)).toLocaleString();
+        var upgradePrice = count > 0 ? Math.floor(e.price * 0.7 * (level + 1)) : 0;
         var sellValue = count > 0 ? Math.floor(e.price * count * 0.7) : 0;
-        html += '<div class="card fade-in" style="text-align:center;border:1px solid ' + (count > 0 ? 'var(--green)' : 'var(--border)') + '">' +
-            '<div style="font-size:30px;margin-bottom:4px;">' + e.icon + '</div>' +
-            '<div style="font-size:12px;font-weight:bold;">' + e.name + '</div>' +
-            '<div style="color:var(--green);font-size:11px;margin:4px 0;">+' + e.passive + '₪/ד\'' + (level > 0 ? ' <small style="color:var(--yellow);">(x' + (1 + level * 0.5).toFixed(1) + ')</small>' : '') + '</div>' +
-            (count > 0 ? '<div style="font-size:10px;color:var(--blue);margin-bottom:4px;">בבעלותך: ' + count + ' | רמה ' + level + ' | 💰 ' + passivePerMin + '₪/ד\'</div>' : '<div style="font-size:10px;opacity:0.5;margin-bottom:4px;">לא בבעלותך</div>') +
-            '<button class="sys-btn" style="width:100%;margin-bottom:5px;font-size:11px;" onclick="buyEstate(\'' + e.id + '\')">🛒 ' + e.price.toLocaleString() + '₪</button>' +
-            (count > 0 ? '<div style="display:flex;gap:4px;"><button class="sys-btn" style="flex:1;font-size:10px;background:rgba(245,158,11,0.15);color:var(--yellow);border-color:var(--yellow);" onclick="upgradeEstate(\'' + e.id + '\')">⬆️ ' + upgradePrice.toLocaleString() + '₪</button><button class="sys-btn" style="flex:1;font-size:10px;background:rgba(239,68,68,0.15);color:var(--red);border-color:var(--red);" onclick="sellEstate(\'' + e.id + '\')">💸 ' + sellValue.toLocaleString() + '₪</button></div>' : '') +
-            '</div>';
+
+        var borderStyle = count > 0 ? 'border-top:4px solid var(--green)' : 'border-top:4px solid var(--border)';
+        
+        html += '<div class="card fade-in" style="text-align:center; display:flex; flex-direction:column; justify-content:space-between; ' + borderStyle + '; padding: 10px; min-height: 260px;">' +
+            '<div>' +
+                '<div style="font-size:30px; margin-bottom:4px;">' + e.icon + '</div>' +
+                '<div style="font-weight:bold; font-size:13px; line-height:1.2;">' + e.name + '</div>' +
+                '<div style="font-size:10px; opacity:0.6; margin-bottom:4px; height:24px; overflow:hidden;">' + e.desc + '</div>' +
+                '<div style="font-size:11px; color:var(--green); font-weight:bold;">' + totalPassive + ' ₪/ד\'</div>' +
+                (count > 0 
+                    ? '<div style="font-size:10px; color:var(--blue); margin:4px 0;">בבעלותך: ' + count + ' | רמה: ' + level + '</div>' 
+                    : '<div style="font-size:10px; opacity:0.5; margin:4px 0;">טרם נרכש</div>') +
+            '</div>' +
+            '<div>' +
+                // כפתור רכישה/הוספה - תמיד פעיל (אייקון מפתח)
+                '<button class="sys-btn" style="width:100%; margin-bottom:4px; font-weight:bold; padding:8px 2px; background:rgba(34,197,94,0.1); border-color:var(--green); color:var(--green);" onclick="buyEstate(\'' + e.id + '\')">' +
+                    '<span style="margin-left:4px;">🔑</span> ' + e.price.toLocaleString() + '₪' +
+                '</button>' +
+                
+                // כפתורי ניהול (מופיעים רק אם יש לפחות נכס אחד)
+                (count > 0 ? '<div style="display:flex; gap:4px;">' +
+                    '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(168,85,247,0.15); color:var(--purple); border-color:var(--purple);" onclick="upgradeEstate(\'' + e.id + '\')" title="שדרג">⬆️ ' + upgradePrice.toLocaleString() + '</button>' +
+                    '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(239,68,68,0.15); color:var(--red); border-color:var(--red);" onclick="sellEstate(\'' + e.id + '\')" title="מכור הכל">💰 מכור</button>' +
+                '</div>' : '') +
+            '</div>' +
+        '</div>';
     });
     c.innerHTML = html + '</div>';
 };
+
 
 window.buyEstate = function(id) {
     var e = estateList.find(function(x) { return x.id === id; });
