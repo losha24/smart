@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/events.js - Random Events System (Clean Version) */
+/* Smart Money Pro- js/events.js - Random Events System (Clean Version) */
 
 window.randomEvents = [
     {
