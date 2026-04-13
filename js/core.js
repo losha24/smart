@@ -24,6 +24,8 @@ window.totalEarned = 0;
 window.lastSaveTime = Date.now();
 window.lastKnownLevel = 0;
 window.estateData = {};
+window.eventLosses = 0; // משתנה זמני לסיכום הפסדים מאירועים
+
 
 if (!localStorage.getItem("deviceID")) {
     localStorage.setItem("deviceID", 'dev_' + Math.random().toString(36).substr(2, 12));
@@ -96,13 +98,24 @@ window.jobPassive = data.jobPassive ?? 0;
                 const msPassed = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
                 const offlineEarnings = (msPassed / 60000) * window.passive;
                 if (offlineEarnings > 1) {
-                    window.money += offlineEarnings;
-                    window.totalEarned += offlineEarnings;
-                    setTimeout(() => {
-                        if (typeof showMsg === 'function')
-                            showMsg('💰 הרווחת ' + Math.floor(offlineEarnings).toLocaleString() + '₪ בזמן שלא היית!', 'var(--yellow)');
-                    }, 1500);
-                }
+    window.money += offlineEarnings;
+    window.totalEarned += offlineEarnings;
+    setTimeout(() => {
+        if (typeof showMsgLong === 'function') {
+            // בניית הודעה משולבת
+            let msg = `💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪ בזמן שלא היית!`;
+            
+            // בדיקה אם המשתנה eventLosses מכיל הפסדים (צריך לעדכן אותו ב-events.js)
+            if (window.eventLosses > 0) {
+                msg += ` | ⚠️ הפסדת ${Math.floor(window.eventLosses).toLocaleString()} ₪ מאירועים.`;
+            }
+            
+            showMsgLong(msg, 'var(--yellow)');
+            window.eventLosses = 0; // איפוס לאחר הצגה
+        }
+    }, 2000);
+}
+
             }
         } else {
             window.lastKnownLevel = 1;
@@ -142,18 +155,111 @@ function saveGame() {
 
 function showMsg(txt, color = "var(--blue)") {
     const bar = document.getElementById('status-bar');
+    const statusText = document.getElementById('status-text');
     if (!bar) return;
     clearTimeout(msgTimer);
-    bar.innerText = txt;
+    
+    if (statusText) statusText.innerText = txt;
+    else bar.innerText = txt;
+
     bar.style.opacity = "1";
     bar.style.transform = "translateY(0)";
     bar.style.color = color;
     bar.style.borderColor = color;
+
     msgTimer = setTimeout(() => {
-        bar.style.opacity = "0";
-        bar.style.transform = "translateY(-5px)";
+        bar.style.opacity = "0.8"; 
+        // כאן השארנו טקסט ריק כדי שלא יופיע "המערכת מוכנה"
+        if (statusText) statusText.innerText = ""; 
     }, 3500);
 }
+
+function showMsgLong(txt, color = "var(--blue)") {
+    const bar = document.getElementById('status-bar');
+    const statusText = document.getElementById('status-text');
+    if (!bar) return;
+    clearTimeout(msgTimer);
+
+    if (statusText) statusText.innerText = txt;
+    else bar.innerText = txt;
+
+    bar.style.opacity = "1";
+    bar.style.transform = "translateY(0)";
+    bar.style.color = color;
+    bar.style.borderColor = color;
+    
+    msgTimer = setTimeout(() => {
+        bar.style.opacity = "0.8";
+        if (statusText) statusText.innerText = ""; 
+    }, 5000); 
+}
+
+
+// הוסף את זה מיד אחרי הפונקציה showMsg המקורית
+function showMsg(txt, color = "var(--blue)") {
+    const bar = document.getElementById('status-bar');
+    const statusText = document.getElementById('status-text');
+    if (!bar) return;
+    clearTimeout(msgTimer);
+    
+    // מעדכן רק את ה-span של הטקסט כדי לא לדרוס את השעון
+    if (statusText) statusText.innerText = txt;
+    else bar.innerText = txt;
+
+    bar.style.opacity = "1";
+    bar.style.transform = "translateY(0)";
+    bar.style.color = color;
+    bar.style.borderColor = color;
+
+    msgTimer = setTimeout(() => {
+        bar.style.opacity = "0.8"; // משאיר את הבר שקוף מעט כדי לראות את השעון
+        if (statusText) statusText.innerText = "המערכת מוכנה...";
+    }, 3500);
+}
+
+function showMsg(txt, color = "var(--blue)") {
+    const bar = document.getElementById('status-bar');
+    const statusText = document.getElementById('status-text');
+    if (!bar) return;
+    clearTimeout(msgTimer);
+    
+    if (statusText) statusText.innerText = txt;
+    else bar.innerText = txt;
+
+    bar.style.opacity = "1";
+    bar.style.transform = "translateY(0)";
+    bar.style.color = color;
+    bar.style.borderColor = color;
+
+    msgTimer = setTimeout(() => {
+        bar.style.opacity = "0.8"; 
+        // כאן השארנו טקסט ריק כדי שלא יופיע "המערכת מוכנה"
+        if (statusText) statusText.innerText = ""; 
+    }, 3500);
+}
+
+function showMsgLong(txt, color = "var(--blue)") {
+    const bar = document.getElementById('status-bar');
+    const statusText = document.getElementById('status-text');
+    if (!bar) return;
+    clearTimeout(msgTimer);
+
+    if (statusText) statusText.innerText = txt;
+    else bar.innerText = txt;
+
+    bar.style.opacity = "1";
+    bar.style.transform = "translateY(0)";
+    bar.style.color = color;
+    bar.style.borderColor = color;
+    
+    msgTimer = setTimeout(() => {
+        bar.style.opacity = "0.8";
+        if (statusText) statusText.innerText = ""; 
+    }, 5000); 
+}
+
+
+
 
 function updateUI() {
     if (window.money > 1000000000) { console.warn("cheat"); window.money = 1000000; }
@@ -237,9 +343,47 @@ function savePlayerName() {
     showMsg("ברוך הבא " + name + " 🚀");
     if (typeof saveGame === 'function') saveGame();
 }
+// טעינת הזמן שנשמר בזיכרון, אם אין - מתחיל מ-60
+window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 60; 
+
+function startEventTimer() {
+    setInterval(() => {
+        window.nextEventTime--;
+        
+        localStorage.setItem('nextEventTime', window.nextEventTime);
+
+        let timerEl = document.getElementById('event-timer');
+        if (timerEl) {
+            let mins = Math.floor(window.nextEventTime / 60);
+            let secs = window.nextEventTime % 60;
+            timerEl.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        if (window.nextEventTime <= 0) {
+            console.log("🎲 הטיימר הסתיים, מבצע הגרלה...");
+            
+            if (Math.random() < 0.50) {
+                console.log("✅ אירוע הופעל!");
+                if (typeof window.triggerRandomEvent === 'function') {
+                    window.triggerRandomEvent();
+                }
+            } else {
+                console.log("❌ הגרלה נכשלה (סיכוי של 50% לא הספיק)");
+            }
+            
+            window.nextEventTime = 60;
+            localStorage.setItem('nextEventTime', 60);
+        }
+    }, 1000);
+}
+
+
+
 
 document.addEventListener("DOMContentLoaded", () => {
     checkPlayerName();
     loadGame();
     updateUI();
+    startEventTimer(); // הפעלת השעון בטעינה
 });
+
