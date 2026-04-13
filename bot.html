@@ -1628,7 +1628,7 @@ document.getElementById('fileSelect').addEventListener('change', function() {
 // אתחול מונה קבצים בטעינה
 updateFileBadge();
 
-let uploadedFiles = []
+window.uploadedFiles = window.uploadedFiles || []
 
 function loadFiles() {
   
@@ -1804,6 +1804,68 @@ function toast(msg) {
     t.classList.remove("show")
   }, 2000)
   
+}
+function handleFileUpload(event) {
+  
+  const files = event.target.files
+  const status = document.getElementById("uploadStatus")
+  
+  if (!files.length) {
+    status.innerText = "לא נבחרו קבצים"
+    return
+  }
+  
+  window.uploadedFiles = window.uploadedFiles || []
+  
+  for (let file of files) {
+    
+    const reader = new FileReader()
+    
+    reader.onload = function(e) {
+      
+      const content = e.target.result
+      
+      window.uploadedFiles.push({
+        name: file.name,
+        content: content,
+        lines: content.split("\n").length
+      })
+      
+      updateFileList()
+      
+      document.getElementById("fileCount").innerText = window.uploadedFiles.length
+    }
+    
+    reader.readAsText(file)
+  }
+  
+  status.innerText = "✔ הקבצים נטענו בהצלחה"
+}
+function updateFileList() {
+  
+  const list = document.getElementById("fileList")
+  
+  if (!list) return
+  
+  list.innerHTML = ""
+  
+  window.uploadedFiles.forEach(file => {
+    
+    const div = document.createElement("div")
+    
+    div.className = "check-item check-info"
+    
+    div.innerHTML = `
+      <span class="check-icon">📄</span>
+      <div class="check-body">
+        <div class="check-title">${file.name}</div>
+        <div class="check-detail">${file.lines} שורות</div>
+      </div>
+    `
+    
+    list.appendChild(div)
+    
+  })
 }
 </script>
 
