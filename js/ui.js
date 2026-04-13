@@ -288,7 +288,8 @@ window.openAdminPanel = function() {
         window.money += amt;
         if(typeof updateUI === 'function') updateUI();
         if(typeof saveGame === 'function') saveGame();
-        if(typeof showMsg === 'function') showMsg('💰 נוספו ' + amt.toLocaleString() + '₪', 'var(--yellow)');
+        if(typeof showMsg === 'function') showMsg
+('💰 נוספו ' + amt.toLocaleString() + '₪', 'var(--yellow)');
         document.getElementById('adminMoneyInput').value = '';
     };
 
