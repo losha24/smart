@@ -86,7 +86,8 @@ window.jobPassive = data.jobPassive ?? 0;
             window.invOwned      = data.invOwned      ?? window.invOwned;
             window.carSpeed      = data.carSpeed      ?? 1;
             window.totalEarned   = data.totalEarned   ?? 0;
-            window.estateData    = data.estateData    ?? {};
+            window.estateData = (data.estateData && typeof data.estateData === 'object') ? data.estateData : {};
+
             window.itemLevels    = data.itemLevels    ?? {};
             window.carLevels     = data.carLevels     ?? {};
             window.invBuyPrice   = data.invBuyPrice   ?? {};
@@ -97,24 +98,27 @@ window.jobPassive = data.jobPassive ?? 0;
                 const now = Date.now();
                 const msPassed = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
                 const offlineEarnings = (msPassed / 60000) * window.passive;
-                if (offlineEarnings > 1) {
-    window.money += offlineEarnings;
-    window.totalEarned += offlineEarnings;
-    setTimeout(() => {
-        if (typeof showMsgLong === 'function') {
-            // בניית הודעה משולבת
-            let msg = `💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪ בזמן שלא היית!`;
-            
-            // בדיקה אם המשתנה eventLosses מכיל הפסדים (צריך לעדכן אותו ב-events.js)
-            if (window.eventLosses > 0) {
-                msg += ` | ⚠️ הפסדת ${Math.floor(window.eventLosses).toLocaleString()} ₪ מאירועים.`;
-            }
-            
-            showMsgLong(msg, 'var(--yellow)');
-            window.eventLosses = 0; // איפוס לאחר הצגה
-        }
-    }, 2000);
-}
+                                if (offlineEarnings > 1) {
+                    window.money += offlineEarnings;
+                    window.totalEarned += offlineEarnings;
+                    
+                    // משיכת הפסדים מהשמירה
+                    const offlineLosses = data.eventLosses || 0;
+
+                    setTimeout(() => {
+                        if (typeof showMsgLong === 'function') {
+                            let msg = `💰 בזמן שלא היית: הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪`;
+                            
+                            if (offlineLosses > 0) {
+                                msg += ` | ⚠️ והפסדת ${Math.floor(offlineLosses).toLocaleString()} ₪ מאירועים`;
+                            }
+                            
+                            showMsgLong(msg, 'var(--yellow)');
+                            window.eventLosses = 0; // איפוס לאחר הצגה
+                        }
+                    }, 2000);
+                }
+                
 
             }
         } else {
@@ -146,9 +150,11 @@ function saveGame() {
         estateData:   window.estateData,
         itemLevels:   window.itemLevels,
         carLevels:    window.carLevels,
-        invBuyPrice:  window.invBuyPrice,
-        staffData:    window.staffData
+                invBuyPrice:  window.invBuyPrice,
+        staffData:    window.staffData,
+        eventLosses:  window.eventLosses || 0  // <--- תוסיף את השורה הזו כאן
     };
+
     const savePack = { data: data, hash: createHash(data) };
     localStorage.setItem(SAVE_KEY, JSON.stringify(savePack));
 }
@@ -169,8 +175,7 @@ function showMsg(txt, color = "var(--blue)") {
 
     msgTimer = setTimeout(() => {
         bar.style.opacity = "0.8"; 
-        // כאן השארנו טקסט ריק כדי שלא יופיע "המערכת מוכנה"
-        if (statusText) statusText.innerText = ""; 
+        if (statusText) statusText.innerText = ""; // הודעה נמחקת לגמרי
     }, 3500);
 }
 
@@ -190,9 +195,11 @@ function showMsgLong(txt, color = "var(--blue)") {
     
     msgTimer = setTimeout(() => {
         bar.style.opacity = "0.8";
-        if (statusText) statusText.innerText = ""; 
+        if (statusText) statusText.innerText = ""; // הודעה נמחקת לגמרי
     }, 5000); 
 }
+
+
 
 
 // הוסף את זה מיד אחרי הפונקציה showMsg המקורית
@@ -213,7 +220,8 @@ function showMsg(txt, color = "var(--blue)") {
 
     msgTimer = setTimeout(() => {
         bar.style.opacity = "0.8"; // משאיר את הבר שקוף מעט כדי לראות את השעון
-        if (statusText) statusText.innerText = "המערכת מוכנה...";
+        if (statusText) statusText.innerText = "";
+
     }, 3500);
 }
 
