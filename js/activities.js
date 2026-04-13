@@ -16,15 +16,16 @@ const jobList = [
 ];
 
 const estateList = [
-    { id: 'e1', name: 'מחסן להשכרה',  price: 15000,    passive: 2,    icon: '📦' },
-    { id: 'e2', name: 'חניה במרכז',   price: 45000,    passive: 6,    icon: '🅿️' },
-    { id: 'e3', name: 'דירת סטודיו',  price: 150000,   passive: 16,   icon: '🏠' },
-    { id: 'e4', name: 'דירת 4 חדרים', price: 320000,   passive: 35,   icon: '🏡' },
-    { id: 'e5', name: 'חנות ברחוב',   price: 450000,   passive: 53,   icon: '🏪' },
-    { id: 'e6', name: 'וילה עם בריכה',price: 1200000,  passive: 142,  icon: '🏰' },
-    { id: 'e7', name: 'בניין מגורים', price: 2500000,  passive: 308,  icon: '🏢' },
-    { id: 'e8', name: 'מרכז מסחרי',   price: 12000000, passive: 1583, icon: '🏗️' }
+    { id: 'e1', name: 'מחסן להשכרה',  price: 15000,    passive: 2,    icon: '📦', desc: 'שטח אחסון קטן לסחורה' },
+    { id: 'e2', name: 'חניה במרכז',   price: 45000,    passive: 6,    icon: '🅿️', desc: 'נדל"ן מבוקש בלב העיר' },
+    { id: 'e3', name: 'דירת סטודיו',  price: 150000,   passive: 16,   icon: '🏠', desc: 'דירה קטנה ליחיד' },
+    { id: 'e4', name: 'דירת 4 חדרים', price: 320000,   passive: 35,   icon: '🏡', desc: 'נכס למשפחה צעירה' },
+    { id: 'e5', name: 'חנות ברחוב',   price: 450000,   passive: 53,   icon: '🏪', desc: 'מיקום מסחרי אסטרטגי' },
+    { id: 'e6', name: 'וילה עם בריכה',price: 1200000,  passive: 142,  icon: '🏰', desc: 'נכס יוקרה למעמד הגבוה' },
+    { id: 'e7', name: 'בניין מגורים', price: 2500000,  passive: 308,  icon: '🏢', desc: 'השקעה מניבה לטווח ארוך' },
+    { id: 'e8', name: 'מרכז מסחרי',   price: 12000000, passive: 1583, icon: '🏗️', desc: 'קניון ענק עם עשרות חנויות' }
 ];
+
 
 const businessList = [
     { id: 'biz_gum',    name: 'מכונת מסטיקים', price: 1200,     passive: 0.5,  icon: '🍬' },
@@ -219,7 +220,8 @@ window.drawEstate = function(c) {
             '<div>' +
                 '<div style="font-size:30px; margin-bottom:4px;">' + e.icon + '</div>' +
                 '<div style="font-weight:bold; font-size:13px; line-height:1.2;">' + e.name + '</div>' +
-                '<div style="font-size:10px; opacity:0.6; margin-bottom:4px; height:24px; overflow:hidden;">' + e.desc + '</div>' +
+                '<div style="font-size:10px; opacity:0.6; margin-bottom:4px; height:24px; overflow:hidden;">נכס מניב הכנסה פסיבית</div>' +
+
                 '<div style="font-size:11px; color:var(--green); font-weight:bold;">' + totalPassive + ' ₪/ד\'</div>' +
                 (count > 0 
                     ? '<div style="font-size:10px; color:var(--blue); margin:4px 0;">בבעלותך: ' + count + ' | רמה: ' + level + '</div>' 
