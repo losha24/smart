@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/economy.js - v6.0.5 - Full Expansion Update */
+/* Smart Money Pro - js/economy.js - v6.0.5 - Full Expansion Update*/
 
 // --- מערכת הבנק המרכזית ---
 
