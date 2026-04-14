@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🔬 Debug Pro</title>
+<style>
+/* ── RESET & VARS ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0b1120;--card:#131d2e;--card2:#192236;--bdr:rgba(255,255,255,0.08);
+  --blue:#38bdf8;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--purple:#a855f7;
+  --text:#e2e8f0;--dim:#64748b;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;direction:rtl;min-height:100vh}
+
+/* ── TOP HEADER ── */
+#topbar{
+background:#0f172a;border-bottom:2px solid var(–blue);
+padding:10px 12px;position:sticky;top:0;z-index:999;
+display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+}
+#topbar h1{font-size:15px;font-weight:800;color:var(–blue);line-height:1.2}
+#topbar small{font-size:10px;color:var(–dim);display:block}
+#runBtn{
+background:var(–blue);color:#000;font-weight:800;font-size:13px;
+border:none;border-radius:8px;padding:9px 16px;cursor:pointer;
+white-space:nowrap;transition:0.15s;flex-shrink:0;
+}
+#runBtn:active{transform:scale(0.96)}
+#runBtn.busy{background:var(–yellow)}
+
+/* ── NAV — 3 rows ── */
+#nav{
+background:#0f172a;border-bottom:1px solid var(–bdr);
+padding:6px 8px;position:sticky;top:52px;z-index:998;
+display:flex;flex-direction:column;gap:5px;
+}
+.nav-row{display:flex;gap:5px}
+.nt{
+flex:1;min-width:0;
+padding:7px 4px;border:none;
+background:rgba(255,255,255,0.04);
+color:var(–dim);font-size:11px;font-weight:700;
+border-radius:7px;cursor:pointer;transition:0.15s;
+display:flex;align-items:center;justify-content:center;gap:3px;
+position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.nt.on{background:rgba(56,189,248,0.18);color:var(–blue)}
+.nt .cnt{
+position:absolute;top:3px;right:3px;
+font-size:9px;font-weight:800;padding:1px 4px;border-radius:8px;
+background:var(–red);color:#fff;line-height:1.3;
+display:none;
+}
+.nt .cnt.show{display:block}
+
+/* ── PAGES ── */
+.pg{display:none;padding:12px;max-width:700px;margin:0 auto;padding-bottom:80px}
+.pg.on{display:block}
+
+/* ── CARD ── */
+.card{background:var(–card);border:1px solid var(–bdr);border-radius:12px;padding:14px;margin-bottom:12px}
+.ch{font-size:13px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ch .sub{font-size:10px;font-weight:600;color:var(–dim);margin-right:4px}
+
+/* ── UPLOAD ── */
+#dropzone{
+border:2px dashed rgba(56,189,248,0.35);border-radius:10px;
+padding:24px 12px;text-align:center;cursor:pointer;
+background:rgba(56,189,248,0.03);margin-bottom:10px;transition:0.2s;
+}
+#dropzone.over{border-color:var(–blue);background:rgba(56,189,248,0.1)}
+#dropzone div:first-child{font-size:30px;margin-bottom:6px}
+#dropzone .dtxt{font-size:13px;font-weight:700;color:var(–blue)}
+#dropzone .dsub{font-size:10px;color:var(–dim);margin-top:3px}
+#fileInput{display:none}
+
+/* ── FILE CHIPS ── */
+#chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.chip{
+display:flex;align-items:center;gap:5px;
+background:var(–card2);border:1px solid var(–bdr);
+border-radius:8px;padding:5px 9px;font-size:11px;
+max-width:180px;
+}
+.chip .cn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.chip .cx{background:none;border:none;color:var(–dim);cursor:pointer;font-size:12px;margin-right:2px;padding:0 2px}
+
+/* ── CODE PASTE ── */
+.langrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.lp{
+padding:5px 11px;border-radius:20px;border:1px solid var(–bdr);
+background:transparent;color:var(–dim);font-size:11px;font-weight:700;cursor:pointer;
+}
+.lp.on{background:rgba(56,189,248,0.15);color:var(–blue);border-color:var(–blue)}
+#pasteBox{
+width:100%;min-height:120px;background:#080e1a;color:#e6edf3;
+border:1px solid var(–bdr);border-radius:9px;padding:11px;
+font-family:‘Courier New’,monospace;font-size:12px;resize:vertical;outline:none;
+}
+#pasteBox:focus{border-color:var(–blue)}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:0.15s}
+.btn:active{transform:scale(0.97)}
+.bp{background:var(–blue);color:#000}
+.bg{background:rgba(255,255,255,0.07);color:var(–text);border:1px solid var(–bdr)}
+.br{background:rgba(239,68,68,0.15);color:var(–red);border:1px solid rgba(239,68,68,0.3)}
+.brow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+/* ── RESULT ITEMS ── */
+.ri{
+display:flex;align-items:flex-start;gap:9px;
+padding:9px 11px;border-radius:9px;margin-bottom:5px;
+font-size:12px;border:1px solid transparent;
+animation:fi 0.2s ease;
+}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.ok {background:rgba(34,197,94,0.07);border-color:rgba(34,197,94,0.2)}
+.wn {background:rgba(245,158,11,0.07);border-color:rgba(245,158,11,0.2)}
+.er {background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.28)}
+.inf{background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.18)}
+.ri-ico{font-size:14px;flex-shrink:0;margin-top:1px}
+.ri-body{flex:1;min-width:0;word-break:break-word}
+.ri-t{font-weight:700;margin-bottom:2px}
+.ri-d{font-size:10px;color:var(–dim);margin-top:2px}
+.ri-fix{
+flex-shrink:0;padding:4px 9px;border-radius:6px;border:none;
+font-size:10px;font-weight:700;cursor:pointer;align-self:flex-start;
+background:rgba(56,189,248,0.14);color:var(–blue);transition:0.15s;
+}
+.ri-fix:hover{background:rgba(56,189,248,0.28)}
+
+/* ── TAGS ── */
+.ft{display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(168,85,247,0.15);color:var(–purple);font-size:10px;font-weight:700;font-family:monospace;margin:0 2px}
+.ln{display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(245,158,11,0.15);color:var(–yellow);font-size:10px;font-weight:700;font-family:monospace;margin:0 2px}
+
+/* ── CODE BLOCK ── */
+.cb{
+background:#060d18;border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+padding:11px 13px;font-family:‘Courier New’,monospace;font-size:11px;color:#e6edf3;
+overflow-x:auto;white-space:pre;margin:7px 0;position:relative;
+}
+.cb-copy{
+position:absolute;top:6px;left:8px;
+padding:3px 8px;border-radius:5px;border:1px solid var(–bdr);
+background:rgba(255,255,255,0.06);color:var(–dim);font-size:9px;cursor:pointer;
+}
+.cb-copy:hover{color:var(–blue)}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:13px}
+.sb{background:var(–card2);border-radius:10px;border:1px solid var(–bdr);padding:12px;text-align:center}
+.sv{font-size:22px;font-weight:800;line-height:1.2}
+.sl{font-size:10px;color:var(–dim);margin-top:2px}
+
+/* ── PROGRESS ── */
+#progWrap{display:none;margin:10px 0}
+#progBar{height:5px;background:#0d1117;border-radius:5px;overflow:hidden}
+#progFill{height:100%;width:0;background:linear-gradient(90deg,var(–blue),var(–purple));transition:width 0.4s}
+#progLbl{font-size:10px;color:var(–dim);margin-top:4px}
+
+/* ── LOG ── */
+#logBox{
+background:#060d18;border:1px solid var(–bdr);border-radius:9px;
+padding:11px;font-family:‘Courier New’,monospace;font-size:11px;
+height:200px;overflow-y:auto;line-height:1.9;
+}
+.lok{color:#22c55e}.ler{color:#ef4444}.lwn{color:#f59e0b}.lin{color:#38bdf8}.ldm{color:#374151}
+
+/* ── SCORE ── */
+.score{
+width:72px;height:72px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+font-size:24px;font-weight:800;border:3px solid;margin:0 auto 10px;
+}
+
+/* ── TOAST ── */
+#toast{
+position:fixed;bottom:20px;left:50%;
+transform:translateX(-50%) translateY(8px);
+background:#1e293b;border:1px solid var(–blue);
+color:var(–text);padding:8px 18px;border-radius:25px;
+font-size:12px;font-weight:700;opacity:0;transition:all 0.3s;
+z-index:9999;pointer-events:none;white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+h2{font-size:15px;font-weight:800;margin-bottom:13px;display:flex;align-items:center;gap:7px}
+hr{border:none;border-top:1px solid var(–bdr);margin:12px 0}
+</style>
+
+</head>
+<body>
+
+<!-- ════ TOP HEADER ════ -->
+
+<div id="topbar">
+  <div>
+    <h1>🔬 Debug Pro <small>בדיקה מקצועית לקבצי JS · HTML · JSON · CSS</small></h1>
+  </div>
+  <button id="runBtn" onclick="runAll()">▶ בדוק</button>
+</div>
+
+<!-- ════ NAV — 3 ROWS ════ -->
+
+<div id="nav">
+  <div class="nav-row">
+    <button class="nt on" onclick="go('upload')"   id="nt-upload">📁 קבצים</button>
+    <button class="nt"    onclick="go('summary')"  id="nt-summary">📊 סיכום<span class="cnt" id="cnt-summary"></span></button>
+    <button class="nt"    onclick="go('fixes')"    id="nt-fixes">🔧 תיקונים<span class="cnt" id="cnt-fixes"></span></button>
+  </div>
+  <div class="nav-row">
+    <button class="nt"    onclick="go('syntax')"   id="nt-syntax">🔍 תחביר<span class="cnt" id="cnt-syntax"></span></button>
+    <button class="nt"    onclick="go('logic')"    id="nt-logic">⚙️ לוגיקה<span class="cnt" id="cnt-logic"></span></button>
+    <button class="nt"    onclick="go('security')" id="nt-security">🔐 אבטחה<span class="cnt" id="cnt-security"></span></button>
+  </div>
+  <div class="nav-row">
+    <button class="nt"    onclick="go('htmlpg')"   id="nt-htmlpg">🌐 HTML/JSON<span class="cnt" id="cnt-htmlpg"></span></button>
+    <button class="nt"    onclick="go('perf')"     id="nt-perf">⚡ ביצועים<span class="cnt" id="cnt-perf"></span></button>
+    <button class="nt"    onclick="go('log')"      id="nt-log">📋 לוג</button>
+  </div>
+</div>
+
+<!-- ════ PAGE: UPLOAD ════ -->
+
+<div class="pg on" id="pg-upload">
+  <h2>📁 העלאת קבצים</h2>
+
+  <div id="dropzone"
+    onclick="document.getElementById('fileInput').click()"
+    ondragover="ev.preventDefault();this.classList.add('over')"
+    ondragleave="this.classList.remove('over')"
+    ondrop="dropFiles(event)">
+    <input type="file" id="fileInput" multiple onchange="loadFiles(this.files)">
+    <div>📂</div>
+    <div class="dtxt">גרור קבצים או לחץ לבחירה</div>
+    <div class="dsub">JS · HTML · JSON · CSS · TS · SW.JS · Manifest</div>
+  </div>
+
+  <div id="chips"></div>
+
+  <div class="card">
+    <div class="ch">✏️ הדבק קוד ישירות</div>
+    <div class="langrow">
+      <button class="lp on" id="lp-js"   onclick="setLang('js')">JS</button>
+      <button class="lp"    id="lp-html" onclick="setLang('html')">HTML</button>
+      <button class="lp"    id="lp-json" onclick="setLang('json')">JSON</button>
+      <button class="lp"    id="lp-css"  onclick="setLang('css')">CSS</button>
+      <button class="lp"    id="lp-ts"   onclick="setLang('ts')">TS</button>
+    </div>
+    <textarea id="pasteBox" placeholder="הדבק קוד כאן..."></textarea>
+    <div class="brow">
+      <button class="btn bp" onclick="addPaste()">➕ הוסף</button>
+      <button class="btn bg" onclick="document.getElementById('pasteBox').value=''">🗑 נקה</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">⚡ פעולות</div>
+    <div class="brow">
+      <button class="btn bp" onclick="runAll()">▶ בדוק הכל</button>
+      <button class="btn bg" onclick="clearAll()">🗑 נקה קבצים</button>
+    </div>
+    <div id="progWrap">
+      <div id="progBar"><div id="progFill"></div></div>
+      <div id="progLbl">מכין...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE: SUMMARY ════ -->
+
+<div class="pg" id="pg-summary">
+  <h2>📊 סיכום תוצאות</h2>
+  <div class="stats">
+    <div class="sb"><div class="sv" id="sv-ok"   style="color:var(--green)">—</div><div class="sl">✅ תקין</div></div>
+    <div class="sb"><div class="sv" id="sv-warn" style="color:var(--yellow)">—</div><div class="sl">⚠️ אזהרות</div></div>
+    <div class="sb"><div class="sv" id="sv-err"  style="color:var(--red)">—</div><div class="sl">❌ שגיאות</div></div>
+  </div>
+  <div id="scoreArea" style="text-align:center;margin-bottom:14px"></div>
+  <div id="summaryList"></div>
+</div>
+
+<!-- ════ PAGE: FIXES ════ -->
+
+<div class="pg" id="pg-fixes">
+  <h2>🔧 תיקונים מוצעים</h2>
+  <div id="fixesList"></div>
+</div>
+
+<!-- ════ PAGE: SYNTAX ════ -->
+
+<div class="pg" id="pg-syntax">
+  <h2>🔍 בדיקות תחביר</h2>
+  <div id="syntaxOut"></div>
+</div>
+
+<!-- ════ PAGE: LOGIC ════ -->
+
+<div class="pg" id="pg-logic">
+  <h2>⚙️ בדיקות לוגיקה</h2>
+  <div id="logicOut"></div>
+</div>
+
+<!-- ════ PAGE: SECURITY ════ -->
+
+<div class="pg" id="pg-security">
+  <h2>🔐 בדיקות אבטחה</h2>
+  <div id="securityOut"></div>
+</div>
+
+<!-- ════ PAGE: HTML/JSON ════ -->
+
+<div class="pg" id="pg-htmlpg">
+  <h2>🌐 HTML · JSON · PWA</h2>
+  <div id="htmlOut"></div>
+</div>
+
+<!-- ════ PAGE: PERF ════ -->
+
+<div class="pg" id="pg-perf">
+  <h2>⚡ ביצועים ואופטימיזציה</h2>
+  <div id="perfOut"></div>
+</div>
+
+<!-- ════ PAGE: LOG ════ -->
+
+<div class="pg" id="pg-log">
+  <h2>📋 לוג בדיקה</h2>
+  <div class="brow" style="margin-bottom:10px">
+    <button class="btn bg" onclick="clearLog()">🗑 נקה</button>
+    <button class="btn bg" onclick="copyLog()">📋 העתק</button>
+  </div>
+  <div id="logBox"><span class="ldm">// ממתין לבדיקה...</span></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+var FILES = {};
+var LANG  = 'js';
+var LOG   = [];
+var STATS = {ok:0,warn:0,err:0};
+var FIXES = [];
+
+// ════════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════════
+function go(name) {
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on')});
+  document.querySelectorAll('.nt').forEach(function(t){t.classList.remove('on')});
+  var pg = document.getElementById('pg-'+name);
+  var nt = document.getElementById('nt-'+name);
+  if(pg) pg.classList.add('on');
+  if(nt) nt.classList.add('on');
+}
+
+// ════════════════════════════════════════════
+// FILES
+// ════════════════════════════════════════════
+var EXT_ICONS = {js:'📜',ts:'💙',jsx:'⚛️',html:'🌐',htm:'🌐',json:'📋',css:'🎨',vue:'💚',md:'📝',txt:'📄',sw:'🔧'};
+var EXT_TYPE  = {js:'js',ts:'ts',jsx:'js',html:'html',htm:'html',json:'json',css:'css',vue:'html',md:'md',txt:'txt'};
+
+function extOf(name) { return name.split('.').pop().toLowerCase(); }
+function iconOf(name) { return EXT_ICONS[extOf(name)] || '📄'; }
+function typeOf(name) {
+  var e = extOf(name);
+  if (name.includes('sw') && e==='js') return 'sw';
+  return EXT_TYPE[e] || 'txt';
+}
+function fmtKB(n) { return n<1024 ? n+'B' : (n/1024).toFixed(1)+'KB'; }
+
+function loadFiles(list) {
+  Array.from(list).forEach(function(f){
+    var r = new FileReader();
+    r.onload = function(e) {
+      FILES[f.name] = {name:f.name, content:e.target.result, type:typeOf(f.name), size:f.size};
+      renderChips();
+    };
+    r.readAsText(f);
+  });
+}
+
+function dropFiles(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('over');
+  loadFiles(e.dataTransfer.files);
+}
+
+function removeFile(name) {
+  delete FILES[name];
+  renderChips();
+}
+
+function renderChips() {
+  var html = Object.keys(FILES).map(function(n){
+    var f = FILES[n];
+    return '<div class="chip">'+
+      '<span>'+iconOf(n)+'</span>'+
+      '<span class="cn">'+n+'</span>'+
+      '<span style="font-size:10px;color:var(--dim)">'+fmtKB(f.size||f.content.length)+'</span>'+
+      '<button class="cx" onclick="removeFile(\''+n.replace(/'/g,"\\'")+'\')" title="הסר">✕</button>'+
+      '</div>';
+  }).join('');
+  document.getElementById('chips').innerHTML = html;
+}
+
+function addPaste() {
+  var code = document.getElementById('pasteBox').value.trim();
+  if (!code) { showToast('הדבק קוד קודם'); return; }
+  var ext  = LANG;
+  var name = 'קוד_שהודבק.' + ext;
+  FILES[name] = {name:name, content:code, type:typeOf(name), size:code.length};
+  renderChips();
+  document.getElementById('pasteBox').value = '';
+  showToast('✅ קוד נוסף');
+}
+
+function setLang(l) {
+  LANG = l;
+  document.querySelectorAll('.lp').forEach(function(p){p.classList.remove('on')});
+  var el = document.getElementById('lp-'+l);
+  if(el) el.classList.add('on');
+}
+
+function clearAll() {
+  FILES = {};
+  renderChips();
+  showToast('נוקה');
+}
+
+// ════════════════════════════════════════════
+// LOG
+// ════════════════════════════════════════════
+function addLog(msg, type) {
+  var cls = {ok:'lok',err:'ler',warn:'lwn',info:'lin',dim:'ldm'}[type||'info']||'lin';
+  var ts  = new Date().toLocaleTimeString('he-IL');
+  LOG.push('<span class="'+cls+'">['+ts+'] '+msg+'</span>');
+  var el = document.getElementById('logBox');
+  if(el){ el.innerHTML = LOG.join('\n'); el.scrollTop = el.scrollHeight; }
+}
+function clearLog() { LOG=[]; document.getElementById('logBox').innerHTML='<span class="ldm">// נוקה</span>'; }
+function copyLog()  { navigator.clipboard.writeText(LOG.map(function(l){return l.replace(/<[^>]+>/g,'')}).join('\n')).then(function(){showToast('לוג הועתק ✓')}); }
+
+// ════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},2400);
+}
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function mkRes(type, title, detail, fix) {
+  var cls  = {ok:'ok',warn:'wn',err:'er',info:'inf'}[type]||'inf';
+  var icon = {ok:'✅',warn:'⚠️',err:'❌',info:'ℹ️'}[type]||'ℹ️';
+  var fixHtml = '';
+  if(fix){
+    var safeCode = JSON.stringify(fix.code);
+    fixHtml = '<button class="ri-fix" onclick="doCopy('+safeCode+')">📋 '+(fix.label||'תיקון')+'</button>';
+  }
+  return '<div class="ri '+cls+'">'+
+    '<span class="ri-ico">'+icon+'</span>'+
+    '<div class="ri-body">'+
+      '<div class="ri-t">'+title+'</div>'+
+      (detail?'<div class="ri-d">'+detail+'</div>':'')+
+    '</div>'+
+    fixHtml+
+    '</div>';
+}
+
+function doCopy(code) { navigator.clipboard.writeText(code).then(function(){showToast('הועתק ✓')}); }
+
+function setProgress(pct, label) {
+  var w = document.getElementById('progWrap');
+  var f = document.getElementById('progFill');
+  var l = document.getElementById('progLbl');
+  if(w) w.style.display = 'block';
+  if(f) f.style.width = pct+'%';
+  if(l && label) l.textContent = label;
+}
+
+function setBadge(id, n) {
+  var el = document.getElementById('cnt-'+id);
+  if(!el) return;
+  if(n > 0){ el.textContent=n; el.classList.add('show'); }
+  else { el.classList.remove('show'); }
+}
+
+// ════════════════════════════════════════════
+// CHECK ENGINES
+// ════════════════════════════════════════════
+
+/* ── SYNTAX ── */
+function checkSyntax(name, src, type) {
+  var R = [];
+
+  if(type==='json') {
+    try{ JSON.parse(src); R.push({s:'ok',t:'JSON תקין ✓'}); }
+    catch(e){ R.push({s:'err',t:'JSON שגוי: '+e.message,d:'בדוק פסיקים, מרכאות, סוגריים',f:{code:'// השתמש ב: jsonlint.com לאיתור השגיאה המדויקת',label:'טיפ'}}); }
+    return R;
+  }
+
+  if(type==='css') {
+    var openC=(src.match(/{/g)||[]).length, closeC=(src.match(/}/g)||[]).length;
+    if(openC!==closeC) R.push({s:'err',t:'CSS: { } לא מאוזן ('+openC+' פתוח, '+closeC+' סגור)',d:'קלד חסר או עודף',f:{code:'// בדוק כל selector שיש לו { ו-}',label:'טיפ'}});
+    else R.push({s:'ok',t:'CSS: סוגריים {} מאוזנים ('+openC+')'});
+    var missingSemi = src.split('\n').filter(function(l){
+      var t=l.trim();
+      return t && !t.startsWith('/*') && !t.startsWith('//') && !t.startsWith('}') && !t.startsWith('{') && !t.endsWith('{') && !t.endsWith('}') && !t.endsWith(';') && !t.endsWith(',') && t.includes(':') && t.length>5;
+    }).length;
+    if(missingSemi>5) R.push({s:'warn',t:'~'+missingSemi+' שורות CSS ללא נקודה-פסיק ;'});
+    return R;
+  }
+
+  if(type!=='js' && type!=='ts' && type!=='sw') return R;
+
+  /* Balanced {} */
+  var depth=0, inStr=false, strCh='', inML=false, inSL=false;
+  for(var i=0;i<src.length;i++){
+    var c=src[i], pv=src[i-1]||'';
+    if(inML){ if(src.slice(i,i+2)==='*/'){inML=false;i++;} continue; }
+    if(inSL){ if(c==='\n')inSL=false; continue; }
+    if(!inStr && src.slice(i,i+2)==='//'){inSL=true;continue;}
+    if(!inStr && src.slice(i,i+2)==='/*'){inML=true;continue;}
+    if(!inStr&&(c==='"'||c==="'"||c==='`')){inStr=true;strCh=c;continue;}
+    if(inStr){if(c===strCh&&pv!=='\\')inStr=false;continue;}
+    if(c==='{')depth++;
+    if(c==='}'){depth--;if(depth<0){R.push({s:'err',t:'} ללא { תואם',d:'אחד או יותר סוגריים סגורים ללא פתוח'});depth=0;}}
+  }
+  if(depth>0) R.push({s:'err',t:depth+' סוגריים { לא נסגרו',d:'בדוק סוף פונקציות ותנאים',f:{code:'// כל function(){...} ו-if(){...} חייבים סוגר סגור }',label:'טיפ'}});
+  else R.push({s:'ok',t:'סוגריים {} מאוזנים ✓'});
+
+  /* Balanced () */
+  var pd=0; inStr=false; inSL=false; inML=false;
+  for(var i=0;i<src.length;i++){
+    var c=src[i],pv=src[i-1]||'';
+    if(inML){if(src.slice(i,i+2)==='*/'){inML=false;i++;}continue;}
+    if(inSL){if(c==='\n')inSL=false;continue;}
+    if(!inStr&&src.slice(i,i+2)==='//'){inSL=true;continue;}
+    if(!inStr&&src.slice(i,i+2)==='/*'){inML=true;continue;}
+    if(!inStr&&(c==='"'||c==="'"||c==='`')){inStr=true;strCh=c;continue;}
+    if(inStr){if(c===strCh&&pv!=='\\')inStr=false;continue;}
+    if(c==='(')pd++;
+    if(c===')')pd--;
+  }
+  if(pd!==0) R.push({s:'warn',t:'סוגריים () לא מאוזנים ('+Math.abs(pd)+' '+(pd>0?'עודף':'חסר')+')',d:'בדוק קריאות פונקציות'});
+  else R.push({s:'ok',t:'סוגריים () מאוזנים ✓'});
+
+  /* Balanced [] */
+  var bd=0; inStr=false; inSL=false; inML=false;
+  for(var i=0;i<src.length;i++){
+    var c=src[i],pv=src[i-1]||'';
+    if(inML){if(src.slice(i,i+2)==='*/'){inML=false;i++;}continue;}
+    if(inSL){if(c==='\n')inSL=false;continue;}
+    if(!inStr&&src.slice(i,i+2)==='//'){inSL=true;continue;}
+    if(!inStr&&src.slice(i,i+2)==='/*'){inML=true;continue;}
+    if(!inStr&&(c==='"'||c==="'"||c==='`')){inStr=true;strCh=c;continue;}
+    if(inStr){if(c===strCh&&pv!=='\\')inStr=false;continue;}
+    if(c==='[')bd++;
+    if(c===']')bd--;
+  }
+  if(bd!==0) R.push({s:'warn',t:'סוגריים [] לא מאוזנים ('+Math.abs(bd)+')',d:'בדוק arrays ו-property access'});
+  else R.push({s:'ok',t:'סוגריים [] מאוזנים ✓'});
+
+  /* onclick quote bug */
+  var onclickBug = src.match(/onclick="[^"]*'' \+ [^+]+ \+ ''[^"]*"/g);
+  if(!onclickBug) onclickBug = src.match(/'<button[^']*onclick="[^"]*\(' \+/g);
+  if(onclickBug) R.push({s:'err',t:'באג גרשיים ב-onclick HTML!',d:'שורות עם onclick שמכיל גרשיים בלתי תואמים',f:{code:"// שמור ID קודם, אז השתמש בו:\nvar sid = s.id;\nvar btn = '<button onclick=\"action(\\'' + sid + '\\')\">';\n// במקום:\n// '<button onclick=\"action('' + s.id + '')\">'",label:'תיקון'}});
+  else R.push({s:'ok',t:'onclick HTML — אין באג גרשיים ✓'});
+
+  /* Unterminated string check per line */
+  var lines=src.split('\n');
+  var strErrs=[];
+  lines.forEach(function(line,i){
+    var clean=line.replace(/\/\/.*$/,'').replace(/\/\*.*?\*\//g,'').trim();
+    if(!clean||clean.startsWith('*')) return;
+    // Count unescaped single quotes outside template literals
+    var sq=0,dq=0,inTpl=false;
+    for(var j=0;j<clean.length;j++){
+      var ch=clean[j],pr=clean[j-1]||'';
+      if(ch==='`')inTpl=!inTpl;
+      if(inTpl) continue;
+      if(ch==="'"&&pr!=='\\') sq++;
+      if(ch==='"'&&pr!=='\\') dq++;
+    }
+    if(sq%2!==0&&sq<=3) strErrs.push({line:i+1,text:clean.slice(0,55)});
+    if(dq%2!==0&&dq<=3) strErrs.push({line:i+1,text:clean.slice(0,55)});
+  });
+  if(strErrs.length>0&&strErrs.length<=8){
+    strErrs.forEach(function(e){ R.push({s:'warn',t:'שורה '+e.line+': מחרוזת אפשרית לא סגורה',d:esc(e.text)}); });
+  } else if(strErrs.length>8){
+    R.push({s:'info',t:strErrs.length+' שורות עם מחרוזת אפשרית לא סגורה',d:'בדוק את הקובץ — ייתכן שיש הרבה template strings'});
+  } else {
+    R.push({s:'ok',t:'מחרוזות — נראה תקין ✓'});
+  }
+
+  /* == vs === */
+  var looseeq=(src.match(/[^=!<>]==[^=]/g)||[]).length;
+  if(looseeq>5) R.push({s:'warn',t:looseeq+' שימושים ב-== (רפוי) במקום ===',d:'== עלול לגרום להשוואות לא צפויות',f:{code:'// החלף == ב-===\n// לדוגמה: if(x === null) במקום if(x == null)',label:'טיפ'}});
+  else R.push({s:'ok',t:'השוואות — ברוב המקרים === ('+looseeq+' פעמים ==)'});
+
+  /* var usage */
+  var varCount=(src.match(/\bvar\b/g)||[]).length;
+  if(varCount>15) R.push({s:'info',t:varCount+' שימושים ב-var',d:'שקול const/let למניעת scope bugs'});
+  else R.push({s:'ok',t:'שימוש var: '+varCount+' (סביר)'});
+
+  /* Semicolons */
+  var semiLines=lines.filter(function(l){
+    var t=l.trim();
+    return t.length>8 && !t.startsWith('//') && !t.startsWith('*') && !t.startsWith('/*') &&
+      !t.endsWith('{') && !t.endsWith('}') && !t.endsWith(',') && !t.endsWith(';') &&
+      !t.startsWith('if') && !t.startsWith('for') && !t.startsWith('while') && !t.startsWith('else') &&
+      !t.startsWith('function') && !t.startsWith('class') && !t.startsWith('//') &&
+      (t.includes('=') || t.includes('('));
+  }).length;
+  if(semiLines>30) R.push({s:'info',t:'~'+semiLines+' שורות ללא נקודה-פסיק',d:'אם זה סגנון הפרויקט — תקין'});
+
+  /* console.log */
+  var consoleCount=(src.match(/console\.(log|warn|error)\(/g)||[]).length;
+  if(consoleCount>8) R.push({s:'warn',t:consoleCount+' console calls',d:'כדאי להסיר לפני פרסום',f:{code:'// חפש והחלף: console.log( → (מחק שורה)\n// או השתמש ב-debugger mode',label:'טיפ'}});
+  else R.push({s:'ok',t:consoleCount+' console calls (תקין)'});
+
+  /* Arrow functions count */
+  var arrows=(src.match(/=>/g)||[]).length;
+  R.push({s:'info',t:arrows+' arrow functions ב-'+name});
+
+  return R;
+}
+
+/* ── LOGIC ── */
+function checkLogic(name, src, type) {
+  var R=[];
+  if(type!=='js'&&type!=='ts'&&type!=='sw') return R;
+
+  /* Known function sets */
+  var REQUIRED = {
+    'activities.js': ['drawHome','drawWork','startWork','drawEstate','buyEstate','upgradeEstate','sellEstate','drawBusiness','buyBusiness','sellBusiness','drawBank','bankProcess','takeCustomLoan','repayLoan','drawInvest','buyStock','sellStock','buildStockCard','drawShop','buyShopItem','upgradeShopItem','drawTasks','runCasino','drawSkills','buySkill','drawCars','buyCar','upgradeCar','recalculateTotalSpeed','drawStaff','hireStaff','upgradeStaff','fireStaff'],
+    'core.js': ['createHash','getLevelData','loadGame','saveGame','showMsg','updateUI','checkLevelUp','toggleTheme','resetGame','checkPlayerName','savePlayerName'],
+    'ui.js': ['fbSaveScore','fbGetLeaderboard','fbLoadConfig','fbSaveAdminMsg','fbLoadAdminMsg','fbSaveAdminPass','fbLoadAdminPass','fbDeletePlayer','fbResetLeaderboard','openTab','showConfirmModal','openAdminPanel','renderUIUpdate','claimDailyGift','loadLeaderboard','getDeviceId']
+  };
+  var SAVE_FIELDS = ['money','bank','loan','lifeXP','passive','jobPassive','skills','cars','inventory','invOwned','carSpeed','totalEarned','lastSaveTime','estateData','itemLevels','carLevels','invBuyPrice','staffData'];
+
+  var req = REQUIRED[name];
+  if(req) {
+    var missing=[], found=[];
+    req.forEach(function(fn){
+      var has = src.includes('function '+fn)||src.includes('window.'+fn+' =')||src.includes('window.'+fn+'=')||src.includes(fn+' = function')||src.includes(fn+'=function');
+      if(has) found.push(fn);
+      else missing.push(fn);
+    });
+    if(found.length) R.push({s:'ok',t:found.length+' פונקציות נמצאו ב-'+name});
+    missing.forEach(function(fn){ R.push({s:'err',t:'פונקציה חסרה: '+fn+'()',d:'נדרשת ב-'+name,f:{code:'window.'+fn+' = function() {\n  // TODO\n};',label:'תבנית'}}); });
+  }
+
+  if(name==='core.js') {
+    SAVE_FIELDS.forEach(function(f){
+      var inSave = src.includes(f+':') || src.includes(f+' :');
+      var inLoad = src.includes('window.'+f);
+      if(inSave&&inLoad) R.push({s:'ok',t:f+' — נשמר ונטען ✓'});
+      else if(!inSave) R.push({s:'err',t:f+' חסר ב-saveGame()!',f:{code:f+': window.'+f+',',label:'העתק'}});
+      else if(!inLoad) R.push({s:'err',t:f+' חסר ב-loadGame()!',f:{code:'window.'+f+' = data.'+f+' ?? {};',label:'העתק'}});
+    });
+  }
+
+  /* setInterval analysis */
+  var intervals=[]; var re=/setInterval\s*\([^,]+,\s*(\d+)\)/g; var m;
+  while((m=re.exec(src))!==null) intervals.push(parseInt(m[1]));
+  intervals.forEach(function(ms){
+    if(ms<30) R.push({s:'err',t:'setInterval '+ms+'ms — מהיר מדי!',d:'עלול לחסום את הדפדפן'});
+    else if(ms===50) R.push({s:'ok',t:'setInterval 50ms — passive tick (תקין)'});
+    else if(ms<=5000) R.push({s:'ok',t:'setInterval '+ms+'ms'});
+    else if(ms>=15000) R.push({s:'ok',t:'setInterval '+ms+'ms — auto save'});
+  });
+  if(intervals.length===0&&(name.includes('core')||name.includes('activities'))) R.push({s:'warn',t:'setInterval לא נמצא — passive income לא יעבוד?'});
+
+  /* try-catch */
+  var tryC=(src.match(/\btry\s*{/g)||[]).length, catchC=(src.match(/\bcatch\s*\(/g)||[]).length;
+  if(tryC>0&&tryC===catchC) R.push({s:'ok',t:tryC+' try-catch blocks ✓'});
+  else if(tryC>0&&tryC!==catchC) R.push({s:'warn',t:'try ('+tryC+') ללא catch ('+catchC+')',d:'כל try חייב catch'});
+
+  /* fetch without catch */
+  var fetchC=(src.match(/\bfetch\s*\(/g)||[]).length;
+  var catchAfterFetch=(src.match(/fetch[\s\S]{0,300}?\.catch|try[\s\S]{0,300}?fetch/g)||[]).length;
+  if(fetchC>0&&catchAfterFetch<fetchC) R.push({s:'warn',t:fetchC+' fetch() — חלקם ללא error handling',d:'גורם לשגיאות שלא נראות',f:{code:'try {\n  const res = await fetch(url);\n  if(!res.ok) throw new Error(res.status);\n  const data = await res.json();\n} catch(e) { console.warn(e); }',label:'תבנית'}});
+  else if(fetchC>0) R.push({s:'ok',t:fetchC+' fetch() עם error handling ✓'});
+
+  /* async/await */
+  var asyncC=(src.match(/\basync\b/g)||[]).length, awaitC=(src.match(/\bawait\b/g)||[]).length;
+  if(asyncC>0) R.push({s:'ok',t:asyncC+' async functions, '+awaitC+' await'});
+
+  /* Firebase specific */
+  if(src.includes('FB_URL')||src.includes('firebase')) {
+    if(src.includes('smart-money-faf43')) R.push({s:'ok',t:'Firebase URL — תקין ✓'});
+    else if(src.includes('FB_URL')) R.push({s:'warn',t:'FB_URL מוגדר אך URL שונה',d:'בדוק שה-URL נכון'});
+    if(src.includes("method: 'PUT'")) R.push({s:'ok',t:'Firebase PUT — כתיבה'});
+    if(src.includes("method: 'DELETE'")) R.push({s:'ok',t:'Firebase DELETE — מחיקה'});
+    if(src.includes('fbLoadConfig')&&src.includes('DOMContentLoaded')) R.push({s:'ok',t:'fbLoadConfig ב-DOMContentLoaded ✓'});
+    else if(src.includes('fbLoadConfig')) R.push({s:'warn',t:'fbLoadConfig — לא נמצא ב-DOMContentLoaded'});
+  }
+
+  /* Memory leaks */
+  var setIntvC=(src.match(/setInterval/g)||[]).length, clearIntvC=(src.match(/clearInterval/g)||[]).length;
+  if(setIntvC>3&&clearIntvC===0) R.push({s:'warn',t:setIntvC+' setInterval ללא clearInterval',d:'זכירה אפשרית — שקול clearInterval'});
+
+  /* undefined variables (simple check) */
+  var undefCheck=['window.passive','window.money','window.lifeXP','window.cars','window.skills','window.inventory'];
+  if(name==='activities.js'||name==='core.js') {
+    undefCheck.forEach(function(v){
+      var shortV=v.replace('window.','');
+      if(src.includes(v)||src.includes(shortV+'.')||src.includes(shortV+' ')) return; // found
+      // Only warn if it's a major file
+    });
+  }
+
+  return R;
+}
+
+/* ── SECURITY ── */
+function checkSecurity(name, src, type) {
+  var R=[];
+
+  /* eval */
+  var evalC=(src.match(/\beval\s*\(/g)||[]).length;
+  if(evalC) R.push({s:'err',t:evalC+' שימושים ב-eval() — סכנת XSS!',d:'eval מריץ קוד שרירותי — מסוכן מאוד',f:{code:'// הסר eval() לחלוטין\n// השתמש ב-JSON.parse() לנתונים\n// או Function() בזהירות מירבית',label:'טיפ'}});
+  else R.push({s:'ok',t:'אין eval() ✓'});
+
+  /* innerHTML */
+  var innerC=(src.match(/\.innerHTML\s*=/g)||[]).length;
+  if(innerC>0) {
+    R.push({s:'info',t:innerC+' שימושים ב-innerHTML',d:'בדוק שאין נתוני משתמש ישירים ללא sanitization'});
+  }
+
+  /* document.write */
+  if(src.includes('document.write(')) R.push({s:'warn',t:'document.write() — לא מומלץ',d:'יכול לדרוס את כל הדף ולפתוח XSS'});
+
+  /* Hardcoded secrets */
+  var secrets=[
+    {re:/password\s*[:=]\s*['"][^'"]{4,}['"]/i, n:'סיסמה hardcoded'},
+    {re:/apikey\s*[:=]\s*['"][^'"]{8,}['"]/i,   n:'API key hardcoded'},
+    {re:/secret\s*[:=]\s*['"][^'"]{8,}['"]/i,   n:'secret hardcoded'},
+    {re:/token\s*[:=]\s*['"][A-Za-z0-9+/=.]{16,}['"]/i, n:'token hardcoded'},
+  ];
+  secrets.forEach(function(s){
+    if(s.re.test(src)) R.push({s:'err',t:s.n+' — אל תכלול בקוד!',d:'שים ב-env variables או config חיצוני',f:{code:'// שמור בקובץ .env:\n// MY_SECRET=...\n// אל תכלול בקוד!',label:'טיפ'}});
+  });
+
+  /* HTTP URLs */
+  var httpC=(src.match(/http:\/\/(?!localhost)/g)||[]).length;
+  if(httpC) R.push({s:'warn',t:httpC+' URL ב-http (לא HTTPS)',d:'השתמש ב-https:// לאבטחה'});
+  else if(src.includes('https://')) R.push({s:'ok',t:'כל URLs ב-HTTPS ✓'});
+
+  /* localStorage sensitive */
+  if(src.includes('localStorage')&&(src.match(/password|credit|ssn|secret/i))) R.push({s:'warn',t:'localStorage עם נתונים רגישים אפשריים'});
+
+  /* Anti-cheat */
+  if(name==='core.js') {
+    if(src.includes('createHash')&&src.includes('checkHash')) R.push({s:'ok',t:'Anti-cheat hash ✓'});
+    else R.push({s:'warn',t:'Anti-cheat לא מוגדר'});
+    if(src.includes('1000000000')) R.push({s:'ok',t:'money cap מוגדר ✓'});
+    else R.push({s:'warn',t:'money cap לא נמצא — anti-cheat חלקי'});
+  }
+
+  if(type==='html') {
+    var tBlank=(src.match(/target=["']_blank["']/g)||[]).length;
+    var noopen=(src.match(/noopener/g)||[]).length;
+    if(tBlank>0&&noopen<tBlank) R.push({s:'warn',t:tBlank+' target="_blank" ללא rel="noopener"',f:{code:'rel="noopener noreferrer"',label:'תיקון'}});
+    if(src.includes('<iframe')&&!src.includes('sandbox')) R.push({s:'warn',t:'iframe ללא sandbox'});
+  }
+
+  return R;
+}
+
+/* ── HTML / JSON / PWA ── */
+function checkHTMLJSON(name, src, type) {
+  var R=[];
+
+  if(type==='html') {
+    /* Required meta */
+    if(!src.includes('charset')) R.push({s:'err',t:'charset חסר!',f:{code:'<meta charset="UTF-8">',label:'הוסף'}});
+    else R.push({s:'ok',t:'charset ✓'});
+    if(!src.includes('viewport')) R.push({s:'err',t:'viewport חסר — מובייל לא יעבוד!',f:{code:'<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">',label:'הוסף'}});
+    else R.push({s:'ok',t:'viewport ✓'});
+    if(!src.includes('<title>')) R.push({s:'warn',t:'title חסר'});
+    else R.push({s:'ok',t:'title ✓'});
+
+    /* RTL */
+    if(src.includes('dir="rtl"')) R.push({s:'ok',t:'RTL dir מוגדר ✓'});
+    else R.push({s:'warn',t:'dir="rtl" חסר',f:{code:'<html lang="he" dir="rtl">',label:'תיקון'}});
+    if(src.includes('lang="he"')) R.push({s:'ok',t:'lang="he" ✓'});
+    else R.push({s:'warn',t:'lang="he" חסר'});
+
+    /* Structure */
+    var opens=(src.match(/<div/gi)||[]).length, closes=(src.match(/<\/div>/gi)||[]).length;
+    if(opens!==closes) R.push({s:'warn',t:'div לא מאוזן: '+opens+' פתוח, '+closes+' סגור'});
+    else R.push({s:'ok',t:'div מאוזן ('+opens+') ✓'});
+    var btnO=(src.match(/<button/gi)||[]).length, btnC=(src.match(/<\/button>/gi)||[]).length;
+    if(btnO!==btnC) R.push({s:'warn',t:'button לא מאוזן: '+btnO+' פתוח, '+btnC+' סגור'});
+    else R.push({s:'ok',t:'button מאוזן ('+btnO+') ✓'});
+
+    /* PWA */
+    if(src.includes('manifest')) R.push({s:'ok',t:'manifest מקושר ✓'});
+    else R.push({s:'warn',t:'manifest חסר',f:{code:'<link rel="manifest" href="manifest.json">',label:'הוסף'}});
+    if(src.includes('serviceWorker')) R.push({s:'ok',t:'Service Worker ✓'});
+    else R.push({s:'warn',t:'Service Worker לא רשום',f:{code:"if('serviceWorker' in navigator){\n  navigator.serviceWorker.register('./sw.js');\n}",label:'הוסף'}});
+    if(src.includes('apple-mobile-web-app')) R.push({s:'ok',t:'iOS PWA meta ✓'});
+    else R.push({s:'info',t:'iOS meta tags חסרים',f:{code:'<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">',label:'הוסף'}});
+    if(src.includes('theme-color')) R.push({s:'ok',t:'theme-color ✓'});
+    else R.push({s:'info',t:'theme-color חסר',f:{code:'<meta name="theme-color" content="#0f172a">',label:'הוסף'}});
+
+    /* Script order */
+    var coreP=src.indexOf('core.js'), actP=src.indexOf('activities.js'), uiP=src.indexOf('ui.js');
+    if(coreP>0&&actP>0&&uiP>0){
+      if(coreP<actP&&actP<uiP) R.push({s:'ok',t:'סדר scripts: core → activities → ui ✓'});
+      else R.push({s:'err',t:'סדר scripts שגוי!',d:'חייב: core.js → activities.js → ui.js',f:{code:'<script src="js/core.js"><\/script>\n<script src="js/activities.js"><\/script>\n<script src="js/ui.js"><\/script>',label:'תיקון'}});
+    }
+
+    /* Hardcoded admin msg */
+    if(src.includes('window.adminMsgText')&&src.match(/window\.adminMsgText\s*=\s*['"]/)) R.push({s:'warn',t:'adminMsgText hardcoded!',d:'מונע טעינה מ-Firebase',f:{code:'// הסר שורה זו — ui.js טוען מ-Firebase אוטומטית:\n// window.adminMsgText = "..."; // ← מחק',label:'תיקון'}});
+    else R.push({s:'ok',t:'adminMsgText — לא hardcoded ✓'});
+
+    /* Cache busting */
+    var cbCount=(src.match(/\?v=[0-9.]+/g)||[]).length;
+    if(cbCount>0) R.push({s:'ok',t:'cache busting — '+cbCount+' קבצים ✓'});
+    else R.push({s:'info',t:'cache busting חסר',d:'שקול ?v=X.X.X לקבצי CSS/JS'});
+  }
+
+  if(type==='json') {
+    try {
+      var obj=JSON.parse(src);
+      if(name.includes('manifest')) {
+        ['name','short_name','start_url','display','icons'].forEach(function(k){
+          if(obj[k]!==undefined) R.push({s:'ok',t:'manifest.'+k+' = '+JSON.stringify(obj[k]).slice(0,35)});
+          else R.push({s:'err',t:'manifest.'+k+' חסר!',f:{code:'"'+k+'": ""',label:'הוסף'}});
+        });
+        if(obj.display&&obj.display!=='standalone') R.push({s:'warn',t:'display אינו standalone',f:{code:'"display": "standalone"',label:'תיקון'}});
+        if(obj.lang==='he') R.push({s:'ok',t:'lang: he ✓'});
+        else R.push({s:'warn',t:'lang לא עברית',f:{code:'"lang": "he"',label:'תיקון'}});
+        if(obj.dir==='rtl') R.push({s:'ok',t:'dir: rtl ✓'});
+        else R.push({s:'warn',t:'dir לא rtl',f:{code:'"dir": "rtl"',label:'תיקון'}});
+        if(obj.icons&&obj.icons.length>=2) R.push({s:'ok',t:'icons: '+obj.icons.length+' גדלים ✓'});
+        else R.push({s:'warn',t:'icons חסרים — מומלץ 192+512'});
+        var ver=obj.version;
+        if(ver&&/^[1-8]\./.test(ver)) R.push({s:'warn',t:'גרסה '+ver+' — ישנה?',d:'שקול לעדכן',f:{code:'"version": "9.0.0"',label:'תיקון'}});
+      }
+    } catch(e){}
+  }
+
+  if(type==='sw') {
+    if(src.includes('skipWaiting')) R.push({s:'ok',t:'skipWaiting ✓'});
+    else R.push({s:'warn',t:'skipWaiting חסר',f:{code:'self.skipWaiting();',label:'הוסף'}});
+    if(src.includes('caches.delete')) R.push({s:'ok',t:'מחיקת קאש ישן ✓'});
+    else R.push({s:'err',t:'אין מחיקת קאש — עדכונים לא יטענו!',f:{code:'// ב-activate event:\ncaches.keys().then(keys => {\n  return Promise.all(\n    keys.map(key => key!==CACHE_NAME ? caches.delete(key) : null)\n  );\n});',label:'תיקון'}});
+    var cm=src.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
+    if(cm){
+      if(/v[1-8]\./.test(cm[1])||/v[1-8]\b/.test(cm[1])) R.push({s:'warn',t:'CACHE_NAME ישן: '+cm[1],f:{code:"const CACHE_NAME = 'smart-money-v9.0.0';",label:'עדכן'}});
+      else R.push({s:'ok',t:'CACHE_NAME: '+cm[1]+' ✓'});
+    }
+    if(src.includes("'fetch'")) R.push({s:'ok',t:'fetch handler ✓'});
+    else R.push({s:'warn',t:'fetch handler חסר'});
+  }
+
+  return R;
+}
+
+/* ── PERFORMANCE ── */
+function checkPerf(name, src, type) {
+  var R=[];
+  if(type==='css') {
+    var rules=(src.match(/[^{}]+{[^{}]*}/g)||[]).length;
+    R.push({s:'info',t:'~'+rules+' CSS rules'});
+    var vendorC=(src.match(/-webkit-|-moz-|-ms-/g)||[]).length;
+    if(vendorC>10) R.push({s:'info',t:vendorC+' vendor prefixes (שקול autoprefixer)'});
+    return R;
+  }
+  if(type!=='js'&&type!=='ts'&&type!=='sw') return R;
+
+  var sizeKB=(src.length/1024).toFixed(1);
+  if(src.length>100000) R.push({s:'warn',t:'קובץ גדול: '+sizeKB+'KB',d:'שקול לפצל'});
+  else if(src.length>50000) R.push({s:'info',t:'קובץ: '+sizeKB+'KB (בינוני)'});
+  else R.push({s:'ok',t:'גודל קובץ: '+sizeKB+'KB ✓'});
+
+  /* DOM in loops */
+  var lines=src.split('\n');
+  var domLoopWarns=0;
+  for(var i=0;i<lines.length;i++){
+    if((lines[i].includes('for(')||lines[i].includes('for ('))&&lines[i+1]&&lines[i+1].includes('getElementById')) domLoopWarns++;
+  }
+  if(domLoopWarns>0) R.push({s:'warn',t:domLoopWarns+' DOM access בלולאה',d:'שמור reference לפני הלולאה'});
+  else R.push({s:'ok',t:'אין DOM access ישיר בלולאה ✓'});
+
+  /* Nested timeouts */
+  var nestedTO=src.match(/setTimeout[\s\S]{0,100}setTimeout[\s\S]{0,100}setTimeout/);
+  if(nestedTO) R.push({s:'warn',t:'setTimeout מקונן עמוק (callback hell)',d:'שקול async/await'});
+  else R.push({s:'ok',t:'אין callback hell ✓'});
+
+  /* Inline styles */
+  var inlineS=(src.match(/style\s*=\s*['"]/g)||[]).length;
+  if(inlineS>80) R.push({s:'warn',t:inlineS+' inline styles בJS',d:'הרבה inline styles מאטים rendering'});
+  else R.push({s:'ok',t:inlineS+' inline styles (תקין)'});
+
+  /* DOM operations count */
+  var getById=(src.match(/getElementById/g)||[]).length;
+  var querySelector=(src.match(/querySelector/g)||[]).length;
+  R.push({s:'info',t:(getById+querySelector)+' DOM queries ('+getById+' byId, '+querySelector+' querySelector)'});
+
+  /* Large strings */
+  var htmlStrings=(src.match(/innerHTML\s*=\s*['`][^'`]{200,}/g)||[]).length;
+  if(htmlStrings>20) R.push({s:'info',t:htmlStrings+' innerHTML מחרוזות גדולות',d:'תקין לפרויקטים ללא framework'});
+
+  return R;
+}
+
+/* ── HEBREW ── */
+function checkHebrew(name, src, type) {
+  var R=[];
+  if(type!=='js'&&type!=='ts') return R;
+
+  var KNOWN_ENGLISH=[
+    {p:"' XP'",       fix:"' נסיון'",           label:"XP → נסיון"},
+    {p:'" XP"',       fix:'" נסיון"',            label:"XP → נסיון"},
+    {p:'+ \' XP\'',   fix:"+ ' נסיון'",          label:"XP → נסיון"},
+    {p:'placeholder="XP', fix:'placeholder="נסיון', label:'placeholder XP → נסיון'},
+    {p:'Device ID',   fix:'מזהה שחקן',           label:'Device ID → מזהה שחקן'},
+    {p:"'הכנס Device ID'", fix:"'הכנס מזהה שחקן'", label:'הודעת Device ID'},
+  ];
+
+  var foundIssues=false;
+  KNOWN_ENGLISH.forEach(function(e){
+    if(src.includes(e.p)){
+      foundIssues=true;
+      R.push({s:'warn',t:'טקסט אנגלי: '+esc(e.p),d:'שנה ל: '+e.fix,f:{code:e.fix,label:e.label}});
+    }
+  });
+  if(!foundIssues) R.push({s:'ok',t:'אין בעיות עברית ידועות ✓'});
+
+  return R;
+}
+
+// ════════════════════════════════════════════
+// MAIN RUN
+// ════════════════════════════════════════════
+function runAll() {
+  var names = Object.keys(FILES);
+  if(!names.length){ showToast('העלה קבצים קודם!'); return; }
+
+  var btn = document.getElementById('runBtn');
+  btn.textContent='⏳...'; btn.classList.add('busy');
+
+  STATS={ok:0,warn:0,err:0}; FIXES=[]; LOG=[];
+  var cats={syntax:[],logic:[],security:[],html:[],perf:[],hebrew:[]};
+  var catCounts={syntax:0,logic:0,security:0,html:0,perf:0};
+
+  addLog('═══════════════════════════════','dim');
+  addLog('🔬 Debug Pro — מתחיל בדיקה','info');
+  addLog('קבצים: '+names.join(' · '),'dim');
+  addLog('═══════════════════════════════','dim');
+
+  var step=0;
+  function processNext() {
+    if(step>=names.length){
+      finalize(cats,catCounts);
+      btn.textContent='▶ בדוק שוב'; btn.classList.remove('busy');
+      return;
+    }
+    var name=names[step]; step++;
+    var f=FILES[name];
+    setProgress(Math.round((step/names.length)*100),'בודק: '+name);
+    addLog('📄 '+name+' ('+f.type+', '+(f.content.length/1024).toFixed(1)+'KB)','info');
+
+    try {
+      var synR=checkSyntax(name,f.content,f.type);
+      var logR=checkLogic(name,f.content,f.type);
+      var secR=checkSecurity(name,f.content,f.type);
+      var htR =checkHTMLJSON(name,f.content,f.type);
+      var pfR =checkPerf(name,f.content,f.type);
+      var hbR =checkHebrew(name,f.content,f.type);
+
+      cats.syntax.push({name:name,res:synR});
+      cats.logic.push({name:name,res:logR});
+      cats.security.push({name:name,res:secR});
+      cats.html.push({name:name,res:htR});
+      cats.perf.push({name:name,res:pfR});
+      cats.hebrew.push({name:name,res:hbR});
+
+      var allR=[].concat(synR,logR,secR,htR,pfR,hbR);
+      allR.forEach(function(r){
+        if(r.s==='ok'){STATS.ok++;}
+        else if(r.s==='warn'){STATS.warn++;if(r.f)FIXES.push({file:name,t:r.t,d:r.d,fix:r.f});}
+        else if(r.s==='err'){STATS.err++;if(r.f)FIXES.push({file:name,t:r.t,d:r.d,fix:r.f});}
+      });
+
+      catCounts.syntax  +=(synR.filter(function(r){return r.s==='err'||r.s==='warn'}).length);
+      catCounts.logic   +=(logR.filter(function(r){return r.s==='err'||r.s==='warn'}).length);
+      catCounts.security+=(secR.filter(function(r){return r.s==='err'||r.s==='warn'}).length);
+      catCounts.html    +=(htR.filter(function(r){return r.s==='err'||r.s==='warn'}).length);
+      catCounts.perf    +=(pfR.filter(function(r){return r.s==='err'||r.s==='warn'}).length);
+    } catch(e){
+      addLog('שגיאה בבדיקת '+name+': '+e.message,'err');
+    }
+
+    setTimeout(processNext, 20);
+  }
+  processNext();
+}
+
+function finalize(cats, catCounts) {
+  addLog('─────────────────────────','dim');
+  addLog('✅ '+STATS.ok+' | ⚠️ '+STATS.warn+' | ❌ '+STATS.err,'info');
+
+  renderCats(cats);
+  renderSummary();
+  renderFixes();
+
+  setBadge('summary', STATS.err+STATS.warn);
+  setBadge('fixes',   FIXES.length);
+  setBadge('syntax',  catCounts.syntax);
+  setBadge('logic',   catCounts.logic);
+  setBadge('security',catCounts.security);
+  setBadge('htmlpg',  catCounts.html);
+  setBadge('perf',    catCounts.perf);
+
+  document.getElementById('progWrap').style.display='none';
+  showToast(STATS.err>0 ? '❌ '+STATS.err+' שגיאות' : STATS.warn>0 ? '⚠️ '+STATS.warn+' אזהרות' : '✅ הכל תקין!');
+  go('summary');
+}
+
+// ════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════
+function renderCats(cats) {
+  renderCatTo('syntaxOut',  cats.syntax);
+  renderCatTo('logicOut',   cats.logic);
+  renderCatTo('securityOut',cats.security);
+  renderCatTo('htmlOut',    cats.html);
+  renderCatTo('perfOut',    cats.perf);
+}
+
+function renderCatTo(containerId, items) {
+  var html='';
+  items.forEach(function(item){
+    if(!item.res||!item.res.length) return;
+    html+='<div class="card"><div class="ch">'+iconOf(item.name)+' '+esc(item.name)+'</div>';
+    item.res.forEach(function(r){
+      var cls={ok:'ok',warn:'wn',err:'er',info:'inf'}[r.s]||'inf';
+      var ico={ok:'✅',warn:'⚠️',err:'❌',info:'ℹ️'}[r.s]||'ℹ️';
+      var fixHtml='';
+      if(r.f){
+        var safeCode=JSON.stringify(r.f.code);
+        fixHtml='<button class="ri-fix" onclick="doCopy('+safeCode+')">📋 '+(r.f.label||'תיקון')+'</button>';
+      }
+      html+='<div class="ri '+cls+'">'+
+        '<span class="ri-ico">'+ico+'</span>'+
+        '<div class="ri-body">'+
+          '<div class="ri-t">'+r.t+'</div>'+
+          (r.d?'<div class="ri-d">'+esc(r.d)+'</div>':'')+
+        '</div>'+fixHtml+'</div>';
+    });
+    html+='</div>';
+  });
+  var el=document.getElementById(containerId);
+  if(el) el.innerHTML=html||'<div class="ri inf"><span class="ri-ico">ℹ️</span><div class="ri-body"><div class="ri-t">הרץ בדיקה כדי לראות תוצאות</div></div></div>';
+}
+
+function renderSummary() {
+  document.getElementById('sv-ok').textContent  = STATS.ok;
+  document.getElementById('sv-warn').textContent = STATS.warn;
+  document.getElementById('sv-err').textContent  = STATS.err;
+
+  var total=STATS.ok+STATS.warn+STATS.err;
+  var score=total?Math.round((STATS.ok/total)*100):0;
+  var grade=score>=90?'A':score>=75?'B':score>=60?'C':'D';
+  var gColor={A:'var(--green)',B:'var(--yellow)',C:'var(--orange)',D:'var(--red)'}[grade];
+  document.getElementById('scoreArea').innerHTML=
+    '<div class="score" style="border-color:'+gColor+';color:'+gColor+'">'+grade+'</div>'+
+    '<div style="font-size:12px;color:var(--dim);text-align:center">ציון: '+score+'% מתוך '+total+' בדיקות</div>';
+
+  /* Collect worst items */
+  var worst=[];
+  document.querySelectorAll('.ri.er,.ri.wn').forEach(function(el){ worst.push(el.outerHTML); });
+  var el=document.getElementById('summaryList');
+  if(el) el.innerHTML = worst.length ?
+    '<div class="card"><div class="ch">⚠️ פריטים לתשומת לב ('+(worst.length)+')</div>'+worst.slice(0,15).join('')+'</div>' :
+    '<div class="ri ok"><span class="ri-ico">✅</span><div class="ri-body"><div class="ri-t">כל הבדיקות עברו!</div></div></div>';
+}
+
+function renderFixes() {
+  var el=document.getElementById('fixesList');
+  if(!FIXES.length){ el.innerHTML='<div class="ri ok"><span class="ri-ico">✅</span><div class="ri-body"><div class="ri-t">אין תיקונים נדרשים</div></div></div>'; return; }
+  var html='';
+  FIXES.forEach(function(f,i){
+    var col=f.t.includes('חסר')||f.t.includes('שגוי')||f.t.includes('שגיאה')?'var(--red)':'var(--yellow)';
+    var safeCode=JSON.stringify(f.fix.code);
+    html+='<div class="card">'+
+      '<div class="ch" style="color:'+col+'">'+(i+1)+'. '+esc(f.t)+' <span class="ft">'+esc(f.file)+'</span></div>'+
+      (f.d?'<div style="font-size:11px;color:var(--dim);margin-bottom:8px">'+esc(f.d)+'</div>':'')+
+      '<div class="cb">'+esc(f.fix.code)+
+      '<button class="cb-copy" onclick="doCopy('+safeCode+')">📋 העתק</button>'+
+      '</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+function setProgress(pct,label){
+  var w=document.getElementById('progWrap'),f=document.getElementById('progFill'),l=document.getElementById('progLbl');
+  if(w)w.style.display='block';if(f)f.style.width=pct+'%';if(l&&label)l.textContent=label;
+}
+</script>
+
+</body>
+</html>
