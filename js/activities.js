@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/activities.js - v9.0.0 - Full Update + Staff System + Fixed Stocks */
+/* Smart Money Pro - js/activities.js - v9.0.0 - Full Update + Staff System (No Stocks) */
 
 // ── נתונים ─────────────────────────────────────────────────
 
@@ -26,7 +26,6 @@ const estateList = [
     { id: 'e8', name: 'מרכז מסחרי',   price: 12000000, passive: 1583, icon: '🏗️', desc: 'קניון ענק עם עשרות חנויות' }
 ];
 
-
 const businessList = [
     { id: 'biz_gum',    name: 'מכונת מסטיקים', price: 1200,     passive: 0.5,  icon: '🍬' },
     { id: 'biz_lemon',  name: 'דוכן לימונדה',  price: 4500,     passive: 1.5,  icon: '🍋' },
@@ -38,22 +37,6 @@ const businessList = [
     { id: 'biz_garage', name: 'מוסך רכב',       price: 650000,   passive: 193,  icon: '🔧' },
     { id: 'biz_hall',   name: 'אולם אירועים',   price: 2200000,  passive: 800,  icon: '🎊' },
     { id: 'biz_tech',   name: 'חברת הייטק',     price: 12000000, passive: 5000, icon: '🚀' }
-];
-
-// מניות: בינלאומי + ישראל
-const stockList = [
-    { id: 'AAPL', name: 'Apple',       price: 580,   trend: 0, flag: '🇺🇸', group: 'world' },
-    { id: 'TSLA', name: 'Tesla',        price: 920,   trend: 0, flag: '🇺🇸', group: 'world' },
-    { id: 'NVDA', name: 'Nvidia',       price: 420,   trend: 0, flag: '🇺🇸', group: 'world' },
-    { id: 'MSFT', name: 'Microsoft',    price: 380,   trend: 0, flag: '🇺🇸', group: 'world' },
-    { id: 'AMZN', name: 'Amazon',       price: 185,   trend: 0, flag: '🇺🇸', group: 'world' },
-    { id: 'BTC',  name: 'Bitcoin',      price: 65000, trend: 0, flag: '₿',   group: 'world' },
-    { id: 'ELAL', name: 'אל-על',        price: 12,    trend: 0, flag: '🇮🇱', group: 'il' },
-    { id: 'BEZQ', name: 'בזק',          price: 38,    trend: 0, flag: '🇮🇱', group: 'il' },
-    { id: 'TEVA', name: 'טבע',          price: 54,    trend: 0, flag: '🇮🇱', group: 'il' },
-    { id: 'ICL',  name: 'כיל',          price: 22,    trend: 0, flag: '🇮🇱', group: 'il' },
-    { id: 'NICE', name: 'NICE',         price: 180,   trend: 0, flag: '🇮🇱', group: 'il' },
-    { id: 'CHKP', name: 'Check Point',  price: 145,   trend: 0, flag: '🇮🇱', group: 'il' }
 ];
 
 const shopItems = [
@@ -91,7 +74,6 @@ const carList = [
     { name: 'מטוס פרטי',   price: 15000000, speed: 24,  icon: '🛩️' }
 ];
 
-// ── מערכת צוות / עובדים ─────────────────────────────────────
 const staffList = [
     { id: 'st1', name: 'מנקה משרדים',   price: 500,      passive: 2,      icon: '🧹', desc: 'עובד בסיסי' },
     { id: 'st2', name: 'קופאי',          price: 2000,     passive: 8,      icon: '🏧', desc: 'מטפל בתשלומים' },
@@ -112,27 +94,6 @@ if (!window.carLevels)    window.carLevels    = {};
 if (!window.estateData)   window.estateData   = {};
 if (!window.invBuyPrice)  window.invBuyPrice  = {};
 if (!window.staffData)    window.staffData    = {};
-
-// ── בורסה חיה + עדכון כסף בזמן אמת ────────────────────────
-setInterval(function() {
-    stockList.forEach(function(s) {
-        var change = (Math.random() * 0.05) - 0.024;
-        var oldPrice = s.price;
-        s.price *= (1 + change);
-        if (s.price < 0.5) s.price = 0.5;
-        s.trend = change;
-        var owned = window.invOwned[s.id] || 0;
-        if (owned > 0) {
-            var delta = (s.price - oldPrice) * owned;
-            window.money = Math.max(0, (window.money || 0) + delta);
-            if (delta > 0) window.totalEarned = (window.totalEarned || 0) + delta;
-        }
-    });
-    if (typeof currentTab !== 'undefined' && currentTab === 'invest') {
-        var c = document.getElementById('content');
-        if (c) window.drawInvest(c);
-    }
-}, 4000);
 
 // ── דף הבית ────────────────────────────────────────────────
 window.drawHome = function(c) {
@@ -188,9 +149,9 @@ window.startWork = function(id) {
         window.money += j.pay;
         window.lifeXP += j.xp;
         if (window.jobPassive < passiveCap) {
-    window.jobPassive = Math.min(passiveCap, window.jobPassive + passiveAdd);
-}
-window.passive += passiveAdd;
+            window.jobPassive = Math.min(passiveCap, window.jobPassive + passiveAdd);
+        }
+        window.passive += passiveAdd;
         showMsg('💰 +' + j.pay + '₪ | ✨ +' + j.xp + ' XP | 🚀 +' + passiveAdd.toFixed(3) + '₪/ד\'', 'var(--green)');
         if (btn) btn.disabled = false;
         if (container) container.style.display = 'none';
@@ -204,15 +165,12 @@ window.drawEstate = function(c) {
     if (!c) return;
     var html = '<div class="grid-2">';
     estateList.forEach(function(e) {
-        // שליחת נתונים מהזיכרון - כאן אנחנו מוודאים שיש count ו-level
         var d = window.estateData[e.id] || { count: 0, level: 0 };
         var count = d.count || 0;
         var level = d.level || 0;
         
-        // חישוב הכנסה: (בסיס * כמות) + בונוס רמה
         var totalPassive = (e.passive * count * (1 + level * 0.5)).toLocaleString();
         var upgradePrice = count > 0 ? Math.floor(e.price * 0.7 * (level + 1)) : 0;
-        var sellValue = count > 0 ? Math.floor(e.price * count * 0.7) : 0;
 
         var borderStyle = count > 0 ? 'border-top:4px solid var(--green)' : 'border-top:4px solid var(--border)';
         
@@ -221,19 +179,15 @@ window.drawEstate = function(c) {
                 '<div style="font-size:30px; margin-bottom:4px;">' + e.icon + '</div>' +
                 '<div style="font-weight:bold; font-size:13px; line-height:1.2;">' + e.name + '</div>' +
                 '<div style="font-size:10px; opacity:0.6; margin-bottom:4px; height:24px; overflow:hidden;">נכס מניב הכנסה פסיבית</div>' +
-
                 '<div style="font-size:11px; color:var(--green); font-weight:bold;">' + totalPassive + ' ₪/ד\'</div>' +
                 (count > 0 
                     ? '<div style="font-size:10px; color:var(--blue); margin:4px 0;">בבעלותך: ' + count + ' | רמה: ' + level + '</div>' 
                     : '<div style="font-size:10px; opacity:0.5; margin:4px 0;">טרם נרכש</div>') +
             '</div>' +
             '<div>' +
-                // כפתור רכישה/הוספה - תמיד פעיל (אייקון מפתח)
                 '<button class="sys-btn" style="width:100%; margin-bottom:4px; font-weight:bold; padding:8px 2px; background:rgba(34,197,94,0.1); border-color:var(--green); color:var(--green);" onclick="buyEstate(\'' + e.id + '\')">' +
                     '<span style="margin-left:4px;">🔑</span> ' + e.price.toLocaleString() + '₪' +
                 '</button>' +
-                
-                // כפתורי ניהול (מופיעים רק אם יש לפחות נכס אחד)
                 (count > 0 ? '<div style="display:flex; gap:4px;">' +
                     '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(168,85,247,0.15); color:var(--purple); border-color:var(--purple);" onclick="upgradeEstate(\'' + e.id + '\')" title="שדרג">⬆️ ' + upgradePrice.toLocaleString() + '</button>' +
                     '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(239,68,68,0.15); color:var(--red); border-color:var(--red);" onclick="sellEstate(\'' + e.id + '\')" title="מכור הכל">💰 מכור</button>' +
@@ -243,7 +197,6 @@ window.drawEstate = function(c) {
     });
     c.innerHTML = html + '</div>';
 };
-
 
 window.buyEstate = function(id) {
     var e = estateList.find(function(x) { return x.id === id; });
@@ -317,7 +270,7 @@ window.buyBusiness = function(id, price, passAdd) {
 window.sellBusiness = function(id) {
     var b = businessList.find(function(x) { return x.id === id; });
     if (!b) return;
-    var level = window.inventory.filter(function(item) { return item === b.id; }).length;
+    var level = window.inventory.filter(function(item) { return item === id; }).length;
     if (level === 0) return;
     var sellValue  = Math.floor(b.price * level * 0.7);
     var passiveLost = b.passive * level;
@@ -384,82 +337,6 @@ window.repayLoan = function() {
     saveGame(); updateUI(); drawBank(document.getElementById('content'));
 };
 
-// ── בורסה מלאה ─────────────────────────────────────────────
-window.drawInvest = function(c) {
-    var totalValue = 0, totalCost = 0;
-    stockList.forEach(function(s) {
-        var owned = window.invOwned[s.id] || 0;
-        if (owned > 0) {
-            totalValue += s.price * owned;
-            totalCost  += (window.invBuyPrice[s.id] || s.price) * owned;
-        }
-    });
-    var pnl = totalValue - totalCost;
-    var pnlColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-
-    var html = '<h3>📈 מסחר בבורסה</h3>';
-    if (totalValue > 0) {
-        html += '<div class="card" style="background:rgba(255,255,255,0.03);padding:12px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.08);">' +
-            '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="opacity:0.7;">💼 שווי תיק</span><b style="color:var(--blue);">' + Math.floor(totalValue).toLocaleString() + '₪</b></div>' +
-            '<div style="display:flex;justify-content:space-between;font-size:12px;"><span style="opacity:0.7;">📊 רווח/הפסד</span><b style="color:' + pnlColor + ';">' + (pnl >= 0 ? '+' : '') + Math.floor(pnl).toLocaleString() + '₪</b></div></div>';
-    }
-    html += '<div style="font-size:11px;font-weight:bold;opacity:0.5;margin-bottom:6px;">🌍 בינלאומי</div><div class="grid-2">';
-    stockList.filter(function(s) { return s.group === 'world'; }).forEach(function(s) { html += buildStockCard(s); });
-    html += '</div><div style="font-size:11px;font-weight:bold;opacity:0.5;margin:10px 0 6px;">🇮🇱 ישראל</div><div class="grid-2">';
-    stockList.filter(function(s) { return s.group === 'il'; }).forEach(function(s) { html += buildStockCard(s); });
-    html += '</div>';
-    c.innerHTML = html;
-};
-
-function buildStockCard(s) {
-    var owned = window.invOwned[s.id] || 0;
-    var color = s.trend >= 0 ? 'var(--green)' : 'var(--red)';
-    var arrow = s.trend >= 0 ? '▲' : '▼';
-    var pct   = (Math.abs(s.trend) * 100).toFixed(2);
-    var val   = owned > 0 ? Math.floor(s.price * owned) : 0;
-    var avg   = window.invBuyPrice[s.id] || s.price;
-    var pnl   = owned > 0 ? Math.floor((s.price - avg) * owned) : 0;
-    var pc    = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-    var sid   = s.id;
-    return '<div class="card fade-in" style="text-align:center;border-bottom:3px solid ' + color + ';padding:10px;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">' +
-        '<span style="font-size:11px;font-weight:bold;">' + s.flag + ' ' + s.name + '</span>' +
-        '<span style="font-size:10px;color:' + color + ';">' + arrow + pct + '%</span></div>' +
-        '<div style="color:' + color + ';font-weight:bold;font-size:14px;margin:4px 0;">' + s.price.toFixed(2) + '₪</div>' +
-        (owned > 0
-            ? '<div style="font-size:10px;margin-bottom:4px;">יש: <b>' + owned + '</b> | <b style="color:var(--blue);">' + val.toLocaleString() + '₪</b><br><span style="color:' + pc + ';">' + (pnl >= 0 ? '+' : '') + pnl.toLocaleString() + '₪</span></div>'
-            : '<div style="font-size:10px;opacity:0.4;margin-bottom:4px;">לא מחזיק</div>') +
-        '<div style="display:flex;gap:4px;">' +
-        '<button class="sys-btn" style="flex:1;padding:5px;background:rgba(34,197,94,0.15);font-size:11px;" onclick="buyStock(\'' + sid + '\')">קנה</button>' +
-        '<button class="sys-btn" style="flex:1;padding:5px;background:rgba(239,68,68,0.15);font-size:11px;" onclick="sellStock(\'' + sid + '\')">מכור</button>' +
-        '</div></div>';
-}
-
-window.buyStock = function(id) {
-    var s = stockList.find(function(x) { return x.id === id; });
-    if (!s) return;
-    if (window.money < s.price) return showMsg('אין מספיק כסף לקנות ' + s.name + '!', 'var(--red)');
-    var prev = window.invOwned[id] || 0;
-    var avg  = window.invBuyPrice[id] || s.price;
-    window.money -= s.price;
-    window.invOwned[id] = prev + 1;
-    window.invBuyPrice[id] = ((avg * prev) + s.price) / (prev + 1);
-    showMsg('📈 קנית ' + s.name + ' ב-' + s.price.toFixed(2) + '₪', 'var(--green)');
-    saveGame(); updateUI(); drawInvest(document.getElementById('content'));
-};
-
-window.sellStock = function(id) {
-    var s = stockList.find(function(x) { return x.id === id; });
-    if (!s) return;
-    if (!window.invOwned[id] || window.invOwned[id] <= 0) return showMsg('אין לך מניות של ' + s.name + '!', 'var(--red)');
-    var profit = s.price - (window.invBuyPrice[id] || s.price);
-    window.money += s.price;
-    window.invOwned[id] -= 1;
-    if (window.invOwned[id] === 0) delete window.invBuyPrice[id];
-    showMsg('💸 מכרת ' + s.name + ' | ' + (profit >= 0 ? '+' : '') + Math.floor(profit) + '₪ רווח', profit >= 0 ? 'var(--green)' : 'var(--red)');
-    saveGame(); updateUI(); drawInvest(document.getElementById('content'));
-};
-
 // ── חנות + שדרוגים ─────────────────────────────────────────
 window.drawShop = function(c) {
     if (!window.itemLevels) window.itemLevels = {};
@@ -503,28 +380,6 @@ window.upgradeShopItem = function(id) {
     saveGame(); updateUI(); drawShop(document.getElementById('content'));
 };
 
-// ── קזינו ───────────────────────────────────────────────────
-window.drawTasks = function(c) {
-    c.innerHTML = '<div class="card fade-in" style="text-align:center;padding:25px;border:2px dashed var(--yellow);">' +
-        '<div style="font-size:55px;margin-bottom:10px;">🎰</div>' +
-        '<h3 style="color:var(--yellow);">Royal Casino</h3>' +
-        '<input type="number" id="gamble-amt" placeholder="כמה להמר?" style="width:85%;padding:12px;margin-bottom:15px;text-align:center;background:#000;color:#fff;border:1px solid #444;border-radius:8px;">' +
-        '<div id="casino-status" style="height:30px;font-weight:bold;margin-bottom:10px;"></div>' +
-        '<button class="action" style="background:var(--yellow);color:black;width:100%;font-weight:bold;" onclick="runCasino()">סובב גלגל!</button></div>';
-};
-
-window.runCasino = function() {
-    var amt    = parseInt(document.getElementById('gamble-amt').value);
-    var status = document.getElementById('casino-status');
-    if (!amt || amt <= 0 || amt > window.money) return showMsg('סכום לא תקין', 'var(--red)');
-    window.money -= amt; updateUI();
-    status.innerHTML = '🎲 מסובב...';
-    setTimeout(function() {
-        if (Math.random() > 0.58) { window.money += amt * 2; status.innerHTML = '<span style="color:var(--green);">זכית ב-' + (amt * 2) + '₪!</span>'; }
-        else { status.innerHTML = '<span style="color:var(--red);">הפסדת...</span>'; }
-        updateUI(); saveGame();
-    }, 1200);
-};
 
 // ── כישורים ─────────────────────────────────────────────────
 window.drawSkills = function(c) {
@@ -625,36 +480,34 @@ window.drawStaff = function(c) {
         '<div class="grid-2">';
 
     staffList.forEach(function(s) {
-    var d            = window.staffData[s.id] || { count: 0, level: 0 };
-    var count        = d.count || 0;
-    var level        = d.level || 0;
-    var currentPass  = (s.passive * (1 + level * 0.4)).toFixed(1);
-    var totalPass    = (s.passive * (1 + level * 0.4) * count).toFixed(1);
-    var upgradePrice = count > 0 ? Math.floor(s.price * 0.5 * (level + 1)) : null;
-    var fireValue    = count > 0 ? Math.floor(s.price * count * 0.6) : 0;
+        var d            = window.staffData[s.id] || { count: 0, level: 0 };
+        var count        = d.count || 0;
+        var level        = d.level || 0;
+        var currentPass  = (s.passive * (1 + level * 0.4)).toFixed(1);
+        var upgradePrice = count > 0 ? Math.floor(s.price * 0.5 * (level + 1)) : null;
+        var fireValue    = count > 0 ? Math.floor(s.price * count * 0.6) : 0;
 
-    html += '<div class="card fade-in" style="text-align:center; display:flex; flex-direction:column; justify-content:space-between; border-top:4px solid ' + (count > 0 ? 'var(--purple)' : 'var(--border)') + '; padding: 10px; min-height: 230px;">' +
-        '<div>' +
-            '<div style="font-size:30px; margin-bottom:4px;">' + s.icon + '</div>' +
-            '<div style="font-weight:bold; font-size:13px; line-height:1.2;">' + s.name + '</div>' +
-            '<div style="font-size:10px; opacity:0.6; margin-bottom:4px; height:24px; overflow:hidden;">' + s.desc + '</div>' +
-            '<div style="font-size:11px; color:var(--purple); font-weight:bold;">' + currentPass + ' ₪/ד\'</div>' +
-            (count > 0
-                ? '<div style="font-size:10px; color:var(--green); margin:4px 0;">צוות: ' + count + ' | רמה ' + level + '</div>'
-                : '<div style="font-size:10px; opacity:0.5; margin:4px 0;">טרם גויס</div>') +
-        '</div>' +
-        '<div>' +
-            // שימוש באייקון כרטיס עובד במקום פלוס
-            '<button class="sys-btn" style="width:100%; margin-bottom:4px; font-weight:bold; padding:8px 2px; background:rgba(56,189,248,0.1); border-color:var(--blue); color:var(--blue);" onclick="hireStaff(\'' + s.id + '\')">' +
-                '<span style="margin-left:4px;">🤝</span> ' + s.price.toLocaleString() + '₪' +
-            '</button>' +
-            (count > 0 ? '<div style="display:flex; gap:4px;">' +
-                '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(168,85,247,0.15); color:var(--purple); border-color:var(--purple);" onclick="upgradeStaff(\'' + s.id + '\')" title="שדרג">⬆️ ' + upgradePrice.toLocaleString() + '</button>' +
-                '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(239,68,68,0.15); color:var(--red); border-color:var(--red);" onclick="fireStaff(\'' + s.id + '\')" title="פטר">🔴 ' + fireValue.toLocaleString() + '</button>' +
-                '</div>' : '') +
-        '</div>' +
-    '</div>';
-});
+        html += '<div class="card fade-in" style="text-align:center; display:flex; flex-direction:column; justify-content:space-between; border-top:4px solid ' + (count > 0 ? 'var(--purple)' : 'var(--border)') + '; padding: 10px; min-height: 230px;">' +
+            '<div>' +
+                '<div style="font-size:30px; margin-bottom:4px;">' + s.icon + '</div>' +
+                '<div style="font-weight:bold; font-size:13px; line-height:1.2;">' + s.name + '</div>' +
+                '<div style="font-size:10px; opacity:0.6; margin-bottom:4px; height:24px; overflow:hidden;">' + s.desc + '</div>' +
+                '<div style="font-size:11px; color:var(--purple); font-weight:bold;">' + currentPass + ' ₪/ד\'</div>' +
+                (count > 0
+                    ? '<div style="font-size:10px; color:var(--green); margin:4px 0;">צוות: ' + count + ' | רמה ' + level + '</div>'
+                    : '<div style="font-size:10px; opacity:0.5; margin:4px 0;">טרם גויס</div>') +
+            '</div>' +
+            '<div>' +
+                '<button class="sys-btn" style="width:100%; margin-bottom:4px; font-weight:bold; padding:8px 2px; background:rgba(56,189,248,0.1); border-color:var(--blue); color:var(--blue);" onclick="hireStaff(\'' + s.id + '\')">' +
+                    '<span style="margin-left:4px;">🤝</span> ' + s.price.toLocaleString() + '₪' +
+                '</button>' +
+                (count > 0 ? '<div style="display:flex; gap:4px;">' +
+                    '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(168,85,247,0.15); color:var(--purple); border-color:var(--purple);" onclick="upgradeStaff(\'' + s.id + '\')" title="שדרג">⬆️ ' + upgradePrice.toLocaleString() + '</button>' +
+                    '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(239,68,68,0.15); color:var(--red); border-color:var(--red);" onclick="fireStaff(\'' + s.id + '\')" title="פטר">🔴 ' + fireValue.toLocaleString() + '</button>' +
+                    '</div>' : '') +
+            '</div>' +
+        '</div>';
+    });
 
     c.innerHTML = html + '</div>';
 };
