@@ -1,6 +1,6 @@
-/* Smart Money Pro- js/events.js - Random Events System (Clean Version) */
-
+/* Smart Money Pro - js/events.js - v9.5.0 - Random Events System (Clean Version) */
 window.randomEvents = [
+    // --- אירועים קיימים ---
     {
         id: 'ev_bonus',
         title: 'בונוס הצטיינות!',
@@ -9,17 +9,6 @@ window.randomEvents = [
             let amount = Math.floor(window.money * 0.1) + 500;
             window.money += amount;
             return `קיבלת בונוס של ${amount.toLocaleString()} ₪`;
-        }
-    },
-    {
-        id: 'ev_market_boom',
-        title: 'גאות בבורסה 📈',
-        type: 'positive',
-        action: () => {
-            if(window.stockPrices) {
-                for (let s in window.stockPrices) { window.stockPrices[s] *= 1.15; }
-            }
-            return `המניות זינקו ב-15%!`;
         }
     },
     {
@@ -38,21 +27,8 @@ window.randomEvents = [
         action: () => {
             let fine = Math.floor(window.money * 0.08);
             window.money -= fine;
-            // עדכון משתנה ההפסדים לסיכום הכניסה
-            window.eventLosses = (window.eventLosses || 0) + fine; 
+            window.eventLosses = (window.eventLosses || 0) + fine;
             return `שילמת קנס בסך ${fine.toLocaleString()} ₪`;
-        }
-    },
-    {
-        id: 'ev_market_crash',
-        title: 'קריסה בבורסה 📉',
-        type: 'negative',
-        action: () => {
-            // כאן קשה לחשב הפסד מדויק בשקלים כי זה שווי תיק, אז נשאיר כהודעה
-            if(window.stockPrices) {
-                for (let s in window.stockPrices) { window.stockPrices[s] *= 0.90; }
-            }
-            return `הפסד של 10% בערך המניות.`;
         }
     },
     {
@@ -62,7 +38,6 @@ window.randomEvents = [
         action: () => {
             let cost = 1200;
             window.money -= cost;
-            // עדכון משתנה ההפסדים
             window.eventLosses = (window.eventLosses || 0) + cost;
             return `התיקון עלה לך 1,200 ₪`;
         }
@@ -82,23 +57,69 @@ window.randomEvents = [
             }, 120000);
             return `שביתה! ההכנסה ירדה ב-${lost.toFixed(1)} ₪ לדקה.`;
         }
+    },
+    // --- אירועים חדשים שהוספתי (בפורמט המקורי שלך) ---
+    {
+        id: 'ev_lottery',
+        title: 'זכייה בלוטו',
+        type: 'positive',
+        action: () => {
+            window.money += 2500;
+            return `זכית ב-2,500 ₪ בלוטו!`;
+        }
+    },
+    {
+        id: 'ev_tax_refund',
+        title: 'החזר מס',
+        type: 'positive',
+        action: () => {
+            window.money += 1200;
+            return `קיבלת החזר מס על סך 1,200 ₪.`;
+        }
+    },
+    {
+        id: 'ev_dentist',
+        title: 'טיפול שיניים',
+        type: 'negative',
+        action: () => {
+            let cost = 1500;
+            window.money -= cost;
+            window.eventLosses = (window.eventLosses || 0) + cost;
+            return `הטיפול עלה לך ${cost.toLocaleString()} ₪.`;
+        }
+    },
+    {
+        id: 'ev_black_market_deal',
+        title: 'עסקת שוק שחור',
+        type: 'positive',
+        action: () => {
+            let gain = 4000;
+            window.blackMoney = (window.blackMoney || 0) + gain;
+            return `העסקה הצליחה! +${gain.toLocaleString()} ₪ לכסף שחור.`;
+        }
+    },
+    {
+        id: 'ev_police_raid',
+        title: 'פשיטה משטרתית',
+        type: 'negative',
+        action: () => {
+            let lost = Math.floor((window.blackMoney || 0) * 0.3);
+            window.blackMoney -= lost;
+            return `הוחרמו לך ${lost.toLocaleString()} ₪ מהכסף השחור!`;
+        }
     }
 ];
 
-// פונקציה מרכזית להפעלת אירוע
 window.triggerRandomEvent = function() {
     const event = window.randomEvents[Math.floor(Math.random() * window.randomEvents.length)];
     const resultMsg = event.action();
-    
     const color = event.type === 'positive' ? 'var(--green)' : 'var(--red)';
     const icon = event.type === 'positive' ? '🎉' : '⚠️';
+    // חזרה למבנה המקורי שלך בדיוק:
     const fullMessage = `${icon} ${event.title}: ${resultMsg}`;
-
-    if (typeof showMsgLong === 'function') {
-        showMsgLong(fullMessage, color);
-    } else if (typeof showMsg === 'function') {
-        showMsg(fullMessage, color);
-    }
     
-    if(window.updateUI) window.updateUI();
+    if (typeof showMsgLong === 'function') showMsgLong(fullMessage, color);
+    else if (typeof showMsg === 'function') showMsg(fullMessage, color);
+    
+    if (window.updateUI) window.updateUI();
 };
