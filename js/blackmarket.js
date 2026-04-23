@@ -146,12 +146,12 @@ function renderBlackMarket() {
         ${renderBMBtn("🔥 ראיות", `${baseScale(180000).toLocaleString()} ₪`, `() => policeAction('ביעור', ${baseScale(180000)}, 150, 150)`, "8s", false, true)}
     </div>
 
-    <div class="bm-label">🏢 נכסים ושיפורים</div>
+    <div class="bm-label">🏢 נכסים<div class="bm-label">🏢 נכסים ושיפורים</div>
     <div class="bm-grid">
-        ${renderBMBtn("🏠 מקלט", `${baseScale(250000).toLocaleString()} ₪`, `() => assetAction('מקלט', ${baseScale(250000)}, 'heat')`, "6s", false)}
-        ${renderBMBtn("⛏️ חווה", `${baseScale(150000).toLocaleString()} ₪`, `() => assetAction('חווה', ${baseScale(150000)}, 'money')`, "5s", false)}
-        ${renderBMBtn("🕵️ מודיע", `${baseScale(200000).toLocaleString()} ₪`, `() => assetAction('מודיע', ${baseScale(200000)}, 'crime')`, "4s", false)}
-        ${renderBMBtn("🤝 קשרים", `${baseScale(350000).toLocaleString()} ₪`, `() => assetAction('קשרים', ${baseScale(350000)}, 'all')`, "7s", false)}
+        ${renderBMBtn("🏠 מקלט - מוריד 80 חום", `${baseScale(250000).toLocaleString()} ₪`, `() => assetAction('מקלט', ${baseScale(250000)}, 'heat')`, "6s", false)}
+        ${renderBMBtn("⛏️ חווה - מפיקה כסף שחור", `${baseScale(150000).toLocaleString()} ₪`, `() => assetAction('חווה', ${baseScale(150000)}, 'money')`, "5s", false)}
+        ${renderBMBtn("🕵️ מודיע - מוריד 50 פשע", `${baseScale(200000).toLocaleString()} ₪`, `() => assetAction('מודיע', ${baseScale(200000)}, 'crime')`, "4s", false)}
+        ${renderBMBtn("🤝 קשרים - מאפס חום ופשע", `${baseScale(350000).toLocaleString()} ₪`, `() => assetAction('קשרים', ${baseScale(350000)}, 'all')`, "7s", false)}
     </div>`;
     
     mainDiv.innerHTML = getBMTemplate(content, "שוק שחור");
