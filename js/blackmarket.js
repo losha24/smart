@@ -146,7 +146,7 @@ function renderBlackMarket() {
         ${renderBMBtn("🔥 ראיות", `${baseScale(180000).toLocaleString()} ₪`, `() => policeAction('ביעור', ${baseScale(180000)}, 150, 150)`, "8s", false, true)}
     </div>
 
-    <div class="bm-label">🏢 נכסים<div class="bm-label">🏢 נכסים ושיפורים</div>
+    <div class="bm-label">🏢 נכסים ושיפורים</div>
     <div class="bm-grid">
         ${renderBMBtn("🏠 מקלט - מוריד 80 חום", `${baseScale(250000).toLocaleString()} ₪`, `() => assetAction('מקלט', ${baseScale(250000)}, 'heat')`, "6s", false)}
         ${renderBMBtn("⛏️ חווה - מפיקה כסף שחור", `${baseScale(150000).toLocaleString()} ₪`, `() => assetAction('חווה', ${baseScale(150000)}, 'money')`, "5s", false)}
