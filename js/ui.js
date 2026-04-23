@@ -490,24 +490,51 @@ function renderUIUpdate(ld) {
 window.openTab = function(t) {
     const isAuto = new Error().stack.includes('setInterval');
     if (t === currentTab && isAuto) return;
+    
     currentTab = t;
+
+    // --- טיפול בצבע הכפתורים (Active State) ---
     document.querySelectorAll('.topbar button').forEach(b => b.classList.remove('active'));
-    const btn = document.getElementById('btn' + t.charAt(0).toUpperCase() + t.slice(1));
+    
+    // בונה את ה-ID לפי שם הטאב (למשל btnHome, btnBlack, btnWork)
+    const btnId = 'btn' + t.charAt(0).toUpperCase() + t.slice(1);
+    const btn = document.getElementById(btnId);
     if(btn) btn.classList.add('active');
+
     const c = document.getElementById('content');
     if(!c) return;
+
+    // --- טיפול בתוכן ---
     c.style.opacity = '0.5';
     setTimeout(() => {
         c.innerHTML = '';
-        const drawFunc = window['draw' + t.charAt(0).toUpperCase() + t.slice(1)];
-        if (typeof drawFunc === 'function') drawFunc(c);
-        else window.drawHome(c);
+
+        // בדיקה אם זה שוק שחור - מפעיל את הפונקציה המיוחדת שלו
+        if (t === 'black') {
+            if (typeof renderBlackMarket === 'function') {
+                renderBlackMarket();
+            }
+        } else {
+            // לוגיקה רגילה לשאר הטאבים (בית, עבודות וכו')
+            const drawFunc = window['draw' + t.charAt(0).toUpperCase() + t.slice(1)];
+            if (typeof drawFunc === 'function') {
+                drawFunc(c);
+            } else {
+                window.drawHome(c);
+            }
+        }
+
         c.style.opacity = '1';
         if (t !== 'invest') window.scrollTo(0,0);
         if(typeof updateUI === 'function') updateUI();
         if (t === 'home') fbSaveScore();
     }, 100);
+    
+    // שורה להוספה: שמירת הטאב הנוכחי בזיכרון
+    localStorage.setItem('lastTab', t);
 };
+
+
 
 // ============================================================
 // דף הבית
@@ -724,6 +751,12 @@ async function triggerInstall() {
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     fbLoadConfig().then(() => {
-        setTimeout(() => { window.openTab('home'); }, 150);
+        // בדיקה איזה טאב היה פתוח בפעם האחרונה
+        const lastTab = localStorage.getItem('lastTab') || 'home';
+        
+        setTimeout(() => { 
+            window.openTab(lastTab); 
+        }, 150);
     });
 });
+
