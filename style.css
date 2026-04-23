@@ -209,25 +209,26 @@ body {
     width: 100%; 
 }
 
-.topbar button { 
-    flex: 1; 
-    min-width: 0; 
-    padding: 10px 2px; 
-    border-radius: 10px; 
-    border: 1px solid var(--border); 
-    background: rgba(255, 255, 255, 0.03); 
-    color: var(--text); 
-    font-size: 11px; 
+.topbar button {
+    flex: 1;
+    padding: 10px 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    font-size: 11px;
+    /* חזרה לגודל המקורי */
     font-weight: 700;
     cursor: pointer;
     transition: 0.2s;
-    white-space: nowrap;
+    /* הסרנו את ה-white-space כדי למנוע בריחה של טקסט */
 }
 
-.topbar button.active { 
-    background: var(--blue); 
-    color: #0f172a; 
-    border-color: var(--blue);
+/* הדגשת הכפתור הפעיל */
+.topbar button.active {
+    background: var(--blue) !important;
+    color: #0f172a !important;
+    border-color: var(--blue) !important;
 }
 
 /* תוכן ראשי */
@@ -337,4 +338,37 @@ footer.main-footer {
 }
 html, body {
 touch-action: manipulation;
+}
+
+/* התאמות נדל"ן לעיצוב v9 */
+.re-project-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+}
+
+.skill-node {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--card);
+    border: 1px solid var(--purple);
+    font-size: 11px;
+    margin: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.skill-node.owned {
+    background: var(--purple);
+    color: white;
+}
+
+.progress-fill {
+    height: 8px;
+    background: var(--green);
+    border-radius: 10px;
+    transition: width 0.4s;
 }
