@@ -169,8 +169,11 @@ window.drawEstate = function(c) {
         var count = d.count || 0;
         var level = d.level || 0;
         
-        var totalPassive = (e.passive * count * (1 + level * 0.5)).toLocaleString();
-        var upgradePrice = count > 0 ? Math.floor(e.price * 0.7 * (level + 1)) : 0;
+        // חישוב מחיר דינמי לתצוגה - זהה ללוגיקת הקנייה
+        var currentPrice = Math.floor(e.price * Math.pow(1.20, count));
+        
+        var totalPassive = (e.passive * 0.75 * count * (1 + level * 0.20)).toLocaleString();
+        var upgradePrice = count > 0 ? Math.floor(e.price * Math.pow(2.5, level + 1)) : 0;
 
         var borderStyle = count > 0 ? 'border-top:4px solid var(--green)' : 'border-top:4px solid var(--border)';
         
@@ -186,7 +189,7 @@ window.drawEstate = function(c) {
             '</div>' +
             '<div>' +
                 '<button class="sys-btn" style="width:100%; margin-bottom:4px; font-weight:bold; padding:8px 2px; background:rgba(34,197,94,0.1); border-color:var(--green); color:var(--green);" onclick="buyEstate(\'' + e.id + '\')">' +
-                    '<span style="margin-left:4px;">🔑</span> ' + e.price.toLocaleString() + '₪' +
+                    '<span style="margin-left:4px;">🔑</span> ' + currentPrice.toLocaleString() + '₪' +
                 '</button>' +
                 (count > 0 ? '<div style="display:flex; gap:4px;">' +
                     '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(168,85,247,0.15); color:var(--purple); border-color:var(--purple);" onclick="upgradeEstate(\'' + e.id + '\')" title="שדרג">⬆️ ' + upgradePrice.toLocaleString() + '</button>' +
@@ -198,31 +201,52 @@ window.drawEstate = function(c) {
     c.innerHTML = html + '</div>';
 };
 
+
 window.buyEstate = function(id) {
     var e = estateList.find(function(x) { return x.id === id; });
-    if (!e || window.money < e.price) return showMsg('אין מספיק כסף!', 'var(--red)');
-    if (!window.estateData[id]) window.estateData[id] = { count: 0, level: 0 };
-    window.money -= e.price;
-    window.estateData[id].count += 1;
-    window.passive += e.passive;
-    showMsg('🏠 רכשת ' + e.name + '! +' + e.passive + '₪/ד\'', 'var(--green)');
+    if (!e) return;
+    var d = window.estateData[id] || { count: 0, level: 0 };
+    
+    // מחיר עולה ב-20% על כל נכס קיים
+    var pricePerOne = Math.floor(e.price * Math.pow(1.20, d.count || 0));
+
+    if (window.money < pricePerOne) return showMsg('אין מספיק כסף!', 'var(--red)');
+
+    window.money -= pricePerOne;
+    // הכנסה פסיבית מוקטנת (75% מהמקור)
+    var reducedPassive = e.passive * 0.75;
+
+    window.estateData[id] = {
+        count: (d.count || 0) + 1,
+        level: d.level || 0
+    };
+    window.passive += reducedPassive;
+
+    showMsg('🏠 רכשת ' + e.name, 'var(--green)');
     saveGame(); updateUI(); drawEstate(document.getElementById('content'));
 };
 
 window.upgradeEstate = function(id) {
     var e = estateList.find(function(x) { return x.id === id; });
-    if (!e) return;
-    var eData = window.estateData[id] || { count: 0, level: 0 };
-    if (eData.count === 0) return;
-    var upgradePrice = Math.floor(e.price * 0.6 * (eData.level + 1));
-    if (window.money < upgradePrice) return showMsg('אין מספיק כסף לשדרוג!', 'var(--red)');
-    var bonusPassive = e.passive * eData.count * 0.5;
+    var d = window.estateData[id];
+    if (!e || !d || d.count === 0) return;
+
+    // מחיר שדרוג קופץ בפי 2.5 בכל רמה
+    var upgradePrice = Math.floor(e.price * Math.pow(2.5, (d.level || 0) + 1));
+
+    if (window.money < upgradePrice) return showMsg('השיפוץ יקר!', 'var(--red)');
+
+    // בונוס פסיבי מוקטן (20% תוספת במקום 50%)
+    var bonusPassive = (e.passive * 0.75) * d.count * 0.20;
+
     window.money -= upgradePrice;
-    window.estateData[id].level += 1;
+    window.estateData[id].level = (d.level || 0) + 1;
     window.passive += bonusPassive;
-    showMsg('⬆️ ' + e.name + ' שודרג לרמה ' + window.estateData[id].level + '! +' + bonusPassive.toFixed(1) + '₪/ד\'', 'var(--yellow)');
+
+    showMsg('⬆️ ' + e.name + ' רמה ' + window.estateData[id].level, 'var(--purple)');
     saveGame(); updateUI(); drawEstate(document.getElementById('content'));
 };
+
 
 window.sellEstate = function(id) {
     var e = estateList.find(function(x) { return x.id === id; });
@@ -468,7 +492,8 @@ window.drawStaff = function(c) {
         var s = staffList.find(function(x) { return x.id === sid; });
         if (s) {
             var d = window.staffData[sid];
-            totalStaffPassive += s.passive * d.count * (1 + (d.level || 0) * 0.4);
+            // חישוב הכנסה כוללת לסוג צוות זה
+            totalStaffPassive += (s.passive * 0.7) * d.count * (1 + (d.level || 0) * 0.15);
         }
     });
 
@@ -476,68 +501,110 @@ window.drawStaff = function(c) {
         '<div class="card" style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.3);padding:12px;margin-bottom:12px;text-align:center;">' +
         '<div style="font-size:12px;opacity:0.7;margin-bottom:4px;">💼 הכנסה פסיבית מהצוות</div>' +
         '<div style="font-size:22px;font-weight:bold;color:var(--purple);">' + totalStaffPassive.toFixed(1) + ' ₪/ד\'</div>' +
-        '<div style="font-size:10px;opacity:0.5;margin-top:2px;">שדרג עובדים להכנסה גבוהה יותר</div></div>' +
-        '<div class="grid-2">';
+        '</div><div class="grid-2">';
 
     staffList.forEach(function(s) {
-        var d            = window.staffData[s.id] || { count: 0, level: 0 };
-        var count        = d.count || 0;
-        var level        = d.level || 0;
-        var currentPass  = (s.passive * (1 + level * 0.4)).toFixed(1);
-        var upgradePrice = count > 0 ? Math.floor(s.price * 0.5 * (level + 1)) : null;
-        var fireValue    = count > 0 ? Math.floor(s.price * count * 0.6) : 0;
+        var d = window.staffData[s.id] || { count: 0, level: 0 };
+        var count = d.count || 0;
+        var level = d.level || 0;
+        
+        var currentPrice = Math.floor(s.price * Math.pow(1.15, count));
+        
+        // --- התיקון כאן: הכפלנו ב-count כדי לראות את הסכום של כולם בריבוע ---
+        var totalTypePass = ((s.passive * 0.7) * count * (1 + level * 0.15)).toFixed(1);
+        
+        var upgradePrice = count > 0 ? Math.floor(s.price * Math.pow(2.2, level + 1)) : 0;
+        var fireValue = count > 0 ? Math.floor(s.price * count * 0.6) : 0;
 
         html += '<div class="card fade-in" style="text-align:center; display:flex; flex-direction:column; justify-content:space-between; border-top:4px solid ' + (count > 0 ? 'var(--purple)' : 'var(--border)') + '; padding: 10px; min-height: 230px;">' +
             '<div>' +
                 '<div style="font-size:30px; margin-bottom:4px;">' + s.icon + '</div>' +
-                '<div style="font-weight:bold; font-size:13px; line-height:1.2;">' + s.name + '</div>' +
-                '<div style="font-size:10px; opacity:0.6; margin-bottom:4px; height:24px; overflow:hidden;">' + s.desc + '</div>' +
-                '<div style="font-size:11px; color:var(--purple); font-weight:bold;">' + currentPass + ' ₪/ד\'</div>' +
+                '<div style="font-weight:bold; font-size:13px;">' + s.name + '</div>' +
+                '<div style="font-size:11px; color:var(--purple); font-weight:bold;">' + totalTypePass + ' ₪/ד\'</div>' + 
                 (count > 0
                     ? '<div style="font-size:10px; color:var(--green); margin:4px 0;">צוות: ' + count + ' | רמה ' + level + '</div>'
                     : '<div style="font-size:10px; opacity:0.5; margin:4px 0;">טרם גויס</div>') +
             '</div>' +
             '<div>' +
-                '<button class="sys-btn" style="width:100%; margin-bottom:4px; font-weight:bold; padding:8px 2px; background:rgba(56,189,248,0.1); border-color:var(--blue); color:var(--blue);" onclick="hireStaff(\'' + s.id + '\')">' +
-                    '<span style="margin-left:4px;">🤝</span> ' + s.price.toLocaleString() + '₪' +
+                '<button class="sys-btn" style="width:100%; margin-bottom:4px; font-weight:bold;" onclick="hireStaff(\'' + s.id + '\')">' +
+                    '🤝 ' + currentPrice.toLocaleString() + '₪' +
                 '</button>' +
                 (count > 0 ? '<div style="display:flex; gap:4px;">' +
-                    '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(168,85,247,0.15); color:var(--purple); border-color:var(--purple);" onclick="upgradeStaff(\'' + s.id + '\')" title="שדרג">⬆️ ' + upgradePrice.toLocaleString() + '</button>' +
-                    '<button class="sys-btn" style="flex:1; font-size:9px; padding:5px 2px; background:rgba(239,68,68,0.15); color:var(--red); border-color:var(--red);" onclick="fireStaff(\'' + s.id + '\')" title="פטר">🔴 ' + fireValue.toLocaleString() + '</button>' +
+                    '<button class="sys-btn" style="flex:1; font-size:9px;" onclick="upgradeStaff(\'' + s.id + '\')">⬆️ ' + upgradePrice.toLocaleString() + '</button>' +
+                    '<button class="sys-btn" style="flex:1; font-size:9px;" onclick="fireStaff(\'' + s.id + '\')">🔴</button>' +
                     '</div>' : '') +
             '</div>' +
         '</div>';
     });
-
     c.innerHTML = html + '</div>';
 };
+
+
 
 window.hireStaff = function(id) {
     var s = staffList.find(function(x) { return x.id === id; });
     if (!s) return;
-    if (window.money < s.price) return showMsg('חסרים ' + Math.ceil(s.price - window.money).toLocaleString() + '₪', 'var(--red)');
-    if (!window.staffData[id]) window.staffData[id] = { count: 0, level: 0 };
-    window.money -= s.price;
-    window.staffData[id].count += 1;
-    var passAdd = s.passive * (1 + (window.staffData[id].level || 0) * 0.4);
-    window.passive += passAdd;
-    showMsg('👤 גויס ' + s.name + '! +' + passAdd.toFixed(1) + '₪/ד\'', 'var(--purple)');
-    saveGame(); updateUI(); drawStaff(document.getElementById('content'));
+    
+    // 1. וודא קיום אובייקט נתונים (StaffData)
+    if (!window.staffData[id]) {
+        window.staffData[id] = { count: 0, level: 0 };
+    }
+    var d = window.staffData[id];
+    
+    // 2. חישוב מחיר (עולה ב-15% על כל איש צוות)
+    var currentPrice = Math.floor(s.price * Math.pow(1.15, d.count));
+
+    if (window.money < currentPrice) {
+        return showMsg('אין מספיק כסף!', 'var(--red)');
+    }
+
+    // 3. חישוב התוספת האמיתית (כולל בונוס הרמה הנוכחי)
+    var incomeBase = s.passive * 0.7;
+    var levelBonus = 1 + (d.level * 0.15);
+    var addedPassive = incomeBase * levelBonus;
+
+    // 4. עדכון הנתונים הגלובליים
+    window.money -= currentPrice;
+    d.count += 1;                  // עדכון הכמות בזיכרון
+    window.passive += addedPassive; // עדכון הסטטיסטיקה הכללית
+
+    showMsg('👤 גויס ' + s.name + '! (+' + addedPassive.toFixed(1) + ' ₪/ד\')', 'var(--purple)');
+    
+    // 5. שמירה ועדכון הבר העליון
+    saveGame(); 
+    updateUI(); 
+    
+    // 6. הזרקה מחדש (RENDER) - זה מה שמעדכן את הטקסט בכרטיס מיד!
+    var contentDiv = document.getElementById('content');
+    if (contentDiv) {
+        drawStaff(contentDiv); 
+    }
 };
+
+
 
 window.upgradeStaff = function(id) {
     var s = staffList.find(function(x) { return x.id === id; });
-    if (!s || !window.staffData[id] || window.staffData[id].count === 0) return;
-    var d            = window.staffData[id];
-    var upgradePrice = Math.floor(s.price * 0.5 * ((d.level || 0) + 1));
-    if (window.money < upgradePrice) return showMsg('חסרים ' + Math.ceil(upgradePrice - window.money).toLocaleString() + '₪', 'var(--red)');
-    var bonusPassive = s.passive * d.count * 0.4;
+    var d = window.staffData[id];
+    if (!s || !d || d.count === 0) return;
+
+    // מחיר שדרוג קופץ בפי 2.2 בכל רמה
+    var currentLevel = d.level || 0;
+    var upgradePrice = Math.floor(s.price * Math.pow(2.2, currentLevel + 1));
+
+    if (window.money < upgradePrice) return showMsg('שדרוג יקר!', 'var(--red)');
+
+    // בונוס פסיבי מוקטן (15% תוספת)
+    var bonusPassive = (s.passive * 0.7) * d.count * 0.15;
+
     window.money -= upgradePrice;
-    window.staffData[id].level = (d.level || 0) + 1;
+    window.staffData[id].level = currentLevel + 1;
     window.passive += bonusPassive;
-    showMsg('⬆️ ' + s.name + ' שודרג לרמה ' + window.staffData[id].level + '! +' + bonusPassive.toFixed(1) + '₪/ד\'', 'var(--purple)');
+
+    showMsg('⬆️ ' + s.name + ' רמה ' + (currentLevel + 1), 'var(--purple)');
     saveGame(); updateUI(); drawStaff(document.getElementById('content'));
 };
+
 
 window.fireStaff = function(id) {
     var s = staffList.find(function(x) { return x.id === id; });
