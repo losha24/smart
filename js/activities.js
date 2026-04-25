@@ -83,8 +83,8 @@ const staffList = [
     { id: 'st6', name: 'מנהל שיווק',    price: 250000,   passive: 850,    icon: '📢', desc: 'מגדיל הכנסות' },
     { id: 'st7', name: 'מנכ"ל',         price: 800000,   passive: 2800,   icon: '💼', desc: 'מנהל כולל' },
     { id: 'st8', name: 'צוות הייטק',    price: 2500000,  passive: 9000,   icon: '💻', desc: 'אוטומציה מלאה' },
-    { id: 'st9', name: 'יועץ חיצוני',   price: 8000000,  passive: 30000,  icon: '🌐', desc: 'קשרים בינלאומיים' },
-    { id: 'st10',name: 'תאגיד עסקי',    price: 30000000, passive: 120000, icon: '🏢', desc: 'אימפריה שלמה' }
+    { id: 'st9', name: 'יועץ חיצוני',   price: 5500000,  passive: 30000,  icon: '🌐', desc: 'קשרים בינלאומיים' },
+    { id: 'st10',name: 'תאגיד עסקי',    price: 18000000, passive: 120000, icon: '🏢', desc: 'אימפריה שלמה' }
 ];
 
 // ── אתחולים ────────────────────────────────────────────────
@@ -161,17 +161,34 @@ window.startWork = function(id) {
 };
 
 // ── נדל"ן ──────────────────────────────────────────────────
+// ── נדל"ן ──────────────────────────────────────────────────
 window.drawEstate = function(c) {
     if (!c) return;
-    var html = '<div class="grid-2">';
+    var totalEstatePassive = 0;
+
+    // חישוב הכנסה פסיבית כוללת מכל הנדל"ן
+    estateList.forEach(function(e) {
+        var d = window.estateData[e.id] || { count: 0, level: 0 };
+        if (d.count > 0) {
+            // חישוב לפי הלוגיקה שלך: הכנסה מופחתת (75%) + בונוס שדרוג (20% לכל רמה)
+            totalEstatePassive += (e.passive * 0.75) * d.count * (1 + (d.level || 0) * 0.20);
+        }
+    });
+
+    var html = '<h3>🏠 אימפריית נדל"ן</h3>' +
+        // תיבת הסיכום החדשה - תואמת לעסקים וצוות
+        '<div class="card" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);padding:12px;margin-bottom:12px;text-align:center;">' +
+        '<div style="font-size:12px;opacity:0.7;margin-bottom:4px;">💰 סך הכנסה משכירות (נדל"ן)</div>' +
+        '<div style="font-size:22px;font-weight:bold;color:var(--green);">' + totalEstatePassive.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' ₪/ד\'</div>' +
+        '</div>' +
+        '<div class="grid-2">';
+
     estateList.forEach(function(e) {
         var d = window.estateData[e.id] || { count: 0, level: 0 };
         var count = d.count || 0;
         var level = d.level || 0;
         
-        // חישוב מחיר דינמי לתצוגה - זהה ללוגיקת הקנייה
         var currentPrice = Math.floor(e.price * Math.pow(1.20, count));
-        
         var totalPassive = (e.passive * 0.75 * count * (1 + level * 0.20)).toLocaleString();
         var upgradePrice = count > 0 ? Math.floor(e.price * Math.pow(2.5, level + 1)) : 0;
 
@@ -181,7 +198,6 @@ window.drawEstate = function(c) {
             '<div>' +
                 '<div style="font-size:30px; margin-bottom:4px;">' + e.icon + '</div>' +
                 '<div style="font-weight:bold; font-size:13px; line-height:1.2;">' + e.name + '</div>' +
-                '<div style="font-size:10px; opacity:0.6; margin-bottom:4px; height:24px; overflow:hidden;">נכס מניב הכנסה פסיבית</div>' +
                 '<div style="font-size:11px; color:var(--green); font-weight:bold;">' + totalPassive + ' ₪/ד\'</div>' +
                 (count > 0 
                     ? '<div style="font-size:10px; color:var(--blue); margin:4px 0;">בבעלותך: ' + count + ' | רמה: ' + level + '</div>' 
@@ -200,6 +216,7 @@ window.drawEstate = function(c) {
     });
     c.innerHTML = html + '</div>';
 };
+
 
 
 window.buyEstate = function(id) {
@@ -266,19 +283,43 @@ window.sellEstate = function(id) {
 };
 
 // ── עסקים ──────────────────────────────────────────────────
+// ── עסקים ──────────────────────────────────────────────────
 window.drawBusiness = function(c) {
-    var html = '<h3>💼 אימפריית עסקים</h3><div class="grid-2">';
+    if (!c) return;
+    var totalBizPassive = 0;
+    
+    // חישוב הכנסה פסיבית כוללת מכל העסקים שבאינוונטר
+    businessList.forEach(function(b) {
+        var level = window.inventory.filter(function(item) { return item === b.id; }).length;
+        if (level > 0) {
+            totalBizPassive += b.passive * level;
+        }
+    });
+
+    var html = '<h3>💼 אימפריית עסקים</h3>' +
+        // תיבת הסיכום החדשה
+        '<div class="card" style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.3);padding:12px;margin-bottom:12px;text-align:center;">' +
+        '<div style="font-size:12px;opacity:0.7;margin-bottom:4px;">💰 סך הכנסה פסיבית מעסקים</div>' +
+        '<div style="font-size:22px;font-weight:bold;color:var(--purple);">' + totalBizPassive.toFixed(1) + ' ₪/ד\'</div>' +
+        '</div>' +
+        '<div class="grid-2">';
+
     businessList.forEach(function(b) {
         var level = window.inventory.filter(function(item) { return item === b.id; }).length;
         var currentPrice   = b.price * (level + 1);
         var currentPassive = (b.passive * level).toFixed(1);
         var sellValue      = level > 0 ? Math.floor(b.price * level * 0.7) : 0;
-        html += '<div class="card fade-in" style="text-align:center;border-top:4px solid ' + (level > 0 ? 'var(--purple)' : '#444') + '">' +
-            '<div style="font-size:35px;margin-bottom:10px;">' + b.icon + '</div>' +
-            '<div style="font-weight:bold;font-size:14px;">' + b.name + (level > 0 ? ' <small>(רמה ' + level + ')</small>' : '') + '</div>' +
-            '<div style="font-size:11px;color:var(--green);margin:5px 0;">פסיבי: ' + currentPassive + '₪/ד\'</div>' +
-            '<button class="sys-btn" style="width:100%;margin-top:10px;" onclick="buyBusiness(\'' + b.id + '\',' + currentPrice + ',' + b.passive + ')">' + currentPrice.toLocaleString() + '₪</button>' +
-            (level > 0 ? '<button class="sys-btn" style="width:100%;margin-top:5px;font-size:10px;background:rgba(239,68,68,0.15);color:var(--red);border-color:var(--red);" onclick="sellBusiness(\'' + b.id + '\')">💸 מכור (' + sellValue.toLocaleString() + '₪)</button>' : '') +
+
+        html += '<div class="card fade-in" style="text-align:center; display:flex; flex-direction:column; justify-content:space-between; border-top:4px solid ' + (level > 0 ? 'var(--purple)' : '#444') + '; padding: 10px; min-height: 200px;">' +
+            '<div>' +
+                '<div style="font-size:35px;margin-bottom:10px;">' + b.icon + '</div>' +
+                '<div style="font-weight:bold;font-size:14px;">' + b.name + (level > 0 ? ' <small>(רמה ' + level + ')</small>' : '') + '</div>' +
+                '<div style="font-size:11px;color:var(--green);margin:5px 0;">פסיבי: ' + currentPassive + '₪/ד\'</div>' +
+            '</div>' +
+            '<div>' +
+                '<button class="sys-btn" style="width:100%;margin-top:10px;" onclick="buyBusiness(\'' + b.id + '\',' + currentPrice + ',' + b.passive + ')">' + currentPrice.toLocaleString() + '₪</button>' +
+                (level > 0 ? '<button class="sys-btn" style="width:100%;margin-top:5px;font-size:10px;background:rgba(239,68,68,0.15);color:var(--red);border-color:var(--red);" onclick="sellBusiness(\'' + b.id + '\')">💸 מכור (' + sellValue.toLocaleString() + '₪)</button>' : '') +
+            '</div>' +
             '</div>';
     });
     c.innerHTML = html + '</div>';
