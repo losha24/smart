@@ -485,15 +485,17 @@ function recalculateTotalSpeed() {
 }
 
 // ── צוות עובדים ─────────────────────────────────────────────
+// ── פונקציית ניהול צוות מעודכנת - כפתור "פטר" ללא סכום מתחת ──────────────────
 window.drawStaff = function(c) {
     if (!window.staffData) window.staffData = {};
     var totalStaffPassive = 0;
+    
+    // חישוב הכנסה פסיבית כוללת מכל הצוות
     Object.keys(window.staffData).forEach(function(sid) {
         var s = staffList.find(function(x) { return x.id === sid; });
         if (s) {
             var d = window.staffData[sid];
-            // חישוב הכנסה כוללת לסוג צוות זה
-            totalStaffPassive += (s.passive * 0.7) * d.count * (1 + (d.level || 0) * 0.15);
+            totalStaffPassive += (s.passive * 0.7) * (d.count || 0) * (1 + (d.level || 0) * 0.15);
         }
     });
 
@@ -508,13 +510,14 @@ window.drawStaff = function(c) {
         var count = d.count || 0;
         var level = d.level || 0;
         
+        // מחיר גיוס
         var currentPrice = Math.floor(s.price * Math.pow(1.15, count));
         
-        // --- התיקון כאן: הכפלנו ב-count כדי לראות את הסכום של כולם בריבוע ---
+        // הכנסה לסוג צוות זה
         var totalTypePass = ((s.passive * 0.7) * count * (1 + level * 0.15)).toFixed(1);
         
+        // מחיר שדרוג
         var upgradePrice = count > 0 ? Math.floor(s.price * Math.pow(2.2, level + 1)) : 0;
-        var fireValue = count > 0 ? Math.floor(s.price * count * 0.6) : 0;
 
         html += '<div class="card fade-in" style="text-align:center; display:flex; flex-direction:column; justify-content:space-between; border-top:4px solid ' + (count > 0 ? 'var(--purple)' : 'var(--border)') + '; padding: 10px; min-height: 230px;">' +
             '<div>' +
@@ -531,13 +534,14 @@ window.drawStaff = function(c) {
                 '</button>' +
                 (count > 0 ? '<div style="display:flex; gap:4px;">' +
                     '<button class="sys-btn" style="flex:1; font-size:9px;" onclick="upgradeStaff(\'' + s.id + '\')">⬆️ ' + upgradePrice.toLocaleString() + '</button>' +
-                    '<button class="sys-btn" style="flex:1; font-size:9px;" onclick="fireStaff(\'' + s.id + '\')">🔴</button>' +
-                    '</div>' : '') +
+                    '<button class="sys-btn" style="flex:1; font-size:9px; background:rgba(239,68,68,0.15); color:var(--red); border-color:var(--red);" onclick="fireStaff(\'' + s.id + '\')">🔴 פטר</button>' +
+                '</div>' : '') +
             '</div>' +
         '</div>';
     });
     c.innerHTML = html + '</div>';
 };
+
 
 
 
