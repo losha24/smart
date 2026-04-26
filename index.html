@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Smart Money Pro | v9.1</title>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -92,8 +92,13 @@
 <script>
     function closeInstallGuide() { document.getElementById('installModal').style.display = 'none'; }
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=9.1.0').then(function() { console.log("SW v9.1"); });
-    }
+    navigator.serviceWorker.register('./sw.js').then(function() { 
+        console.log("Service Worker Registered Successfully"); 
+    }).catch(function(err) {
+        console.log("Service Worker Registration Failed", err);
+    });
+}
+
     window.addEventListener('load', function() {
         if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             document.getElementById('android-instr').style.display = 'none';
