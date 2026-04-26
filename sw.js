@@ -1,29 +1,34 @@
-/* Smart Money Pro - Service Worker v9.0.0 */
-const CACHE_NAME = 'smart-money-v9';
+/* Smart Money Pro - Service Worker v9.1.0 */
+const CACHE_NAME = 'smart-money-v9.1.0';
 
-// רשימת הנכסים לשמירה (הוספתי את הקבצים המדויקים שלך)
+// רשימת הנכסים המדויקת כולל הגרסאות כפי שמופיעות ב-HTML
 const ASSETS = [
   './',
   './index.html',
-  './style.css',
-  './js/core.js',
-  './js/ui.js',
-  './js/activities.js',
-  './js/economy.js',
-  './manifest.json',
-  './logo.png'
+  './style.css?v=9.1.0',
+  './js/events.js?v=9.1.0',
+  './js/core.js?v=9.1.0',
+  './js/activities.js?v=9.1.0',
+  './js/economy.js?v=9.1.0',
+  './js/ui.js?v=9.1.0',
+  './js/blackmarket.js?v=9.1.0',
+  './manifest.json?v=9.1.0',
+  './logo.png',
+  './icons/icon_192.png',
+  './icons/icon_512.png'
 ];
 
 // התקנה - שמירת הקבצים בזיכרון
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      console.log('SW: Caching all assets');
       return cache.addAll(ASSETS);
     })
   );
 });
 
-// הפעלה - ניקוי גרסאות ישנות כדי שלא יהיו באגים
+// הפעלה - ניקוי גרסאות ישנות (חשוב מאוד כשמעדכנים גרסת קוד)
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -34,9 +39,11 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// אסטרטגיית "Network First" - מנסה להביא מהאינטרנט, אם אין קליטה מביא מהזיכרון
-// זה הכי טוב למשחק שלך כי יש עדכוני בורסה ב-Firebase
+// אסטרטגיית "Network First" - מנסה להביא מהשרת, ואם נכשל (אין אינטרנט) מביא מה-Cache
 self.addEventListener('fetch', (e) => {
+  // התעלמות מבקשות של Firebase או שרתים חיצוניים כדי לא לשבש נתונים חיים
+  if (!e.request.url.startsWith(self.location.origin)) return;
+
   e.respondWith(
     fetch(e.request).catch(() => {
       return caches.match(e.request);
