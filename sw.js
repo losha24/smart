@@ -1,52 +1,63 @@
 /* Smart Money Pro - Service Worker v9.1.0 */
-const CACHE_NAME = 'smart-money-v9.1.0';
+const CACHE_NAME = 'smart-money-v9.1';
 
-// רשימת הנכסים המדויקת כולל הגרסאות כפי שמופיעות ב-HTML
 const ASSETS = [
   './',
   './index.html',
-  './style.css?v=9.1.0',
-  './js/events.js?v=9.1.0',
-  './js/core.js?v=9.1.0',
-  './js/activities.js?v=9.1.0',
-  './js/economy.js?v=9.1.0',
-  './js/ui.js?v=9.1.0',
-  './js/blackmarket.js?v=9.1.0',
-  './manifest.json?v=9.1.0',
+  './style.css',
+  './manifest.json',
   './logo.png',
+  './js/events.js',
+  './js/core.js',
+  './js/activities.js',
+  './js/economy.js',
+  './js/ui.js',
+  './js/blackmarket.js',
   './icons/icon_192.png',
   './icons/icon_512.png'
 ];
 
-// התקנה - שמירת הקבצים בזיכרון
+// התקנה
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW: Caching all assets');
       return cache.addAll(ASSETS);
-    })
+    }).then(() => self.skipWaiting())
   );
 });
 
-// הפעלה - ניקוי גרסאות ישנות (חשוב מאוד כשמעדכנים גרסת קוד)
+// הפעלה וניקוי CACHE ישן
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
-// אסטרטגיית "Network First" - מנסה להביא מהשרת, ואם נכשל (אין אינטרנט) מביא מה-Cache
+// ניהול בקשות - Network First עם החרגת Firebase
 self.addEventListener('fetch', (e) => {
-  // התעלמות מבקשות של Firebase או שרתים חיצוניים כדי לא לשבש נתונים חיים
-  if (!e.request.url.startsWith(self.location.origin)) return;
+  if (e.request.url.includes('firebasedatabase.app') || 
+      e.request.url.includes('firebase') || 
+      e.request.url.includes('googleapis')) {
+    return;
+  }
 
   e.respondWith(
-    fetch(e.request).catch(() => {
-      return caches.match(e.request);
-    })
+    fetch(e.request)
+      .then((res) => {
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          if (e.request.method === 'GET') {
+            cache.put(e.request, resClone);
+          }
+        });
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
