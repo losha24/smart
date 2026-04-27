@@ -701,15 +701,27 @@ function claimDailyGift() {
     const now = Date.now();
     const waitTime = 4 * 60 * 60 * 1000;
     if (window.lastGift && (now - window.lastGift < waitTime)) return;
-    const currentLvl = (typeof getLevelData === 'function') ? getLevelData(window.lifeXP).level : 1;
-    const bonus = 500 + (currentLvl * 250);
+
+    // הגדרת הסכומים המעודכנת: 10,000 עד 100,000
+    const minGift = 10000;
+    const maxGift = 100000;
+    const bonus = Math.floor(Math.random() * (maxGift - minGift + 1)) + minGift;
+
     window.money += bonus;
     window.lastGift = now;
+
     if(typeof saveGame === 'function') saveGame();
     if(typeof updateUI === 'function') updateUI();
-    if(typeof showMsg === 'function') showMsg('🎁 קיבלת ' + bonus.toLocaleString() + '₪!', 'var(--green)');
+    
+    // הודעה עם הסכום שהוגרל
+    if(typeof showMsg === 'function') {
+        showMsg('🎁 קיבלת ' + bonus.toLocaleString() + ' ₪!', 'var(--green)');
+    }
+    
     window.openTab('home');
 }
+
+
 
 function startGiftTimer() {
     const timerEl = document.getElementById('giftTimer');
