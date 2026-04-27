@@ -556,9 +556,10 @@ window.drawStaff = function(c) {
         
         // הכנסה לסוג צוות זה
         var totalTypePass = ((s.passive * 0.7) * count * (1 + level * 0.15)).toFixed(1);
-        
-        // מחיר שדרוג
-        var upgradePrice = count > 0 ? Math.floor(s.price * Math.pow(2.2, level + 1)) : 0;
+      
+        // השורה המעודכנת עבור הצגת המחיר בכפתור:
+var upgradePrice = count > 0 ? Math.floor(s.price * Math.pow(1.5, level + 1)) : 0;
+
 
         html += '<div class="card fade-in" style="text-align:center; display:flex; flex-direction:column; justify-content:space-between; border-top:4px solid ' + (count > 0 ? 'var(--purple)' : 'var(--border)') + '; padding: 10px; min-height: 230px;">' +
             '<div>' +
@@ -633,9 +634,10 @@ window.upgradeStaff = function(id) {
     var d = window.staffData[id];
     if (!s || !d || d.count === 0) return;
 
-    // מחיר שדרוג קופץ בפי 2.2 בכל רמה
     var currentLevel = d.level || 0;
-    var upgradePrice = Math.floor(s.price * Math.pow(2.2, currentLevel + 1));
+    // שינוי ל-1.5 הופך את השדרוגים להרבה יותר זולים ברמות הגבוהות
+var upgradePrice = Math.floor(s.price * Math.pow(1.5, currentLevel + 1));
+
 
     if (window.money < upgradePrice) return showMsg('שדרוג יקר!', 'var(--red)');
 
