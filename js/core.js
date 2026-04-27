@@ -149,7 +149,7 @@ if (offlineEarnings > 1) {
         } else {
             window.lastKnownLevel = 1;
         }
-        document.body.className = (localStorage.getItem('theme') || 'dark') + '-theme';
+       
     } catch(e) { console.error('שגיאה בטעינה:', e); }
 }
 
@@ -205,14 +205,6 @@ function checkLevelUp(currentLevel) {
         window.lastKnownLevel = currentLevel;
         updateUI();
     }
-}
-
-function toggleTheme() {
-    const isLight = document.body.classList.contains('light-theme');
-    const next = isLight ? 'dark' : 'light';
-    document.body.className = next + '-theme';
-    localStorage.setItem('theme', next);
-    showMsg('עברת למצב ' + (next === 'light' ? 'יום' : 'לילה'), 'var(--blue)');
 }
 
 function savePlayerName() {
