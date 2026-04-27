@@ -535,6 +535,57 @@ window.openTab = function(t) {
 };
 
 
+// --- הוספת מאגר טיפים ---
+window.gameTips = [
+    "השקעה בנדל\"ן היא הדרך הכי טובה לייצר הכנסה פסיבית בזמן שאתה ישן.",
+    "שים לב ל-'חום משטרה' – אם הוא גבוה מדי, המשטרה תחרים לך כסף שחור!",
+    "שדרוג אנשי צוות בעבודות מגדיל את הרווח שלך משמעותית בכל פעולה.",
+    "אל תשאיר חובות לבנק – הריבית תאכל לך את הרווחים לאורך זמן.",
+    "המתנה היומית מתאפסת כל 4 שעות – נצל אותה כדי לקבל עד 100,000₪!",
+    "רכבים מהירים פותחים אפשרויות לעבודות יוקרתיות ורווחיות יותר."
+];
+
+// --- פונקציית ציור טאב המדריך ---
+window.drawGuide = function(c) {
+    const randomTip = window.gameTips[Math.floor(Math.random() * window.gameTips.length)];
+
+    c.innerHTML = `
+        <div class="card fade-in" style="border-top: 3px solid var(--blue);">
+            <h3 style="margin-top:0;">📖 מדריך למליונר המתחיל</h3>
+            
+            <div style="background:rgba(59,130,246,0.1); border-right:4px solid var(--blue); padding:15px; margin-bottom:20px; border-radius:8px;">
+                <small style="color:var(--blue); font-weight:bold; display:block; margin-bottom:5px;">💡 טיפ:</small>
+                <div style="font-size:14px; color:#fff; font-style:italic;">"${randomTip}"</div>
+            </div>
+
+            <div style="display:grid; gap:15px;">
+                <div class="card" style="margin:0; background:rgba(34,197,94,0.05); border:1px solid rgba(34,197,94,0.2);">
+                    <h4 style="margin:0 0 5px 0; color:var(--green);">🔋 שלב 1: התחלה אקטיבית</h4>
+                    <p style="margin:0; font-size:13px; color:#cbd5e1;">
+                        כנס ל<b>עבודות</b>. כל לחיצה נותנת כסף ו-XP. השתמש ב-XP כדי לעלות רמות ולקבל בונוסים של אלפי שקלים.
+                    </p>
+                </div>
+
+                <div class="card" style="margin:0; background:rgba(59,130,246,0.05); border:1px solid rgba(59,130,246,0.2);">
+                    <h4 style="margin:0 0 5px 0; color:var(--blue);">🏠 שלב 2: הכנסה פסיבית</h4>
+                    <p style="margin:0; font-size:13px; color:#cbd5e1;">
+                        אל תבזבז הכל על רכבים! קנה <b>נדל"ן</b> ו<b>עסקים</b>. הם מייצרים לך כסף כל דקה, גם כשאתה לא לוחץ.
+                    </p>
+                </div>
+
+                <div class="card" style="margin:0; background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.2);">
+                    <h4 style="margin:0 0 5px 0; color:#ef4444;">🕶️ שלב 3: השוק השחור</h4>
+                    <p style="margin:0; font-size:13px; color:#cbd5e1;">
+                        הרווח הכי גדול נמצא שם, אבל זהירות - המשטרה יכולה להחרים לך את ה<b>כסף השחור</b>. תלבין אותו בבנק כדי לשמור עליו.
+                    </p>
+                </div>
+            </div>
+
+            <button class="sys-btn" style="width:100%; margin-top:20px; padding:12px;" onclick="window.openTab('home')">חזרה למסך הבית</button>
+        </div>
+    `;
+};
+
 
 // ============================================================
 // דף הבית
