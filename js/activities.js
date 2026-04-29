@@ -190,7 +190,7 @@ window.drawEstate = function(c) {
         
         var currentPrice = Math.floor(e.price * Math.pow(1.20, count));
         var totalPassive = (e.passive * 0.75 * count * (1 + level * 0.20)).toLocaleString();
-        var upgradePrice = count > 0 ? Math.floor(e.price * Math.pow(2.5, level + 1)) : 0;
+        var upgradePrice = count > 0 ? Math.floor(e.price * Math.pow(1.8, level + 1)) : 0;
 
         var borderStyle = count > 0 ? 'border-top:4px solid var(--green)' : 'border-top:4px solid var(--border)';
         
@@ -248,8 +248,8 @@ window.upgradeEstate = function(id) {
     var d = window.estateData[id];
     if (!e || !d || d.count === 0) return;
 
-    // מחיר שדרוג קופץ בפי 2.5 בכל רמה
-    var upgradePrice = Math.floor(e.price * Math.pow(2.5, (d.level || 0) + 1));
+    // מחיר שדרוג קופץ בפי 1.8 בכל רמה
+    var upgradePrice = Math.floor(e.price * Math.pow(1.8, (d.level || 0) + 1));
 
     if (window.money < upgradePrice) return showMsg('השיפוץ יקר!', 'var(--red)');
 
@@ -558,7 +558,7 @@ window.drawStaff = function(c) {
         var totalTypePass = ((s.passive * 0.7) * count * (1 + level * 0.15)).toFixed(1);
       
         // השורה המעודכנת עבור הצגת המחיר בכפתור:
-var upgradePrice = count > 0 ? Math.floor(s.price * Math.pow(1.5, level + 1)) : 0;
+var upgradePrice = count > 0 ? Math.floor(s.price * Math.pow(1.35, level + 1)) : 0;
 
 
         html += '<div class="card fade-in" style="text-align:center; display:flex; flex-direction:column; justify-content:space-between; border-top:4px solid ' + (count > 0 ? 'var(--purple)' : 'var(--border)') + '; padding: 10px; min-height: 230px;">' +
@@ -635,8 +635,8 @@ window.upgradeStaff = function(id) {
     if (!s || !d || d.count === 0) return;
 
     var currentLevel = d.level || 0;
-    // שינוי ל-1.5 הופך את השדרוגים להרבה יותר זולים ברמות הגבוהות
-var upgradePrice = Math.floor(s.price * Math.pow(1.5, currentLevel + 1));
+    // שינוי ל-1.35 הופך את השדרוגים להרבה יותר זולים ברמות הגבוהות
+var upgradePrice = Math.floor(s.price * Math.pow(1.35, currentLevel + 1));
 
 
     if (window.money < upgradePrice) return showMsg('שדרוג יקר!', 'var(--red)');
