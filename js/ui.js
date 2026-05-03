@@ -65,26 +65,16 @@ function getDeviceId() {
 }
 
 async function fbSaveAdminMsg(msg) {
-    // שמור תמיד ב-localStorage — עובד גם עם סיסמה רגילה
-    localStorage.setItem('adminMsgText', msg);
-    window.adminMsgText = msg;
-
-    // שמור ל-Firebase רק אם מחובר כמנהל Google (גלוי לכולם)
-    if (window.fbDB && window.isAdmin) {
-        try {
-            await window.fbDB.ref('config/adminMsg').set({ text: msg, ts: Date.now() });
-        } catch(e) { console.warn('FB msg save failed:', e.message); }
-    }
+    try {
+        await fetch(FB_URL + '/config/adminMsg.json', { method: 'PUT', body: JSON.stringify({ text: msg, ts: Date.now() }) });
+    } catch(e) { console.warn('FB msg save failed:', e); }
 }
 async function fbLoadAdminMsg() {
-    // קודם נסה Firebase (גרסה עדכנית לכולם)
     try {
         const res = await fetch(FB_URL + '/config/adminMsg.json');
         const data = await res.json();
-        if (data && data.text) return data.text;
-    } catch(e) {}
-    // fallback: localStorage (נשמר בכניסה עם סיסמה)
-    return localStorage.getItem('adminMsgText') || null;
+        return data ? data.text : null;
+    } catch(e) { return null; }
 }
 async function fbSaveAdminPass(hashVal) {
     try {
@@ -281,21 +271,13 @@ window.openAdminPanel = function() {
     document.getElementById('adminSaveMsg').onclick = async function() {
         const msg = document.getElementById('adminMsgInput').value.trim();
         if (!msg) return;
+        window.adminMsgText = msg;
         this.innerText = '⏳ שומר...';
         this.disabled = true;
         await fbSaveAdminMsg(msg);
-        if (window.isAdmin) {
-            // מחובר עם Google — נשמר לכולם
-            this.innerText = '✅ נשמר לכולם!';
-            this.style.background = '#3b82f6';
-        } else {
-            // נכנס עם סיסמה — נשמר רק מקומית
-            this.innerText = '💾 נשמר מקומית';
-            this.style.background = '#f59e0b';
-            if (typeof showMsg === 'function')
-                showMsg('הודעה נשמרה מקומית. כנס עם Google כדי לשמור לכולם.', 'var(--yellow)');
-        }
-        setTimeout(() => { this.innerText = '💾 שמור הודעה'; this.style.background = '#22c55e'; this.disabled = false; }, 3000);
+        this.innerText = '✅ נשמר לכולם!';
+        this.style.background = '#3b82f6';
+        setTimeout(() => { this.innerText = '💾 שמור הודעה'; this.style.background = '#22c55e'; this.disabled = false; }, 2000);
         if (typeof window.openTab === 'function') window.openTab('home');
     };
 
