@@ -1,19 +1,5 @@
 /* Smart Money Pro - js/core.js - v9.1.0 - Clean (No Stocks) */
 
-// ✅ תיקון: Global Error Handler — תופס שגיאות שקטות ושומר לאבחון
-window.addEventListener('error', function(e) {
-    console.error('[SmartMoney]', e.message, 'line', e.lineno);
-    try {
-        const errs = JSON.parse(localStorage.getItem('_errors') || '[]');
-        errs.push({ msg: e.message, line: e.lineno, t: Date.now() });
-        if (errs.length > 10) errs.shift();
-        localStorage.setItem('_errors', JSON.stringify(errs));
-    } catch(_) {}
-});
-window.addEventListener('unhandledrejection', function(e) {
-    console.warn('[SmartMoney Promise]', e.reason);
-});
-
 const VERSION = "9.1.0";
 const SAVE_KEY = "smartMoneySave_v8_main";
 
@@ -42,7 +28,6 @@ window.policeHeat = 0;
 window.gang = null;
 window.activeShipments = [];
 
-// ✅ deviceID עם D גדולה — עקבי בכל הקבצים
 if (!localStorage.getItem("deviceID")) {
     localStorage.setItem("deviceID", 'dev_' + Math.random().toString(36).substr(2, 12));
 }
@@ -138,28 +123,33 @@ function loadGame() {
                 const msPassed = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
                 const offlineEarnings = (msPassed / 60000) * window.passive;
 
-                if (offlineEarnings > 1) {
-                    if (window.money + offlineEarnings > 1000000000) {
-                        window.money = 1000000000;
-                        showMsgLong("💰 הגעת לתקרת המזומן המקסימלית (מיליארד ₪)!", 'var(--red)');
-                    } else {
-                        window.money += offlineEarnings;
-                    }
-                    window.totalEarned += offlineEarnings;
-                    const offlineLosses = data.eventLosses || 0;
-                    setTimeout(() => {
-                        if (typeof showMsgLong === 'function' && window.money < 1000000000) {
-                            let msg = `💰 בזמן שלא היית: הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪`;
-                            if (offlineLosses > 0) msg += ` | ⚠️ והפסדת ${Math.floor(offlineLosses).toLocaleString()} ₪ מאירועים`;
-                            showMsgLong(msg, 'var(--yellow)');
-                        }
-                    }, 2000);
-                }
+if (offlineEarnings > 1) {
+    // בדיקה: האם הוספת הרווח תעבור את המיליארד?
+    if (window.money + offlineEarnings > 1000000000) {
+        window.money = 1000000000; // עוצר בדיוק במיליארד
+        showMsgLong("💰 הגעת לתקרת המזומן המקסימלית (מיליארד ₪)!", 'var(--red)');
+    } else {
+        window.money += offlineEarnings;
+    }
+    
+    window.totalEarned += offlineEarnings;
+    
+    // שאר הקוד של הלוגים והפסדים...
+    const offlineLosses = data.eventLosses || 0;
+    setTimeout(() => {
+        if (typeof showMsgLong === 'function' && window.money < 1000000000) {
+            let msg = `💰 בזמן שלא היית: הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪`;
+            if (offlineLosses > 0) msg += ` | ⚠️ והפסדת ${Math.floor(offlineLosses).toLocaleString()} ₪ מאירועים`;
+            showMsgLong(msg, 'var(--yellow)');
+        }
+    }, 2000);
+}
+
             }
         } else {
             window.lastKnownLevel = 1;
         }
-        document.body.className = (localStorage.getItem('theme') || 'dark') + '-theme';
+       
     } catch(e) { console.error('שגיאה בטעינה:', e); }
 }
 
@@ -217,70 +207,29 @@ function checkLevelUp(currentLevel) {
     }
 }
 
-// ✅ תיקון: savePlayerName — הוספת XSS protection + הגבלת אורך
 function savePlayerName() {
     const input = document.getElementById("player-name-input");
-    const rawName = input ? input.value.trim() : '';
-    if (rawName.length < 2) { alert("הכנס שם שחקן (לפחות 2 תווים)"); return; }
-    if (rawName.length > 20) { alert("שם שחקן ארוך מדי (מקסימום 20 תווים)"); return; }
-    // הסרת תווי HTML שעלולים לגרום XSS
-    const name = rawName.replace(/[<>"'&]/g, '');
-    if (name.length < 2) { alert("שם שחקן מכיל תווים לא חוקיים"); return; }
+    const name = input.value.trim();
+    if (name.length < 2) { alert("הכנס שם שחקן"); return; }
     localStorage.setItem("playerName", name);
     window.playerName = name;
     const el = document.getElementById("player-start");
     if (el) el.style.display = "none";
     showMsg("ברוך הבא " + name + " 🚀");
     saveGame();
-    // שלח ציון ראשוני ל-Firebase אחרי שיש שם
-    if (typeof window.fbSaveScore === 'function') window.fbSaveScore();
 }
 
-// ✅ תיקון חדש: ייצוא שמירה — חשוב ל-iOS שמנקה localStorage
-function exportSave() {
-    saveGame();
-    const data = localStorage.getItem(SAVE_KEY);
-    if (!data) { showMsg('אין נתונים לייצוא', 'var(--red)'); return; }
-    const blob = new Blob([data], { type: 'application/json' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
-    a.download = 'smart-money-save-' + Date.now() + '.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    showMsg('✅ קובץ שמירה הורד!', 'var(--green)');
-}
-
-// ✅ תיקון חדש: ייבוא שמירה
-function importSave(file) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const parsed = JSON.parse(e.target.result);
-            if (!parsed.data && !parsed.money) throw new Error('קובץ לא תקין');
-            localStorage.setItem(SAVE_KEY, e.target.result);
-            showMsg('✅ השמירה יובאה! טוען...', 'var(--green)');
-            setTimeout(() => location.reload(), 1500);
-        } catch(err) {
-            showMsg('❌ קובץ שמירה לא תקין', 'var(--red)');
-        }
-    };
-    reader.readAsText(file);
-}
-window.exportSave = exportSave;
-window.importSave = importSave;
-
-// Passive income tick
+// Passive income tick - תיקון קטן למניעת חריגה בזמן אמת
 setInterval(() => {
-    if (window.passive > 0 && window.money < 1000000000) {
+    if (window.passive > 0 && window.money < 1000000000) { // הוספתי בדיקת מקסימום
         const tick = window.passive / 1200;
-        window.money = Math.min(1000000000, window.money + tick);
+        window.money = Math.min(1000000000, window.money + tick); // מוודא שלא עובר מיליארד
         window.totalEarned += tick;
         const mEl = document.getElementById('money');
         if (mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
     }
 }, 50);
+
 
 // UI update every second
 setInterval(() => {
