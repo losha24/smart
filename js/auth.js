@@ -10,7 +10,7 @@ const FIREBASE_CONFIG = {
     appId: "1:55641338232:web:85ad1f1243fb2eefcd988d"
 };
 
-const ADMIN_EMAIL = "losha22@gmail.com";
+const ADMIN_EMAIL = "losha23@gmail.com";
 
 // מצב גלובלי
 window.isAdmin = false;
