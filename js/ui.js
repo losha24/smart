@@ -150,11 +150,12 @@ window.openAdminPanel = function() {
         '<button id="adminClose" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;">✕</button>' +
         '</div>' +
 
-        // שלב 1 - סיסמה
+        // שלב 1 - כניסה (Google או סיסמה)
         '<div id="adminLoginStep">' +
-        '<div style="font-size:13px;color:#94a3b8;margin-bottom:10px;">הכנס סיסמת מנהל:</div>' +
-        '<input id="adminPassInput" type="password" placeholder="סיסמה" style="width:100%;padding:12px;background:#1e293b;color:#fff;border:1px solid #334155;border-radius:8px;font-size:14px;text-align:center;margin-bottom:12px;">' +
-        '<button id="adminLoginBtn" style="width:100%;padding:12px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">כניסה</button>' +
+        '<button onclick="window.adminSignIn && window.adminSignIn()" style="width:100%;padding:12px;background:#4285f4;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:10px;">🔵 כניסה עם Google (מנהל)</button>' +
+        '<div style="font-size:11px;color:#475569;text-align:center;margin-bottom:10px;">— או כניסה עם סיסמה —</div>' +
+        '<input id="adminPassInput" type="password" placeholder="סיסמת מנהל" style="width:100%;padding:12px;background:#1e293b;color:#fff;border:1px solid #334155;border-radius:8px;font-size:14px;text-align:center;margin-bottom:12px;">' +
+        '<button id="adminLoginBtn" style="width:100%;padding:12px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">כניסה עם סיסמה</button>' +
         '<div id="adminLoginErr" style="color:#ef4444;font-size:12px;text-align:center;margin-top:8px;display:none;">סיסמה שגויה!</div>' +
         '</div>' +
 
@@ -822,4 +823,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 150);
     });
 });
-
