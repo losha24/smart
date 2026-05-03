@@ -65,16 +65,26 @@ function getDeviceId() {
 }
 
 async function fbSaveAdminMsg(msg) {
-    try {
-        await fetch(FB_URL + '/config/adminMsg.json', { method: 'PUT', body: JSON.stringify({ text: msg, ts: Date.now() }) });
-    } catch(e) { console.warn('FB msg save failed:', e); }
+    // שמור תמיד ב-localStorage — עובד גם עם סיסמה רגילה
+    localStorage.setItem('adminMsgText', msg);
+    window.adminMsgText = msg;
+
+    // שמור ל-Firebase רק אם מחובר כמנהל Google (גלוי לכולם)
+    if (window.fbDB && window.isAdmin) {
+        try {
+            await window.fbDB.ref('config/adminMsg').set({ text: msg, ts: Date.now() });
+        } catch(e) { console.warn('FB msg save failed:', e.message); }
+    }
 }
 async function fbLoadAdminMsg() {
+    // קודם נסה Firebase (גרסה עדכנית לכולם)
     try {
         const res = await fetch(FB_URL + '/config/adminMsg.json');
         const data = await res.json();
-        return data ? data.text : null;
-    } catch(e) { return null; }
+        if (data && data.text) return data.text;
+    } catch(e) {}
+    // fallback: localStorage (נשמר בכניסה עם סיסמה)
+    return localStorage.getItem('adminMsgText') || null;
 }
 async function fbSaveAdminPass(hashVal) {
     try {
@@ -150,12 +160,11 @@ window.openAdminPanel = function() {
         '<button id="adminClose" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;">✕</button>' +
         '</div>' +
 
-        // שלב 1 - כניסה (Google או סיסמה)
+        // שלב 1 - סיסמה
         '<div id="adminLoginStep">' +
-        '<button onclick="window.adminSignIn && window.adminSignIn()" style="width:100%;padding:12px;background:#4285f4;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:10px;">🔵 כניסה עם Google (מנהל)</button>' +
-        '<div style="font-size:11px;color:#475569;text-align:center;margin-bottom:10px;">— או כניסה עם סיסמה —</div>' +
-        '<input id="adminPassInput" type="password" placeholder="סיסמת מנהל" style="width:100%;padding:12px;background:#1e293b;color:#fff;border:1px solid #334155;border-radius:8px;font-size:14px;text-align:center;margin-bottom:12px;">' +
-        '<button id="adminLoginBtn" style="width:100%;padding:12px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">כניסה עם סיסמה</button>' +
+        '<div style="font-size:13px;color:#94a3b8;margin-bottom:10px;">הכנס סיסמת מנהל:</div>' +
+        '<input id="adminPassInput" type="password" placeholder="סיסמה" style="width:100%;padding:12px;background:#1e293b;color:#fff;border:1px solid #334155;border-radius:8px;font-size:14px;text-align:center;margin-bottom:12px;">' +
+        '<button id="adminLoginBtn" style="width:100%;padding:12px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">כניסה</button>' +
         '<div id="adminLoginErr" style="color:#ef4444;font-size:12px;text-align:center;margin-top:8px;display:none;">סיסמה שגויה!</div>' +
         '</div>' +
 
@@ -272,13 +281,21 @@ window.openAdminPanel = function() {
     document.getElementById('adminSaveMsg').onclick = async function() {
         const msg = document.getElementById('adminMsgInput').value.trim();
         if (!msg) return;
-        window.adminMsgText = msg;
         this.innerText = '⏳ שומר...';
         this.disabled = true;
         await fbSaveAdminMsg(msg);
-        this.innerText = '✅ נשמר לכולם!';
-        this.style.background = '#3b82f6';
-        setTimeout(() => { this.innerText = '💾 שמור הודעה'; this.style.background = '#22c55e'; this.disabled = false; }, 2000);
+        if (window.isAdmin) {
+            // מחובר עם Google — נשמר לכולם
+            this.innerText = '✅ נשמר לכולם!';
+            this.style.background = '#3b82f6';
+        } else {
+            // נכנס עם סיסמה — נשמר רק מקומית
+            this.innerText = '💾 נשמר מקומית';
+            this.style.background = '#f59e0b';
+            if (typeof showMsg === 'function')
+                showMsg('הודעה נשמרה מקומית. כנס עם Google כדי לשמור לכולם.', 'var(--yellow)');
+        }
+        setTimeout(() => { this.innerText = '💾 שמור הודעה'; this.style.background = '#22c55e'; this.disabled = false; }, 3000);
         if (typeof window.openTab === 'function') window.openTab('home');
     };
 
