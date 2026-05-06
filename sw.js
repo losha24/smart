@@ -1,63 +1,101 @@
-/* Smart Money Pro - Service Worker v9.1.0 */
-const CACHE_NAME = 'smart-money-v9.1';
+const CACHE_NAME = 'smart-money-pro-v9.1';
+const BASE = '/smart/';
 
-const ASSETS = [
-  './',
-  './index.html',
-  './style.css',
-  './manifest.json',
-  './logo.png',
-  './js/events.js',
-  './js/core.js',
-  './js/activities.js',
-  './js/economy.js',
-  './js/ui.js',
-  './js/blackmarket.js',
-  './icons/icon_192.png',
-  './icons/icon_512.png'
+// קבצים קריטיים (App Shell)
+const CORE_ASSETS = [
+  BASE,
+  BASE + 'index.html',
+  BASE + 'style.css',
+  BASE + 'manifest.json',
+  BASE + 'logo.png',
+  BASE + 'icons/icon_192.png',
+  BASE + 'icons/icon_512.png'
 ];
 
-// התקנה
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    }).then(() => self.skipWaiting())
+// JS מודולים
+const JS_ASSETS = [
+  BASE + 'js/events.js',
+  BASE + 'js/core.js',
+  BASE + 'js/activities.js',
+  BASE + 'js/economy.js',
+  BASE + 'js/ui.js',
+  BASE + 'js/blackmarket.js'
+];
+
+// כל האסטרים יחד
+const ALL_ASSETS = [...CORE_ASSETS, ...JS_ASSETS];
+
+// ======================
+// INSTALL (precache)
+// ======================
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+    .then((cache) => cache.addAll(ALL_ASSETS))
+    .then(() => self.skipWaiting())
   );
 });
 
-// הפעלה וניקוי CACHE ישן
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
+// ======================
+// ACTIVATE (cleanup old cache)
+// ======================
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// ניהול בקשות - Network First עם החרגת Firebase
-self.addEventListener('fetch', (e) => {
-  if (e.request.url.includes('firebasedatabase.app') || 
-      e.request.url.includes('firebase') || 
-      e.request.url.includes('googleapis')) {
-    return;
-  }
-
-  e.respondWith(
-    fetch(e.request)
+// ======================
+// FETCH STRATEGY (SMART)
+// ======================
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // לא לגעת בחיצוניים (Firebase וכו')
+  if (url.origin !== location.origin) return;
+  
+  // HTML → Network First
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
       .then((res) => {
-        const resClone = res.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          if (e.request.method === 'GET') {
-            cache.put(e.request, resClone);
-          }
-        });
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         return res;
       })
-      .catch(() => caches.match(e.request))
+      .catch(() => caches.match(BASE + 'index.html'))
+    );
+    return;
+  }
+  
+  // JS / CSS / IMG → Cache First
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      
+      return fetch(event.request)
+        .then((res) => {
+          if (!res || res.status !== 200) return res;
+          
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          
+          return res;
+        })
+        .catch(() => {
+          // fallback בטוח
+          if (event.request.destination === 'document') {
+            return caches.match(BASE + 'index.html');
+          }
+        });
+    })
   );
 });
