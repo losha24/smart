@@ -4,7 +4,7 @@
   "name": "Smart Money Pro - סימולטור פיננסי",
   "description": "נהל אימפריה כלכלית: עבודות, נדל\"ן, עסקים, שוק שחור ועוד.",
   "version": "9.1.0",
-  "start_url": "index.html",
+  "start_url": "/smart/index.html",
   "scope": "/smart/",
   "display": "standalone",
   "display_override": ["standalone", "window-controls-overlay"],
