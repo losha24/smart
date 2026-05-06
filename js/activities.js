@@ -352,21 +352,48 @@ window.sellBusiness = function(id) {
 
 // ── בנק ────────────────────────────────────────────────────
 window.drawBank = function(c) {
-    var tax = (window.bankTaxRate * 100).toFixed(1);
-    var loanLimit = 250000;
-    c.innerHTML = '<div class="fade-in" style="max-width:400px;margin:auto;"><h3 style="text-align:center;margin-bottom:15px;">🏦 מרכז פיננסי</h3>' +
-        '<div style="display:flex;gap:10px;margin-bottom:15px;">' +
-        '<div class="card" style="flex:1;text-align:center;padding:10px;border-bottom:3px solid var(--blue);"><small style="opacity:0.6;display:block;font-size:10px;">יתרה בבנק</small><b style="color:var(--blue);font-size:16px;">' + window.bank.toLocaleString() + ' ₪</b></div>' +
-        '<div class="card" style="flex:1;text-align:center;padding:10px;border-bottom:3px solid var(--red);"><small style="opacity:0.6;display:block;font-size:10px;">חוב פעיל</small><b style="color:var(--red);font-size:16px;">' + window.loan.toLocaleString() + ' ₪</b></div></div>' +
-        '<div class="card" style="margin-bottom:15px;">' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="font-size:12px;font-weight:bold;">ניהול מזומנים</span><span style="font-size:10px;color:var(--yellow);">עמלה: ' + tax + '%</span></div>' +
-        '<input type="number" id="bank-amt" placeholder="סכום פעולה" style="width:100%;padding:10px;background:#000;color:#fff;border:1px solid #333;border-radius:6px;margin-bottom:10px;text-align:center;">' +
-        '<div style="display:flex;gap:8px;"><button class="sys-btn" style="flex:1;background:#3b82f6;color:white;" onclick="bankProcess(\'deposit\')">הפקדה</button><button class="sys-btn" style="flex:1;background:#64748b;color:white;" onclick="bankProcess(\'withdraw\')">משיכה</button></div></div>' +
-        '<div class="card" style="border-right:3px solid var(--yellow);">' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="font-size:12px;font-weight:bold;color:var(--yellow);">הלוואות</span><span style="font-size:10px;opacity:0.6;">תקרה: ' + loanLimit.toLocaleString() + ' ₪</span></div>' +
-        '<input type="number" id="loan-amt" placeholder="סכום הלוואה" style="width:100%;padding:10px;background:#000;color:var(--yellow);border:1px solid #444;border-radius:6px;margin-bottom:10px;text-align:center;">' +
-        '<div style="display:grid;gap:8px;"><button class="action" style="background:#f59e0b;color:#000;font-weight:bold;border:none;" onclick="takeCustomLoan()">💰 קבל הלוואה</button><button class="action" style="background:#ef4444;color:#fff;font-weight:bold;border:none;" onclick="repayLoan()">✅ החזר חוב מהיר</button></div></div></div>';
-};
+        var tax = (window.bankTaxRate * 100).toFixed(1);
+    if (!c) return;
+    c.innerHTML = `
+    <div class="card fade-in">
+        <h3 style="margin-top:0;">🏦 ניהול חשבון בנק</h3>
+        <p style="font-size:12px; opacity:0.8;">כסף בבנק בטוח מפני הפסדים בקזינו.</p>
+        
+        <div class="grid-2">
+            <div class="card" style="margin:0; text-align:center; padding:15px; border:1px solid var(--blue);">
+                <small>יתרה בבנק</small><br>
+                <b style="font-size:18px; color:var(--blue);">${bank.toLocaleString()}₪</b>
+            </div>
+            <div class="card" style="margin:0; text-align:center; padding:15px; border:1px solid var(--red);">
+                <small>חוב קיים (הלוואות)</small><br>
+                <b style="font-size:18px; color:var(--red);">${loan.toLocaleString()}₪</b>
+            </div>
+        </div>
+        
+        <div style="margin:20px 0;">
+            <input type="number" id="bank-amt" placeholder="הכנס סכום להפקדה/משיכה..." 
+                style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:var(--text); text-align:center; font-size:16px;">
+        </div>
+        
+        <div class="grid-2">
+            <button class="action" onclick="executeBankOp('dep')" style="background:var(--green); color:white;">⬇️ הפקד לבנק</button>
+            <button class="action" onclick="executeBankOp('wd')" style="background:var(--blue); color:white;">⬆️ משוך מזומן</button>
+        </div>
+        
+        <hr style="opacity:0.1; margin:25px 0;">
+        
+        <h4 style="margin:0 0 10px 0;">מסגרת אשראי והלוואות</h4>
+        <div class="grid-2">
+            <button class="action" style="background:var(--yellow); color:black; font-size:13px;" onclick="executeLoanOp('take')">
+                קח הלוואה: 10,000₪
+            </button>
+            <button class="action" style="background:#ec4899; color:white; font-size:13px;" onclick="executeLoanOp('pay')">
+                החזר חוב: 10,500₪
+            </button>
+        </div>
+        <p style="font-size:10px; color:var(--red); text-align:center; margin-top:8px;">* החזר הלוואה כולל עמלת ריבית של 5%.</p>
+    </div>`;
+}
 
 window.bankProcess = function(mode) {
     var val = parseInt(document.getElementById('bank-amt').value);
