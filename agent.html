@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Money — מרכז סוכני בדיקה</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Rubik:wght@400;500;700;900&display=swap');
+
+:root {
+  --bg: #060a12;
+  --surface: #0d1420;
+  --surface2: #111827;
+  --border: #1e2d42;
+  --accent: #00d4ff;
+  --accent2: #7c3aed;
+  --green: #10b981;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Rubik', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* רקע אנימציה */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,212,255,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 80% 90%, rgba(124,58,237,0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* גריד רקע */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+
+/* כותרת */
+header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(0,212,255,0.08);
+  border: 1px solid rgba(0,212,255,0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+
+header h1 {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+header h1 span { color: var(--accent); }
+
+header p {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+/* אזור העלאת קבצים */
+.upload-zone {
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  padding: 30px;
+  margin-bottom: 30px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.upload-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(0,212,255,0.04);
+}
+
+.upload-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.upload-header h2 {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-header h2 span.icon {
+  font-size: 20px;
+}
+
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.file-slot {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.file-slot:hover { border-color: var(--accent); }
+
+.file-slot.loaded {
+  border-color: var(--green);
+  background: rgba(16,185,129,0.05);
+}
+
+.file-slot input[type=file] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.file-slot .slot-icon { font-size: 22px; margin-bottom: 6px; }
+
+.file-slot .slot-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.file-slot .slot-status {
+  font-size: 10px;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.file-slot.loaded .slot-status { color: var(--green); }
+
+.upload-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* כפתורים */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.3px;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+}
+.btn-primary:hover { background: #22e0ff; }
+
+.btn-secondary {
+  background: rgba(124,58,237,0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(124,58,237,0.3);
+}
+.btn-secondary:hover { background: rgba(124,58,237,0.25); }
+
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+.btn-danger {
+  background: rgba(239,68,68,0.1);
+  color: var(--red);
+  border: 1px solid rgba(239,68,68,0.3);
+}
+.btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* סוכנים */
+.agents-section { margin-bottom: 30px; }
+
+.agents-section h2 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  font-family: var(--mono);
+}
+
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.agent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.agent-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 60px; height: 60px;
+  border-radius: 0 14px 0 60px;
+  opacity: 0.06;
+}
+
+.agent-card.agent-logic::before { background: var(--accent); }
+.agent-card.agent-security::before { background: var(--red); }
+.agent-card.agent-conflict::before { background: var(--yellow); }
+.agent-card.agent-fix::before { background: var(--green); }
+
+.agent-card.running { border-color: var(--accent); animation: pulse-border 1s ease infinite; }
+.agent-card.done-ok { border-color: var(--green); }
+.agent-card.done-err { border-color: var(--red); }
+
+@keyframes pulse-border {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,212,255,0); }
+  50% { box-shadow: 0 0 0 3px rgba(0,212,255,0.15); }
+}
+
+.agent-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.agent-avatar {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.agent-logic .agent-avatar { background: rgba(0,212,255,0.1); }
+.agent-security .agent-avatar { background: rgba(239,68,68,0.1); }
+.agent-conflict .agent-avatar { background: rgba(245,158,11,0.1); }
+.agent-fix .agent-avatar { background: rgba(16,185,129,0.1); }
+
+.agent-info h3 { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.agent-info p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+.agent-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+
+.status-dot.running { background: var(--accent); animation: blink 0.8s ease infinite; }
+.status-dot.ok { background: var(--green); }
+.status-dot.err { background: var(--red); }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.agent-findings {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.7;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.agent-findings.open { max-height: 400px; overflow-y: auto; }
+
+.finding {
+  display: flex;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  align-items: flex-start;
+}
+
+.finding.bug { background: rgba(239,68,68,0.08); color: #fca5a5; }
+.finding.warn { background: rgba(245,158,11,0.08); color: #fcd34d; }
+.finding.ok { background: rgba(16,185,129,0.08); color: #6ee7b7; }
+.finding.info { background: rgba(0,212,255,0.06); color: #67e8f9; }
+.finding.fixed { background: rgba(16,185,129,0.12); color: #6ee7b7; }
+
+.finding-icon { flex-shrink: 0; margin-top: 1px; }
+.finding-text { flex: 1; }
+.finding-loc { color: var(--accent); font-weight: 600; }
+
+/* לוג ראשי */
+.main-log {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+.log-header h3 {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-body {
+  padding: 16px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  max-height: 320px;
+  overflow-y: auto;
+  color: var(--muted);
+}
+
+.log-body::-webkit-scrollbar { width: 4px; }
+.log-body::-webkit-scrollbar-track { background: transparent; }
+.log-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.log-line { display: flex; gap: 10px; align-items: baseline; }
+.log-ts { color: var(--border); flex-shrink: 0; font-size: 10px; }
+.log-line.log-ok .log-msg { color: var(--green); }
+.log-line.log-err .log-msg { color: var(--red); }
+.log-line.log-warn .log-msg { color: var(--yellow); }
+.log-line.log-info .log-msg { color: var(--accent); }
+.log-line.log-fix .log-msg { color: #a78bfa; }
+
+/* סיכום */
+.summary-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+
+.summary-card .num {
+  font-size: 28px;
+  font-weight: 900;
+  font-family: var(--mono);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.summary-card .label { font-size: 11px; color: var(--muted); }
+.summary-card.s-bugs .num { color: var(--red); }
+.summary-card.s-warn .num { color: var(--yellow); }
+.summary-card.s-fix .num { color: var(--green); }
+.summary-card.s-ok .num { color: var(--accent); }
+
+/* פרוגרס */
+.progress-bar-wrap {
+  background: var(--surface2);
+  height: 3px;
+  border-radius: 2px;
+  margin: 8px 0 0;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* patch section */
+.patch-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  display: none;
+}
+
+.patch-section.visible { display: block; }
+
+.patch-header {
+  background: rgba(16,185,129,0.06);
+  border-bottom: 1px solid rgba(16,185,129,0.15);
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.patch-header h3 {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 1px;
+}
+
+.patch-list { padding: 16px 18px; }
+
+.patch-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.patch-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.patch-file {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.patch-line {
+  color: var(--yellow);
+  font-size: 10px;
+}
+
+.patch-desc { color: var(--muted); font-size: 11px; margin-bottom: 8px; }
+
+.patch-code {
+  background: rgba(0,0,0,0.3);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-right: 3px solid var(--green);
+}
+
+.patch-code.before { border-color: var(--red); color: #fca5a5; }
+
+.diff-arrow {
+  text-align: center;
+  color: var(--muted);
+  font-size: 16px;
+  margin: 6px 0;
+}
+
+/* responsive */
+@media(max-width:600px) {
+  .summary-bar { grid-template-columns: 1fr 1fr; }
+  .agents-grid { grid-template-columns: 1fr; }
+  header h1 { font-size: 22px; }
+}
+
+/* סקרול מותאם */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.spinner {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 2px solid rgba(0,212,255,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-family: var(--mono);
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+.badge-blue { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+.badge-green { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+.badge-red { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- כותרת -->
+  <header>
+    <div class="logo-tag">SMART MONEY PRO — AGENT SYSTEM v1.0</div>
+    <h1>🤖 מרכז <span>סוכני בדיקה</span></h1>
+    <p>// העלה קבצים → הפעל סוכנים → קבל דוח + תיקונים אוטומטיים</p>
+  </header>
+
+  <!-- אזור העלאת קבצים -->
+  <div class="upload-zone" id="uploadZone">
+    <div class="upload-header">
+      <h2><span class="icon">📁</span> טעינת קבצי המשחק</h2>
+      <span class="badge badge-blue" id="loadedCount">0 / 6 קבצים</span>
+    </div>
+
+    <div class="files-grid">
+      <div class="file-slot" id="slot-ui">
+        <input type="file" accept=".js" onchange="loadFile('ui', this)">
+        <div class="slot-icon">🖥️</div>
+        <div class="slot-name">ui.js</div>
+        <div class="slot-status" id="status-ui">לחץ להעלאה</div>
+      </div>
+      <div class="file-slot" id="slot-core">
+        <input type="file" accept=".js" onchange="loadFile('core', this)">
+        <div class="slot-icon">⚙️</div>
+        <div class="slot-name">core.js</div>
+        <div class="slot-status" id="status-core">לחץ להעלאה</div>
+      </div>
+      <div class="file-slot" id="slot-activities">
+        <input type="file" accept=".js" onchange="loadFile('activities', this)">
+        <div class="slot-icon">🏢</div>
+        <div class="slot-name">activities.js</div>
+        <div class="slot-status" id="status-activities">לחץ להעלאה</div>
+      </div>
+      <div class="file-slot" id="slot-economy">
+        <input type="file" accept=".js" onchange="loadFile('economy', this)">
+        <div class="slot-icon">🏦</div>
+        <div class="slot-name">economy.js</div>
+        <div class="slot-status" id="status-economy">לחץ להעלאה</div>
+      </div>
+      <div class="file-slot" id="slot-events">
+        <input type="file" accept=".js" onchange="loadFile('events', this)">
+        <div class="slot-icon">⚡</div>
+        <div class="slot-name">events.js</div>
+        <div class="slot-status" id="status-events">לחץ להעלאה</div>
+      </div>
+      <div class="file-slot" id="slot-blackmarket">
+        <input type="file" accept=".js" onchange="loadFile('blackmarket', this)">
+        <div class="slot-icon">🕶️</div>
+        <div class="slot-name">blackmarket.js</div>
+        <div class="slot-status" id="status-blackmarket">לחץ להעלאה</div>
+      </div>
+    </div>
+
+    <div class="upload-actions">
+      <button class="btn btn-primary" id="runBtn" onclick="runAllAgents()" disabled>
+        ▶ הפעל את כל הסוכנים
+      </button>
+      <button class="btn btn-secondary" id="applyBtn" onclick="applyAllFixes()" disabled>
+        🔧 החל תיקונים אוטומטיים
+      </button>
+      <button class="btn btn-ghost" onclick="clearAll()">
+        🗑 נקה הכל
+      </button>
+    </div>
+  </div>
+
+  <!-- סיכום -->
+  <div class="summary-bar">
+    <div class="summary-card s-bugs">
+      <div class="num" id="countBugs">—</div>
+      <div class="label">🔴 באגים קריטיים</div>
+    </div>
+    <div class="summary-card s-warn">
+      <div class="num" id="countWarn">—</div>
+      <div class="label">🟡 אזהרות</div>
+    </div>
+    <div class="summary-card s-fix">
+      <div class="num" id="countFix">—</div>
+      <div class="label">🟢 תיקונים זמינים</div>
+    </div>
+    <div class="summary-card s-ok">
+      <div class="num" id="countOk">—</div>
+      <div class="label">✅ בדיקות עברו</div>
+    </div>
+  </div>
+
+  <!-- סוכנים -->
+  <div class="agents-section">
+    <h2>// סוכנים פעילים</h2>
+    <div class="agents-grid">
+
+      <!-- סוכן 1: לוגיקה -->
+      <div class="agent-card agent-logic" id="agent-logic">
+        <div class="agent-top">
+          <div class="agent-avatar">🧠</div>
+          <div class="agent-info">
+            <h3>סוכן לוגיקה</h3>
+            <p>בודק באגים לוגיים: משתנים לא מוגדרים, ערכים שליליים, פונקציות חסרות, קריסות runtime</p>
+          </div>
+        </div>
+        <div class="agent-status">
+          <div class="status-dot" id="dot-logic"></div>
+          <span id="label-logic">ממתין לקבצים...</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-logic"></div></div>
+        <div class="agent-findings" id="findings-logic"></div>
+      </div>
+
+      <!-- סוכן 2: אבטחה -->
+      <div class="agent-card agent-security" id="agent-security">
+        <div class="agent-top">
+          <div class="agent-avatar">🛡️</div>
+          <div class="agent-info">
+            <h3>סוכן אבטחה</h3>
+            <p>בודק XSS, הזרקת HTML, confirm() לא בטוח, חשיפת מידע רגיש, localStorage בלתי מאובטח</p>
+          </div>
+        </div>
+        <div class="agent-status">
+          <div class="status-dot" id="dot-security"></div>
+          <span id="label-security">ממתין לקבצים...</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-security"></div></div>
+        <div class="agent-findings" id="findings-security"></div>
+      </div>
+
+      <!-- סוכן 3: קונפליקטים -->
+      <div class="agent-card agent-conflict" id="agent-conflict">
+        <div class="agent-top">
+          <div class="agent-avatar">⚔️</div>
+          <div class="agent-info">
+            <h3>סוכן קונפליקטים</h3>
+            <p>בודק פונקציות כפולות, דריסת משתנים גלובליים, סדר טעינה שגוי, אתחולים מתנגשים</p>
+          </div>
+        </div>
+        <div class="agent-status">
+          <div class="status-dot" id="dot-conflict"></div>
+          <span id="label-conflict">ממתין לקבצים...</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-conflict"></div></div>
+        <div class="agent-findings" id="findings-conflict"></div>
+      </div>
+
+      <!-- סוכן 4: תיקון אוטומטי -->
+      <div class="agent-card agent-fix" id="agent-fix">
+        <div class="agent-top">
+          <div class="agent-avatar">🔧</div>
+          <div class="agent-info">
+            <h3>סוכן תיקון</h3>
+            <p>מייצר patches מוכנים לתיקון: קובץ, שורה, קוד מקורי vs מתוקן, עם הסבר</p>
+          </div>
+        </div>
+        <div class="agent-status">
+          <div class="status-dot" id="dot-fix"></div>
+          <span id="label-fix">ממתין לסוכנים אחרים...</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-fix"></div></div>
+        <div class="agent-findings" id="findings-fix"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- לוג ראשי -->
+  <div class="main-log">
+    <div class="log-header">
+      <h3>📟 SYSTEM LOG</h3>
+      <button class="btn btn-ghost" style="padding:5px 12px;font-size:11px;" onclick="clearLog()">נקה לוג</button>
+    </div>
+    <div class="log-body" id="mainLog">
+      <div class="log-line log-info">
+        <span class="log-ts">00:00:00</span>
+        <span class="log-msg">// מערכת סוכני בדיקה מוכנה. העלה קבצים כדי להתחיל.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- פאנל תיקונים -->
+  <div class="patch-section" id="patchSection">
+    <div class="patch-header">
+      <h3>🔧 PATCHES — תיקונים אוטומטיים מוכנים</h3>
+      <button class="btn btn-primary" onclick="downloadFixed()">⬇ הורד קבצים מתוקנים</button>
+    </div>
+    <div class="patch-list" id="patchList"></div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// מצב גלובלי
+// ============================================================
+const files = {};
+let findings = [];
+let patches = [];
+let loadedCount = 0;
+
+const REQUIRED_FILES = ['ui','core','activities','economy','events','blackmarket'];
+
+// ============================================================
+// טעינת קבצים
+// ============================================================
+function loadFile(name, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    files[name] = { name: file.name, content: e.target.result, lines: e.target.result.split('\n') };
+    const slot = document.getElementById('slot-' + name);
+    const status = document.getElementById('status-' + name);
+    slot.classList.add('loaded');
+    status.textContent = '✓ ' + file.name;
+    loadedCount = Object.keys(files).length;
+    document.getElementById('loadedCount').textContent = loadedCount + ' / 6 קבצים';
+    log('info', 'נטען: ' + file.name + ' (' + files[name].lines.length + ' שורות)');
+    checkEnableRun();
+  };
+  reader.readAsText(file);
+}
+
+function checkEnableRun() {
+  const hasAny = Object.keys(files).length > 0;
+  document.getElementById('runBtn').disabled = !hasAny;
+}
+
+// ============================================================
+// לוג
+// ============================================================
+function log(type, msg) {
+  const now = new Date();
+  const ts = now.toTimeString().slice(0,8);
+  const logEl = document.getElementById('mainLog');
+  const line = document.createElement('div');
+  line.className = 'log-line log-' + type;
+  line.innerHTML = '<span class="log-ts">' + ts + '</span><span class="log-msg">' + msg + '</span>';
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('mainLog').innerHTML = '';
+  log('info', '// לוג נוקה');
+}
+
+// ============================================================
+// עזרים לניתוח
+// ============================================================
+function getLines(fname) {
+  return files[fname] ? files[fname].lines : [];
+}
+
+function searchInFile(fname, pattern) {
+  const results = [];
+  const lines = getLines(fname);
+  lines.forEach((line, i) => {
+    const match = typeof pattern === 'string'
+      ? line.includes(pattern)
+      : pattern.test(line);
+    if (match) results.push({ line: i + 1, content: line.trim() });
+  });
+  return results;
+}
+
+function searchAllFiles(pattern) {
+  const results = [];
+  Object.keys(files).forEach(fname => {
+    const hits = searchInFile(fname, pattern);
+    hits.forEach(h => results.push({ file: fname, ...h }));
+  });
+  return results;
+}
+
+function addFinding(agentId, type, icon, text, file, lineNum, patch) {
+  const f = { agentId, type, icon, text, file, lineNum, patch };
+  findings.push(f);
+  renderFinding(agentId, f);
+  if (patch) patches.push({ ...f, ...patch });
+}
+
+function renderFinding(agentId, f) {
+  const el = document.getElementById('findings-' + agentId);
+  if (!el) return;
+  el.classList.add('open');
+  const div = document.createElement('div');
+  div.className = 'finding ' + f.type;
+  const loc = f.file ? '<span class="finding-loc">' + f.file + '.js' + (f.lineNum ? ':' + f.lineNum : '') + '</span> — ' : '';
+  div.innerHTML = '<span class="finding-icon">' + f.icon + '</span><span class="finding-text">' + loc + f.text + '</span>';
+  el.appendChild(div);
+}
+
+function setAgentStatus(id, status, label) {
+  const dot = document.getElementById('dot-' + id);
+  const lbl = document.getElementById('label-' + id);
+  const card = document.getElementById('agent-' + id);
+  dot.className = 'status-dot ' + status;
+  lbl.textContent = label;
+  card.className = 'agent-card agent-' + id + (status === 'running' ? ' running' : status === 'ok' ? ' done-ok' : status === 'err' ? ' done-err' : '');
+}
+
+function setProgress(id, pct) {
+  document.getElementById('prog-' + id).style.width = pct + '%';
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================
+// ============================================================
+// סוכן 1: לוגיקה
+// ============================================================
+async function runAgentLogic() {
+  setAgentStatus('logic', 'running', '🔍 סורק...');
+  log('info', '[סוכן לוגיקה] מתחיל סריקה...');
+  document.getElementById('findings-logic').innerHTML = '';
+  let bugs = 0, ok = 0;
+
+  await delay(300);
+  setProgress('logic', 20);
+
+  // 1. בדיקת משתנים ללא window. ב-economy.js
+  if (files['economy']) {
+    const hits = searchInFile('economy', /^\s*(money|bank|loan)\s*([-+*/]=|\+\+|--)/);
+    if (hits.length > 0) {
+      hits.forEach(h => {
+        addFinding('logic','bug','🔴','משתנה גלובלי ללא window. — קריסה אפשרית','economy', h.line, {
+          description: 'הוסף window. לפני ' + h.content.trim().split(/\s/)[0],
+          before: h.content,
+          after: h.content.replace(/\b(money|bank|loan)\b/g, 'window.$1')
+        });
+      });
+      bugs += hits.length;
+      log('err', '[לוגיקה] נמצאו ' + hits.length + ' משתנים ללא window. ב-economy.js');
+    } else {
+      addFinding('logic','ok','✅','כל המשתנים הגלובליים ב-economy.js תקינים','economy');
+      ok++;
+    }
+  }
+
+  setProgress('logic', 40);
+  await delay(200);
+
+  // 2. בדיקת צבעים לא קיימים ב-CSS
+  const badColors = searchAllFiles(/var\(--(white|black|orange|pink)\)/);
+  if (badColors.length > 0) {
+    badColors.forEach(h => {
+      const color = h.content.match(/var\(--([\w]+)\)/)?.[1];
+      addFinding('logic','bug','🔴','צבע CSS לא קיים: var(--' + color + ')' , h.file, h.line, {
+        description: 'החלף ב-var(--text) או צבע קיים',
+        before: h.content,
+        after: h.content.replace(/var\(--white\)/g,"var(--text)").replace(/var\(--black\)/g,"#000")
+      });
+      bugs++;
+    });
+    log('err', '[לוגיקה] נמצאו ' + badColors.length + ' צבעי CSS לא קיימים');
+  } else {
+    addFinding('logic','ok','✅','כל הצבעי CSS תקינים'); ok++;
+  }
+
+  setProgress('logic', 60);
+  await delay(200);
+
+  // 3. בדיקת resetGame מוגדרת
+  const resetDefined = searchAllFiles(/function resetGame\b|window\.resetGame\s*=/);
+  if (resetDefined.length === 0) {
+    addFinding('logic','bug','🔴','resetGame() נקראת אבל לא מוגדרת בשום קובץ','core', null, {
+      description: 'הוסף את פונקציית resetGame ל-core.js',
+      before: '// חסר',
+      after: `function resetGame() {\n  localStorage.clear();\n  location.reload();\n}`
+    });
+    bugs++;
+    log('err', '[לוגיקה] resetGame לא מוגדרת!');
+  } else {
+    addFinding('logic','ok','✅','resetGame מוגדרת: ' + resetDefined[0].file + '.js:' + resetDefined[0].line); ok++;
+  }
+
+  setProgress('logic', 80);
+  await delay(200);
+
+  // 4. בדיקת money שלילי בairועים
+  if (files['events']) {
+    const noGuard = searchInFile('events', /window\.money\s*-=\s*(cost|fine|lost)/).filter(h => {
+      const lines = files['events'].lines;
+      const surrounds = lines.slice(Math.max(0, h.line-3), h.line+2).join('\n');
+      return !surrounds.includes('Math.min') && !surrounds.includes('Math.max');
+    });
+    if (noGuard.length > 0) {
+      noGuard.forEach(h => {
+        addFinding('logic','warn','⚠️','חיסור money ללא הגנה מפני ערך שלילי','events', h.line, {
+          description: 'עטוף ב-Math.min(cost, window.money)',
+          before: h.content,
+          after: h.content.replace(/window\.money\s*-=\s*(\w+)/, 'const _safe = Math.min($1, window.money);\n            window.money -= _safe')
+        });
+        bugs++;
+      });
+    } else {
+      addFinding('logic','ok','✅','כל חיסורי money מוגנים מפני ערך שלילי','events'); ok++;
+    }
+  }
+
+  // 5. בדיקת blackMoney שלילי
+  if (files['events']) {
+    const bmHits = searchInFile('events', /window\.blackMoney\s*-=/).filter(h => {
+      const lines = files['events'].lines;
+      const surrounds = lines.slice(Math.max(0, h.line-2), h.line+2).join('\n');
+      return !surrounds.includes('Math.max');
+    });
+    if (bmHits.length > 0) {
+      bmHits.forEach(h => {
+        addFinding('logic','warn','⚠️','blackMoney יכול לרדת מתחת לאפס','events', h.line, {
+          description: 'עטוף ב-Math.max(0, ...)',
+          before: h.content,
+          after: h.content.replace(/window\.blackMoney\s*-=\s*(\w+)/, 'window.blackMoney = Math.max(0, window.blackMoney - $1)')
+        });
+        bugs++;
+      });
+    } else {
+      addFinding('logic','ok','✅','blackMoney מוגן מפני ערך שלילי','events'); ok++;
+    }
+  }
+
+  setProgress('logic', 100);
+  const total = bugs;
+  setAgentStatus('logic', total > 0 ? 'err' : 'ok', total > 0 ? `נמצאו ${total} בעיות` : `✓ הכל תקין (${ok} בדיקות)`);
+  log(total > 0 ? 'err' : 'ok', '[סוכן לוגיקה] סיים — ' + bugs + ' בעיות, ' + ok + ' תקינות');
+  return { bugs, ok };
+}
+
+// ============================================================
+// סוכן 2: אבטחה
+// ============================================================
+async function runAgentSecurity() {
+  setAgentStatus('security', 'running', '🔍 סורק...');
+  log('info', '[סוכן אבטחה] מתחיל סריקה...');
+  document.getElementById('findings-security').innerHTML = '';
+  let bugs = 0, ok = 0;
+
+  await delay(500);
+  setProgress('security', 25);
+
+  // 1. confirm() לא בטוח
+  const confirms = searchAllFiles(/\bconfirm\s*\(/);
+  if (confirms.length > 0) {
+    confirms.forEach(h => {
+      addFinding('security','bug','🔴','confirm() חסום ב-PWA ו-iOS — יש להחליף ב-showConfirmModal',h.file, h.line, {
+        description: 'החלף confirm() ב-showConfirmModal',
+        before: h.content,
+        after: h.content.replace(/if\s*\(confirm\([^)]+\)\)\s*(\w+)\(\)/,
+          "showConfirmModal('אישור', 'האם אתה בטוח?', function(){ $1(); })")
+      });
+      bugs++;
+    });
+    log('err', '[אבטחה] נמצאו ' + confirms.length + ' שימושים ב-confirm()');
+  } else {
+    addFinding('security','ok','✅','לא נמצאו confirm() — תקין'); ok++;
+  }
+
+  setProgress('security', 50);
+  await delay(300);
+
+  // 2. XSS - entry.user / player.name ב-innerHTML ללא sanitize
+  const xssHits = searchAllFiles(/innerHTML.*\+.*entry\.(user|device)|innerHTML.*\+.*p\.name/);
+  if (xssHits.length > 0) {
+    xssHits.forEach(h => {
+      addFinding('security','bug','🔴','XSS אפשרי — נתוני משתמש מוזרקים ישירות ל-innerHTML', h.file, h.line, {
+        description: 'השתמש ב-sanitizeText() לפני הזרקה',
+        before: h.content,
+        after: h.content.replace(/entry\.(user|device)/g, 'sanitizeText(entry.$1)').replace(/p\.name/g,'sanitizeText(p.name)')
+      });
+      bugs++;
+    });
+    log('err', '[אבטחה] נמצאו ' + xssHits.length + ' נקודות XSS');
+  } else {
+    addFinding('security','ok','✅','לא נמצאו הזרקות XSS ידועות'); ok++;
+  }
+
+  setProgress('security', 75);
+  await delay(300);
+
+  // 3. בדיקת sanitizeText קיימת
+  const sanitize = searchAllFiles(/function sanitizeText/);
+  if (sanitize.length === 0 && xssHits && xssHits.length > 0) {
+    addFinding('security','warn','⚠️','sanitizeText() נדרשת אך לא מוגדרת','ui', null, {
+      description: 'הוסף פונקציית sanitizeText',
+      before: '// חסר',
+      after: `function sanitizeText(str) {\n  return String(str)\n    .replace(/&/g,'&amp;').replace(/</g,'&lt;')\n    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');\n}`
+    });
+    bugs++;
+  } else if (sanitize.length > 0) {
+    addFinding('security','ok','✅','sanitizeText() מוגדרת: ' + sanitize[0].file + ':' + sanitize[0].line); ok++;
+  }
+
+  // 4. פרטים רגישים ב-localStorage
+  const sensitiveLS = searchAllFiles(/localStorage\.setItem\s*\(\s*['"][^'"]*[Pp]ass[^'"]*['"]/);
+  if (sensitiveLS.length > 0) {
+    sensitiveLS.forEach(h => {
+      addFinding('security','warn','⚠️','סיסמה מאוחסנת ב-localStorage (hash בלבד — ודא שזה hash ולא plain text)', h.file, h.line);
+      bugs++;
+    });
+  } else {
+    addFinding('security','ok','✅','אין סיסמאות plain-text ב-localStorage'); ok++;
+  }
+
+  setProgress('security', 100);
+  setAgentStatus('security', bugs > 0 ? 'err' : 'ok', bugs > 0 ? `נמצאו ${bugs} בעיות אבטחה` : `✓ אבטחה תקינה (${ok} בדיקות)`);
+  log(bugs > 0 ? 'err' : 'ok', '[סוכן אבטחה] סיים — ' + bugs + ' בעיות, ' + ok + ' תקינות');
+  return { bugs, ok };
+}
+
+// ============================================================
+// סוכן 3: קונפליקטים
+// ============================================================
+async function runAgentConflict() {
+  setAgentStatus('conflict', 'running', '🔍 סורק...');
+  log('info', '[סוכן קונפליקטים] מתחיל סריקה...');
+  document.getElementById('findings-conflict').innerHTML = '';
+  let bugs = 0, ok = 0;
+
+  await delay(700);
+  setProgress('conflict', 20);
+
+  // 1. פונקציות drawXxx כפולות
+  const drawFunctions = {};
+  Object.keys(files).forEach(fname => {
+    const lines = files[fname].lines;
+    lines.forEach((line, i) => {
+      const m = line.match(/^(function|window\.)(draw\w+)\s*[=(]/);
+      if (m) {
+        const fn = m[2];
+        if (!drawFunctions[fn]) drawFunctions[fn] = [];
+        drawFunctions[fn].push({ file: fname, line: i + 1 });
+      }
+    });
+  });
+
+  Object.entries(drawFunctions).forEach(([fn, locations]) => {
+    if (locations.length > 1) {
+      addFinding('conflict','bug','🔴', fn + ' מוגדרת ' + locations.length + ' פעמים: ' +
+        locations.map(l => l.file + ':' + l.line).join(', '),
+        locations[locations.length-1].file, locations[locations.length-1].line, {
+          description: 'הסר את ההגדרה הכפולה ב-' + locations[0].file + '.js ושאיר רק ב-' + locations[locations.length-1].file + '.js',
+          before: '// ' + fn + ' מוגדרת ב-' + locations[0].file + '.js:' + locations[0].line,
+          after: '// הסר הגדרה זו — שאיר רק ב-' + locations[locations.length-1].file + '.js'
+        });
+      bugs++;
+      log('err', '[קונפליקטים] ' + fn + ' כפולה ב-' + locations.map(l=>l.file).join(', '));
+    }
+  });
+
+  if (bugs === 0) { addFinding('conflict','ok','✅','אין פונקציות draw כפולות'); ok++; }
+
+  setProgress('conflict', 40);
+  await delay(300);
+
+  // 2. אתחול כפול של משתנים גלובליים קריטיים
+  const criticalVars = ['crimeLevel', 'policeHeat', 'blackMoney', 'money', 'bank', 'loan'];
+  criticalVars.forEach(varName => {
+    const hits = searchAllFiles(new RegExp('window\\.' + varName + '\\s*=\\s*(?!window)'));
+    if (hits.length > 1) {
+      addFinding('conflict','warn','⚠️', 'window.' + varName + ' מאותחל ' + hits.length + ' פעמים: ' +
+        hits.map(h => h.file + ':' + h.line).join(', '),
+        hits[hits.length-1].file, hits[hits.length-1].line, {
+          description: 'ב-blackmarket.js השתמש בתנאי typeof === undefined',
+          before: 'window.' + varName + ' = ...',
+          after: "if (typeof window." + varName + " === 'undefined') window." + varName + " = 0;"
+        });
+      bugs++;
+    }
+  });
+
+  setProgress('conflict', 65);
+  await delay(300);
+
+  // 3. בדיקת DOMContentLoaded מרובה
+  const domLoaded = searchAllFiles(/document\.addEventListener\s*\(\s*['"]DOMContentLoaded/);
+  if (domLoaded.length > 2) {
+    addFinding('conflict','warn','⚠️','DOMContentLoaded מופיע ' + domLoaded.length + ' פעמים — סדר אתחול בעייתי',
+      domLoaded[0].file, domLoaded[0].line);
+    bugs++;
+    log('warn', '[קונפליקטים] DOMContentLoaded כפול: ' + domLoaded.length + ' פעמים');
+  } else {
+    addFinding('conflict','ok','✅', domLoaded.length + ' DOMContentLoaded — תקין'); ok++;
+  }
+
+  setProgress('conflict', 85);
+  await delay(200);
+
+  // 4. בדיקת לוגיקת הבנק - drawBank כפולה?
+  const drawBankHits = searchAllFiles(/^(function drawBank|window\.drawBank\s*=)/);
+  if (drawBankHits.length > 1) {
+    addFinding('conflict','bug','🔴','drawBank מוגדרת ב-' + drawBankHits.map(h=>h.file).join(' ו-') + ' — economy.js יכול לדרוס',
+      drawBankHits[0].file, drawBankHits[0].line, {
+        description: 'הסר drawBank מ-economy.js ושאיר רק ב-activities.js',
+        before: '// function drawBank ב-economy.js',
+        after: '// מחק — activities.js כבר מגדיר window.drawBank'
+      });
+    bugs++;
+  } else {
+    addFinding('conflict','ok','✅','drawBank מוגדרת במקום אחד בלבד'); ok++;
+  }
+
+  setProgress('conflict', 100);
+  setAgentStatus('conflict', bugs > 0 ? 'err' : 'ok', bugs > 0 ? `נמצאו ${bugs} קונפליקטים` : `✓ אין קונפליקטים (${ok} בדיקות)`);
+  log(bugs > 0 ? 'warn' : 'ok', '[סוכן קונפליקטים] סיים — ' + bugs + ' בעיות, ' + ok + ' תקינות');
+  return { bugs, ok };
+}
+
+// ============================================================
+// סוכן 4: תיקון — מסכם patches
+// ============================================================
+async function runAgentFix() {
+  setAgentStatus('fix', 'running', '🔧 מכין תיקונים...');
+  log('fix', '[סוכן תיקון] מסכם ממצאים...');
+  document.getElementById('findings-fix').innerHTML = '';
+
+  await delay(400);
+  setProgress('fix', 50);
+
+  const fixable = findings.filter(f => f.patch);
+
+  if (fixable.length === 0) {
+    addFinding('fix', 'ok', '✅', 'אין תיקונים אוטומטיים נדרשים — הכל תקין!');
+    setAgentStatus('fix', 'ok', '✓ אין בעיות לתיקון');
+    setProgress('fix', 100);
+    return;
+  }
+
+  fixable.forEach(f => {
+    addFinding('fix', 'fixed', '🔧',
+      `[${f.file}.js:${f.lineNum || '?'}] ${f.text}`,
+      f.file, f.lineNum
+    );
+  });
+
+  setProgress('fix', 100);
+  setAgentStatus('fix', 'ok', `✓ ${fixable.length} תיקונים מוכנים`);
+  log('fix', '[סוכן תיקון] ' + fixable.length + ' patches מוכנים להחלה');
+
+  // הצג פאנל patches
+  renderPatches();
+}
+
+// ============================================================
+// הפעלת כל הסוכנים
+// ============================================================
+async function runAllAgents() {
+  findings = [];
+  patches = [];
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('applyBtn').disabled = true;
+  document.getElementById('patchSection').classList.remove('visible');
+
+  // איפוס סטטוס
+  ['logic','security','conflict','fix'].forEach(id => {
+    setAgentStatus(id, '', 'ממתין...');
+    setProgress(id, 0);
+    document.getElementById('findings-' + id).innerHTML = '';
+    document.getElementById('findings-' + id).classList.remove('open');
+  });
+
+  log('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  log('info', '// הפעלת ' + Object.keys(files).length + ' קבצים — ' + REQUIRED_FILES.filter(f=>!files[f]).map(f=>f+'.js') .join(', ') || 'כולם נטענו');
+  log('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+  const [r1, r2, r3] = await Promise.all([
+    runAgentLogic(),
+    runAgentSecurity(),
+    runAgentConflict()
+  ]);
+
+  await delay(300);
+  await runAgentFix();
+
+  // עדכון סיכום
+  const totalBugs = findings.filter(f => f.type === 'bug').length;
+  const totalWarn = findings.filter(f => f.type === 'warn').length;
+  const totalFix  = findings.filter(f => f.patch).length;
+  const totalOk   = findings.filter(f => f.type === 'ok').length;
+
+  document.getElementById('countBugs').textContent = totalBugs;
+  document.getElementById('countWarn').textContent = totalWarn;
+  document.getElementById('countFix').textContent  = totalFix;
+  document.getElementById('countOk').textContent   = totalOk;
+
+  document.getElementById('runBtn').disabled = false;
+  if (totalFix > 0) document.getElementById('applyBtn').disabled = false;
+
+  log('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  log(totalBugs > 0 ? 'err' : 'ok',
+    '// סיכום: ' + totalBugs + ' באגים | ' + totalWarn + ' אזהרות | ' + totalFix + ' תיקונים | ' + totalOk + ' תקינות');
+  log('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+}
+
+// ============================================================
+// הצגת patches
+// ============================================================
+function renderPatches() {
+  const fixable = findings.filter(f => f.patch);
+  if (fixable.length === 0) return;
+
+  const section = document.getElementById('patchSection');
+  const list = document.getElementById('patchList');
+  list.innerHTML = '';
+  section.classList.add('visible');
+
+  fixable.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'patch-item';
+    div.innerHTML = `
+      <div class="patch-item-header">
+        <span class="patch-file">📄 ${f.file}.js</span>
+        ${f.lineNum ? '<span class="patch-line">שורה ' + f.lineNum + '</span>' : ''}
+      </div>
+      <div class="patch-desc">🔍 ${f.text}</div>
+      <div class="patch-desc" style="color:var(--green)">🛠 ${f.patch.description}</div>
+      <div class="patch-code before">${escapeHtml(f.patch.before)}</div>
+      <div class="diff-arrow">↓</div>
+      <div class="patch-code">${escapeHtml(f.patch.after)}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// החלת תיקונים אוטומטיים
+// ============================================================
+function applyAllFixes() {
+  const fixable = findings.filter(f => f.patch);
+  if (fixable.length === 0) { log('warn','אין תיקונים להחלה'); return; }
+
+  log('fix', '// מתחיל החלת ' + fixable.length + ' תיקונים...');
+
+  fixable.forEach(f => {
+    if (!files[f.file]) return;
+    const before = f.patch.before.trim();
+    let content = files[f.file].content;
+    if (content.includes(before)) {
+      files[f.file].content = content.replace(before, f.patch.after);
+      files[f.file].lines = files[f.file].content.split('\n');
+      log('fix', '✓ תוקן: ' + f.file + '.js — ' + f.text.slice(0,50));
+    } else {
+      log('warn', '⚠ לא נמצא טקסט לתיקון ב-' + f.file + '.js (שורה ' + f.lineNum + ')');
+    }
+  });
+
+  log('ok', '// התיקונים הוחלו. לחץ "הורד קבצים מתוקנים" להורדה.');
+  document.getElementById('applyBtn').disabled = true;
+}
+
+// ============================================================
+// הורדת קבצים מתוקנים
+// ============================================================
+function downloadFixed() {
+  const loaded = Object.keys(files);
+  if (loaded.length === 0) { log('err','אין קבצים להורדה'); return; }
+
+  loaded.forEach(fname => {
+    const blob = new Blob([files[fname].content], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fname + '.js';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  log('ok', '// הורדו ' + loaded.length + ' קבצים מתוקנים');
+}
+
+// ============================================================
+// ניקוי
+// ============================================================
+function clearAll() {
+  Object.keys(files).forEach(k => delete files[k]);
+  loadedCount = 0;
+  findings = [];
+  patches = [];
+
+  REQUIRED_FILES.forEach(name => {
+    document.getElementById('slot-' + name).classList.remove('loaded');
+    document.getElementById('status-' + name).textContent = 'לחץ להעלאה';
+  });
+
+  document.getElementById('loadedCount').textContent = '0 / 6 קבצים';
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('applyBtn').disabled = true;
+  document.getElementById('patchSection').classList.remove('visible');
+
+  ['logic','security','conflict','fix'].forEach(id => {
+    setAgentStatus(id, '', 'ממתין לקבצים...');
+    setProgress(id, 0);
+    document.getElementById('findings-' + id).innerHTML = '';
+    document.getElementById('findings-' + id).classList.remove('open');
+  });
+
+  ['countBugs','countWarn','countFix','countOk'].forEach(id => {
+    document.getElementById(id).textContent = '—';
+  });
+
+  clearLog();
+  log('info', '// הכל אופס. העלה קבצים מחדש.');
+}
+
+// drag & drop על כל הדף
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('drag-over');
+  const droppedFiles = Array.from(e.dataTransfer.files);
+  droppedFiles.forEach(file => {
+    const baseName = file.name.replace('.js','').replace(/[^a-zA-Z]/g,'').toLowerCase();
+    const match = REQUIRED_FILES.find(f => baseName.includes(f) || f.includes(baseName));
+    if (match) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const input = document.querySelector('#slot-' + match + ' input');
+        files[match] = { name: file.name, content: ev.target.result, lines: ev.target.result.split('\n') };
+        document.getElementById('slot-' + match).classList.add('loaded');
+        document.getElementById('status-' + match).textContent = '✓ ' + file.name;
+        loadedCount = Object.keys(files).length;
+        document.getElementById('loadedCount').textContent = loadedCount + ' / 6 קבצים';
+        log('info', 'גרירה: נטען ' + file.name);
+        checkEnableRun();
+      };
+      reader.readAsText(file);
+    }
+  });
+});
+</script>
+</body>
+</html>
