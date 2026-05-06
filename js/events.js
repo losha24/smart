@@ -26,6 +26,7 @@ window.randomEvents = [
         type: 'negative',
         action: () => {
             let fine = Math.floor(window.money * 0.08);
+            fine = Math.min(fine, window.money);
             window.money -= fine;
             window.eventLosses = (window.eventLosses || 0) + fine;
             return `שילמת קנס בסך ${fine.toLocaleString()} ₪`;
@@ -36,10 +37,10 @@ window.randomEvents = [
         title: 'תקלה בבית',
         type: 'negative',
         action: () => {
-            let cost = 1200;
+            let cost = Math.min(1200, window.money);
             window.money -= cost;
             window.eventLosses = (window.eventLosses || 0) + cost;
-            return `התיקון עלה לך 1,200 ₪`;
+            return `התיקון עלה לך ${cost.toLocaleString()} ₪`;
         }
     },
     {
@@ -82,7 +83,7 @@ window.randomEvents = [
         title: 'טיפול שיניים',
         type: 'negative',
         action: () => {
-            let cost = 1500;
+            let cost = Math.min(1500, window.money);
             window.money -= cost;
             window.eventLosses = (window.eventLosses || 0) + cost;
             return `הטיפול עלה לך ${cost.toLocaleString()} ₪.`;
@@ -104,7 +105,7 @@ window.randomEvents = [
         type: 'negative',
         action: () => {
             let lost = Math.floor((window.blackMoney || 0) * 0.3);
-            window.blackMoney -= lost;
+            window.blackMoney = Math.max(0, (window.blackMoney || 0) - lost);
             return `הוחרמו לך ${lost.toLocaleString()} ₪ מהכסף השחור!`;
         }
     }
