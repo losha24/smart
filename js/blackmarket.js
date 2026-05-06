@@ -1,11 +1,12 @@
 // Smart Money - Black Market System v9.0.0 - The Volatile Syndicate
 // ============================================================
-
-window.crimeLevel = parseInt(localStorage.getItem('crimeLevel')) || 0;
-window.policeHeat = parseInt(localStorage.getItem('policeHeat')) || 0;
-window.blackMoney = parseInt(localStorage.getItem('blackMoney')) || 0;
-window.gang = localStorage.getItem('gangName') || null;
-window.currentLaunderFee = parseInt(localStorage.getItem('launderFee')) || 25;
+// הערה: crimeLevel, policeHeat, blackMoney נטענים מ-core.js/loadGame
+// אתחול כאן רק אם עדיין לא הוגדרו (טעינה ראשונה)
+if (typeof window.crimeLevel === 'undefined') window.crimeLevel = 0;
+if (typeof window.policeHeat === 'undefined') window.policeHeat = 0;
+if (typeof window.blackMoney === 'undefined') window.blackMoney = 0;
+window.gang = window.gang || localStorage.getItem('gangName') || null;
+window.currentLaunderFee = window.currentLaunderFee || parseInt(localStorage.getItem('launderFee')) || 25;
 window.isActionRunning = false;
 
 // ודא ש-money קיים
