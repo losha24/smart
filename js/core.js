@@ -207,6 +207,20 @@ function checkLevelUp(currentLevel) {
     }
 }
 
+function resetGame() {
+    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem('adminLoginLog');
+    localStorage.removeItem('crimeLevel');
+    localStorage.removeItem('policeHeat');
+    localStorage.removeItem('blackMoney');
+    localStorage.removeItem('launderFee');
+    localStorage.removeItem('gangName');
+    localStorage.removeItem('lastTab');
+    localStorage.removeItem('nextEventTime');
+    localStorage.removeItem('playerName');
+    location.reload();
+}
+
 function savePlayerName() {
     const input = document.getElementById("player-name-input");
     const name = input.value.trim();
