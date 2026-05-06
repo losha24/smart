@@ -16,12 +16,18 @@ function hashStr(str) {
     }
     return hash.toString(16);
 }
-const DEFAULT_HASH = hashStr('1234');
-if (!localStorage.getItem('adminPassHash')) {
-    localStorage.setItem('adminPassHash', DEFAULT_HASH);
+// ברירת מחדל: שם משתמש "admin" + סיסמה "1234"
+const DEFAULT_USER_HASH = hashStr('admin');
+const DEFAULT_PASS_HASH = hashStr('1234');
+if (!localStorage.getItem('adminUserHash')) {
+    localStorage.setItem('adminUserHash', DEFAULT_USER_HASH);
 }
-function checkAdminPass(input) {
-    return hashStr(input) === localStorage.getItem('adminPassHash');
+if (!localStorage.getItem('adminPassHash')) {
+    localStorage.setItem('adminPassHash', DEFAULT_PASS_HASH);
+}
+function checkAdminCredentials(user, pass) {
+    return hashStr(user) === localStorage.getItem('adminUserHash') &&
+           hashStr(pass) === localStorage.getItem('adminPassHash');
 }
 
 // ============================================================
@@ -88,10 +94,32 @@ async function fbLoadAdminPass() {
         return data ? data.hash : null;
     } catch(e) { return null; }
 }
+
+// שמירת שם משתמש ל-Firebase
+async function fbSaveAdminUser(hashVal) {
+    try {
+        await fetch(FB_URL + '/config/adminUserHash.json', { method: 'PUT', body: JSON.stringify({ hash: hashVal, ts: Date.now() }) });
+    } catch(e) { console.warn('FB user save failed:', e); }
+}
+// טעינת שם משתמש מ-Firebase
+async function fbLoadAdminUser() {
+    try {
+        const res  = await fetch(FB_URL + '/config/adminUserHash.json');
+        const data = await res.json();
+        return data ? data.hash : null;
+    } catch(e) { return null; }
+}
+
+// טעינת כל ההגדרות - הודעה + סיסמה + שם משתמש
 async function fbLoadConfig() {
-    const [msg, passHash] = await Promise.all([fbLoadAdminMsg(), fbLoadAdminPass()]);
-    if (msg) window.adminMsgText = msg;
+    const [msg, passHash, userHash] = await Promise.all([
+        fbLoadAdminMsg(),
+        fbLoadAdminPass(),
+        fbLoadAdminUser()
+    ]);
+    if (msg)      window.adminMsgText = msg;
     if (passHash) localStorage.setItem('adminPassHash', passHash);
+    if (userHash) localStorage.setItem('adminUserHash', userHash);
 }
 
 async function fbDeletePlayer(deviceId) {
@@ -131,6 +159,50 @@ window.showConfirmModal = function(title, bodyHtml, onConfirm) {
 };
 
 // ============================================================
+// לוג כניסות מנהל
+// ============================================================
+const ADMIN_LOG_KEY = 'adminLoginLog';
+const MAX_LOG_ENTRIES = 20;
+
+function addAdminLoginLog(username) {
+    let log = [];
+    try { log = JSON.parse(localStorage.getItem(ADMIN_LOG_KEY)) || []; } catch(e) {}
+    log.unshift({
+        ts: Date.now(),
+        user: username,
+        device: getDeviceId().slice(0, 12)
+    });
+    if (log.length > MAX_LOG_ENTRIES) log = log.slice(0, MAX_LOG_ENTRIES);
+    localStorage.setItem(ADMIN_LOG_KEY, JSON.stringify(log));
+}
+
+function sanitizeText(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderAdminLoginLog() {
+    const el = document.getElementById('adminLoginLog');
+    if (!el) return;
+    let log = [];
+    try { log = JSON.parse(localStorage.getItem(ADMIN_LOG_KEY)) || []; } catch(e) {}
+    if (log.length === 0) {
+        el.innerHTML = '<div style="opacity:0.4;text-align:center;padding:8px;">אין רשומות</div>';
+        return;
+    }
+    el.innerHTML = log.map(function(entry, i) {
+        const d = new Date(entry.ts);
+        const dateStr = d.toLocaleDateString('he-IL', { day:'2-digit', month:'2-digit', year:'2-digit' });
+        const timeStr = d.toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        const isFirst = i === 0;
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 6px;border-radius:6px;margin-bottom:3px;background:' + (isFirst ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.02)') + ';border:1px solid ' + (isFirst ? 'rgba(59,130,246,0.3)' : 'transparent') + ';">' +
+            '<span style="color:#38bdf8;font-weight:bold;">' + sanitizeText(entry.user) + '</span>' +
+            '<span style="opacity:0.5;font-size:10px;">' + entry.device + '...</span>' +
+            '<span style="color:#94a3b8;font-size:10px;">' + dateStr + ' ' + timeStr + '</span>' +
+            '</div>';
+    }).join('');
+}
+
+// ============================================================
 // פאנל ניהול - modal מלא ללא prompt()
 // ============================================================
 window.openAdminPanel = function() {
@@ -152,10 +224,11 @@ window.openAdminPanel = function() {
 
         // שלב 1 - סיסמה
         '<div id="adminLoginStep">' +
-        '<div style="font-size:13px;color:#94a3b8;margin-bottom:10px;">הכנס סיסמת מנהל:</div>' +
+        '<div style="font-size:13px;color:#94a3b8;margin-bottom:10px;">כניסת מנהל:</div>' +
+        '<input id="adminUserInput" type="text" placeholder="שם משתמש" style="width:100%;padding:12px;background:#1e293b;color:#fff;border:1px solid #334155;border-radius:8px;font-size:14px;text-align:center;margin-bottom:8px;">' +
         '<input id="adminPassInput" type="password" placeholder="סיסמה" style="width:100%;padding:12px;background:#1e293b;color:#fff;border:1px solid #334155;border-radius:8px;font-size:14px;text-align:center;margin-bottom:12px;">' +
         '<button id="adminLoginBtn" style="width:100%;padding:12px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">כניסה</button>' +
-        '<div id="adminLoginErr" style="color:#ef4444;font-size:12px;text-align:center;margin-top:8px;display:none;">סיסמה שגויה!</div>' +
+        '<div id="adminLoginErr" style="color:#ef4444;font-size:12px;text-align:center;margin-top:8px;display:none;">שם משתמש או סיסמה שגויים!</div>' +
         '</div>' +
 
         // שלב 2 - פאנל (מוסתר בהתחלה)
@@ -182,18 +255,22 @@ window.openAdminPanel = function() {
         '</div>' +
         '</div>' +
 
-        // סטטיסטיקות
+        // לוג כניסות מנהל
         '<div style="background:#1e293b;border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid #334155;">' +
-        '<div style="font-size:12px;color:#94a3b8;margin-bottom:10px;">📊 סטטיסטיקות מערכת</div>' +
-        '<div id="adminStats" style="font-size:12px;color:#cbd5e1;line-height:1.9;"></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<span style="font-size:12px;color:#94a3b8;">🔐 לוג כניסות מנהל</span>' +
+        '<button id="adminClearLog" style="font-size:10px;padding:3px 8px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid #ef4444;border-radius:6px;cursor:pointer;">נקה</button>' +
+        '</div>' +
+        '<div id="adminLoginLog" style="font-size:11px;color:#cbd5e1;max-height:130px;overflow-y:auto;"></div>' +
         '</div>' +
 
         // שינוי סיסמה
         '<div style="background:#1e293b;border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid #334155;">' +
-        '<div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">🔐 שינוי סיסמת מנהל</div>' +
-        '<input id="adminNewPass1" type="password" placeholder="סיסמה חדשה" style="width:100%;padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;margin-bottom:8px;">' +
+        '<div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">🔐 שינוי פרטי כניסה</div>' +
+        '<input id="adminNewUser" type="text" placeholder="שם משתמש חדש (אופציונלי)" style="width:100%;padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;margin-bottom:8px;">' +
+        '<input id="adminNewPass1" type="password" placeholder="סיסמה חדשה (אופציונלי)" style="width:100%;padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;margin-bottom:8px;">' +
         '<input id="adminNewPass2" type="password" placeholder="אשר סיסמה" style="width:100%;padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;margin-bottom:8px;">' +
-        '<button id="adminChangePass" style="width:100%;padding:10px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">🔐 שנה סיסמה</button>' +
+        '<button id="adminChangePass" style="width:100%;padding:10px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">🔐 שמור פרטי כניסה</button>' +
         '<div id="adminPassMsg" style="font-size:12px;text-align:center;margin-top:6px;"></div>' +
         '</div>' +
 
@@ -222,49 +299,50 @@ window.openAdminPanel = function() {
         '<button id="adminSavePlayer" style="width:100%;padding:10px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">💾 שמור שינויים לשחקן</button>' +
         '<div id="adminEditMsg" style="font-size:12px;text-align:center;margin-top:6px;"></div>' +
         '</div>' +
+// איפוס בלבד (ללא בדיקת מערכת)
+'<div style="display:block;">' +
+'<button id="adminReset" style="width:100%;padding:12px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid #ef4444;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;">🗑️ איפוס מלא</button>' +
+'</div>' +
 
-        // בדיקת מערכת + איפוס
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
-        '<button id="adminDebug" style="padding:12px;background:rgba(56,189,248,0.1);color:#38bdf8;border:1px solid #38bdf8;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;">🔧 בדיקת מערכת</button>' +
-        '<button id="adminReset" style="padding:12px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid #ef4444;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;">🗑️ איפוס מלא</button>' +
-        '</div>' +
 
         '</div>' + // adminPanelStep
         '</div>'; // card
 
     document.body.appendChild(overlay);
 
+    // נקה לוג
+    document.getElementById('adminClearLog').onclick = function() {
+        localStorage.removeItem(ADMIN_LOG_KEY);
+        renderAdminLoginLog();
+    };
+
     // סגירה
     document.getElementById('adminClose').onclick = function() { overlay.remove(); };
     overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
-    // כניסה עם סיסמה
+    // כניסה עם שם משתמש + סיסמה
+    const userInput = document.getElementById('adminUserInput');
     const passInput = document.getElementById('adminPassInput');
-    passInput.focus();
+    userInput.focus();
+    userInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') passInput.focus(); });
     passInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('adminLoginBtn').click(); });
 
     document.getElementById('adminLoginBtn').onclick = function() {
+        const user = document.getElementById('adminUserInput').value.trim();
         const pass = document.getElementById('adminPassInput').value;
-        if (!checkAdminPass(pass)) {
+        if (!checkAdminCredentials(user, pass)) {
             document.getElementById('adminLoginErr').style.display = 'block';
             passInput.value = '';
-            passInput.focus();
+            userInput.value = '';
+            userInput.focus();
             return;
         }
         document.getElementById('adminLoginStep').style.display = 'none';
         document.getElementById('adminPanelStep').style.display = 'block';
 
-        // טען סטטיסטיקות
-        const ld = getLevelData(window.lifeXP || 0);
-        const totalPlayers = window.lbAllPlayersCount || '?';
-        document.getElementById('adminStats').innerHTML =
-            '💰 כסף במשחק: <b>' + Math.floor(window.money || 0).toLocaleString() + '₪</b><br>' +
-            '🏦 בבנק: <b>' + Math.floor(window.bank || 0).toLocaleString() + '₪</b><br>' +
-            '⭐ רמה: <b>' + ld.level + '</b> (' + Math.floor(ld.xpInCurrentLevel).toLocaleString() + '/' + Math.floor(ld.xpForNext).toLocaleString() + ' XP)<br>' +
-            '🚀 פסיבי: <b>' + (window.passive || 0).toFixed(1) + '₪/ד\'</b><br>' +
-            '🏦 חוב: <b>' + Math.floor(window.loan || 0).toLocaleString() + '₪</b><br>' +
-            '🏠 נדל"ן: <b>' + Object.values(window.estateData || {}).filter(e => e.count > 0).length + ' נכסים</b><br>' +
-            '🚗 רכבים: <b>' + (window.cars || []).length + '</b>';
+        // רשום כניסה ללוג
+        addAdminLoginLog(user);
+        renderAdminLoginLog();
     };
 
     // שמור הודעה
@@ -304,31 +382,57 @@ window.openAdminPanel = function() {
         document.getElementById('adminXpInput').value = '';
     };
 
-    // שנה סיסמה
+    // שנה פרטי כניסה
     document.getElementById('adminChangePass').onclick = async function() {
-        const p1 = document.getElementById('adminNewPass1').value;
-        const p2 = document.getElementById('adminNewPass2').value;
-        const msgEl = document.getElementById('adminPassMsg');
-        if (p1.length < 4) { msgEl.style.color = '#ef4444'; msgEl.innerText = 'סיסמה קצרה מדי (מינימום 4)'; return; }
-        if (p1 !== p2) { msgEl.style.color = '#ef4444'; msgEl.innerText = 'הסיסמאות לא תואמות!'; return; }
-        const newHash = hashStr(p1);
-        localStorage.setItem('adminPassHash', newHash);
+        const newUser = document.getElementById('adminNewUser').value.trim();
+        const p1      = document.getElementById('adminNewPass1').value;
+        const p2      = document.getElementById('adminNewPass2').value;
+        const msgEl   = document.getElementById('adminPassMsg');
+
+        if (newUser.length === 0 && p1.length === 0) {
+            msgEl.style.color = '#ef4444';
+            msgEl.innerText = 'מלא לפחות שדה אחד';
+            return;
+        }
+        if (newUser.length > 0 && newUser.length < 3) {
+            msgEl.style.color = '#ef4444';
+            msgEl.innerText = 'שם משתמש קצר מדי (מינימום 3)';
+            return;
+        }
+        if (p1.length > 0 && p1.length < 4) {
+            msgEl.style.color = '#ef4444';
+            msgEl.innerText = 'סיסמה קצרה מדי (מינימום 4)';
+            return;
+        }
+        if (p1.length > 0 && p1 !== p2) {
+            msgEl.style.color = '#ef4444';
+            msgEl.innerText = 'הסיסמאות לא תואמות!';
+            return;
+        }
+
         this.innerText = '⏳ שומר...';
-        await fbSaveAdminPass(newHash);
+        this.disabled  = true;
+
+        if (newUser.length >= 3) {
+            const newUserHash = hashStr(newUser);
+            localStorage.setItem('adminUserHash', newUserHash);
+            await fbSaveAdminUser(newUserHash); // שמירה ל-Firebase
+        }
+        if (p1.length >= 4) {
+            const newHash = hashStr(p1);
+            localStorage.setItem('adminPassHash', newHash);
+            await fbSaveAdminPass(newHash); // שמירה ל-Firebase
+        }
+
         msgEl.style.color = '#22c55e';
-        msgEl.innerText = '✅ סיסמה שונתה ונשמרה!';
+        msgEl.innerText   = '✅ פרטי הכניסה עודכנו!';
+        document.getElementById('adminNewUser').value  = '';
         document.getElementById('adminNewPass1').value = '';
         document.getElementById('adminNewPass2').value = '';
-        this.innerText = '🔐 שנה סיסמה';
+        this.innerText = '🔐 שמור פרטי כניסה';
+        this.disabled  = false;
     };
 
-    // בדיקת מערכת
-    document.getElementById('adminDebug').onclick = function() {
-        const script = document.createElement('script');
-        script.src = 'js/debug.js?v=' + Date.now();
-        document.body.appendChild(script);
-        if(typeof showMsg === 'function') showMsg('🔧 בדיקת מערכת הופעלה', 'var(--blue)');
-    };
 
     // איפוס מלא
     document.getElementById('adminReset').onclick = function() {
@@ -596,7 +700,6 @@ window.drawHome = function(c) {
     const ld = (typeof getLevelData === 'function')
                ? getLevelData(window.lifeXP || 0)
                : { level:1, xpInCurrentLevel:0, xpForNext:1000, progressPercent:0 };
-    const playerName = localStorage.getItem('playerName') || 'שחקן';
 
     c.innerHTML =
         '<div class="card fade-in">' +
@@ -634,11 +737,7 @@ window.drawHome = function(c) {
         '<small style="opacity:0.7;font-size:10px;display:block;margin-bottom:4px;">🏦 חוב לבנק</small>' +
         '<b style="color:#ef4444;font-size:15px;">' + (window.loan || 0).toLocaleString() + ' ₪</b></div></div>' +
 
-        // שם שחקן
-        '<div class="card" style="padding:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);margin-bottom:15px;">' +
-        '<div style="display:flex;gap:8px;align-items:center;">' +
-        '<input id="nameInput" type="text" value="' + playerName + '" placeholder="השם שלך בדירוג" maxlength="20" style="flex:1;padding:8px;background:#000;color:#fff;border:1px solid #333;border-radius:6px;font-size:13px;">' +
-        '<button class="sys-btn" style="padding:8px 14px;" onclick="saveName()">💾</button></div></div>' +
+
 
         // לידרבורד
         '<div class="card" style="padding:12px;background:rgba(255,255,255,0.02);">' +
@@ -652,7 +751,7 @@ window.drawHome = function(c) {
         '<button onclick="changeLPage(1)" id="lbNext" class="sys-btn" style="padding:5px 15px;">▶</button></div></div>' +
 
         '<div id="install-container" style="margin-top:20px;"></div>' +
-        '<button class="sys-btn" style="border:1px solid #451a1a;color:#ef4444;margin-top:15px;font-size:11px;padding:10px;width:100%;opacity:0.7;" onclick="if(confirm(\'לאפס הכל?\')) resetGame()">🗑️ איפוס חשבון</button>' +
+        '<button class="sys-btn" style="border:1px solid #451a1a;color:#ef4444;margin-top:15px;font-size:11px;padding:10px;width:100%;opacity:0.7;" onclick="showConfirmModal(\'🗑️ איפוס חשבון\',\'כל ההתקדמות תימחק לצמיתות!\',function(){resetGame()})">🗑️ איפוס חשבון</button>' +
         '</div>';
 
     startGiftTimer();
@@ -737,14 +836,6 @@ window.refreshLeaderboard = function() {
     fbSaveScore().then(loadLeaderboard);
 };
 
-window.saveName = function() {
-    const input = document.getElementById('nameInput');
-    if (!input || !input.value.trim()) return;
-    localStorage.setItem('playerName', input.value.trim());
-    showMsg('✅ שם עודכן: ' + input.value.trim(), 'var(--blue)');
-    fbSaveScore();
-};
-
 // ============================================================
 // בונוס יומי
 // ============================================================
@@ -809,7 +900,7 @@ async function triggerInstall() {
     if (outcome === 'accepted') { deferredPrompt = null; renderInstallBtn(); }
 }
 
-// =======================.=====================================
+// ===========================================================
 // אתחול
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
