@@ -100,6 +100,15 @@ header p{margin-top:8px;font-size:12px;color:var(--muted);font-family:var(--mono
 .diff-arrow{text-align:center;color:var(--muted);margin:6px 0;font-size:15px}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-family:var(--mono);padding:3px 9px;border-radius:20px;font-weight:700}
 .badge-blue{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.2)}
+/* כרטיסי הורדה */
+.dl-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:200px;transition:border-color .2s}
+.dl-card:hover{border-color:var(--accent)}
+.dl-card.patched{border-color:var(--green)}
+.dl-card .dl-name{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)}
+.dl-card .dl-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.dl-card .dl-tag{font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:10px;font-weight:700;margin-top:4px;display:inline-block}
+.dl-tag-fixed{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.25)}
+.dl-tag-clean{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.2)}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 @media(max-width:600px){.summary-bar{grid-template-columns:1fr 1fr}.agents-grid{grid-template-columns:1fr}.upload-actions{flex-direction:column}.upload-actions .btn{justify-content:center}}
 </style>
@@ -129,11 +138,11 @@ header p{margin-top:8px;font-size:12px;color:var(--muted);font-family:var(--mono
     <div class="ut-icon">📂</div>
     <div class="ut-text">
       <h3>לחץ כאן לבחירת קבצים — או גרור לכאן</h3>
-      <p>ניתן לבחור מספר קבצים יחד: ui.js, core.js, activities.js, economy.js, events.js, blackmarket.js ועוד</p>
+      <p>תומך בכל סוגי הקבצים: .js .ts .html .css .json .txt ועוד — ללא הגבלת כמות</p>
     </div>
   </label>
 
-  <input type="file" id="fileInput" multiple accept=".js,.ts,.html,.css" style="position:absolute;left:-9999px;opacity:0;">
+  <input type="file" id="fileInput" multiple style="display:block;width:0;height:0;overflow:hidden;position:absolute;">
 
   <div id="fileList"><span class="empty-hint">// טרם נטענו קבצים — לחץ למעלה או גרור קבצים</span></div>
 
@@ -216,9 +225,18 @@ header p{margin-top:8px;font-size:12px;color:var(--muted);font-family:var(--mono
 <div class="patch-section" id="patchSection">
   <div class="patch-header">
     <h3>🔧 PATCHES — תיקונים אוטומטיים</h3>
-    <button class="btn btn-success" onclick="downloadFixed()">⬇ הורד מתוקנים</button>
+    <button class="btn btn-success" onclick="downloadFixed()">⬇ הורד הכל מתוקן</button>
   </div>
   <div class="patch-list" id="patchList"></div>
+</div>
+
+<!-- פאנל הורדה בודדת -->
+<div class="patch-section" id="downloadPanel" style="margin-top:16px;">
+  <div class="patch-header">
+    <h3>📦 הורדת קבצים — בודד או הכל</h3>
+    <button class="btn btn-primary" onclick="downloadFixed()">⬇ הורד הכל</button>
+  </div>
+  <div id="downloadList" style="padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px;"></div>
 </div>
 
 </div><!-- /wrapper -->
@@ -707,6 +725,10 @@ async function runAllAgents() {
   document.getElementById('runBtn').disabled = false;
   if (totalFix > 0) document.getElementById('applyBtn').disabled = false;
 
+  // הצג פאנל הורדה תמיד אחרי סריקה
+  renderDownloadPanel({});
+  document.getElementById('downloadBtn').disabled = false;
+
   log('info','━━━━━━━━━━━━━━━━━━━━');
   log(totalBugs > 0 ? 'err' : 'ok',
     '// ' + totalBugs + ' באגים | ' + totalWarn + ' אזהרות | ' + totalFix + ' patches | ' + totalOk + ' תקינות');
@@ -746,6 +768,9 @@ function applyAllFixes() {
   const fixable = findings.filter(function(f) { return f.patch && f.file && files[f.file]; });
   let applied = 0, skipped = 0;
 
+  // רשום אילו קבצים תוקנו
+  const patchedFiles = {};
+
   fixable.forEach(function(f) {
     const before  = f.patch.before.trim();
     let content   = files[f.file].content;
@@ -759,6 +784,7 @@ function applyAllFixes() {
         lines[idx] = indent + f.patch.after;
         files[f.file].content = lines.join('\n');
         files[f.file].lines   = lines;
+        patchedFiles[f.file]  = true;
         applied++;
         log('fix','✓ שורה ' + f.lineNum + ' ב-' + f.file);
         return;
@@ -769,6 +795,7 @@ function applyAllFixes() {
     if (content.includes(before)) {
       files[f.file].content = content.replace(before, f.patch.after);
       files[f.file].lines   = files[f.file].content.split('\n');
+      patchedFiles[f.file]  = true;
       applied++;
       log('fix','✓ תוקן: ' + f.file);
     } else {
@@ -781,21 +808,66 @@ function applyAllFixes() {
   patched = true;
   document.getElementById('applyBtn').disabled    = true;
   document.getElementById('downloadBtn').disabled = false;
+
+  // הצג פאנל הורדה
+  renderDownloadPanel(patchedFiles);
 }
 
 // ============================================================
-// DOWNLOAD
+// RENDER DOWNLOAD PANEL
+// ============================================================
+function renderDownloadPanel(patchedFiles) {
+  const panel = document.getElementById('downloadPanel');
+  const list  = document.getElementById('downloadList');
+  panel.classList.add('visible');
+  list.innerHTML = '';
+
+  Object.keys(files).forEach(function(k) {
+    const wasPatched = patchedFiles && patchedFiles[k];
+    const lines = files[k].lines ? files[k].lines.length : '?';
+
+    const card = document.createElement('div');
+    card.className = 'dl-card' + (wasPatched ? ' patched' : '');
+
+    // אייקון לפי סיומת
+    const ext = k.split('.').pop().toLowerCase();
+    const icons = { js:'🟨', ts:'🔷', html:'🌐', css:'🎨', json:'📋', txt:'📄' };
+    const icon  = icons[ext] || '📄';
+
+    card.innerHTML =
+      '<div>' +
+        '<div class="dl-name">' + icon + ' ' + escHtml(k) + '</div>' +
+        '<div class="dl-meta">' + lines + ' שורות</div>' +
+        '<span class="dl-tag ' + (wasPatched ? 'dl-tag-fixed' : 'dl-tag-clean') + '">' +
+          (wasPatched ? '✓ תוקן' : '✓ נקי') +
+        '</span>' +
+      '</div>' +
+      '<button class="btn btn-ghost" style="padding:7px 12px;font-size:11px;flex-shrink:0;" ' +
+        'onclick="downloadSingle(\'' + escHtml(k).replace(/'/g,"\\'") + '\')">⬇ הורד</button>';
+    list.appendChild(card);
+  });
+}
+
+// ============================================================
+// DOWNLOAD SINGLE FILE
+// ============================================================
+function downloadSingle(key) {
+  if (!files[key]) { log('err','קובץ לא נמצא: ' + key); return; }
+  const blob = new Blob([files[key].content], { type: 'text/plain;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = key; a.click();
+  URL.revokeObjectURL(url);
+  log('ok','⬇ הורד: ' + key);
+}
+
+// ============================================================
+// DOWNLOAD ALL
 // ============================================================
 function downloadFixed() {
   const keys = Object.keys(files);
   if (keys.length === 0) { log('err','אין קבצים להורדה'); return; }
-  keys.forEach(function(k) {
-    const blob = new Blob([files[k].content], { type: 'text/javascript' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = k; a.click();
-    URL.revokeObjectURL(url);
-  });
+  keys.forEach(function(k) { downloadSingle(k); });
   log('ok','// הורדו ' + keys.length + ' קבצים');
 }
 
@@ -810,6 +882,8 @@ function clearAll() {
   document.getElementById('applyBtn').disabled    = true;
   document.getElementById('downloadBtn').disabled = true;
   document.getElementById('patchSection').classList.remove('visible');
+  document.getElementById('downloadPanel').classList.remove('visible');
+  document.getElementById('downloadList').innerHTML = '';
   ['logic','security','conflict','fix'].forEach(function(id) {
     setAgent(id,'','ממתין...');
     setProgress(id, 0);
