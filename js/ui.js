@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v9.0.0 - כולל יומן אירועים-Admin Panel Modal + Firebase */
+/* Smart Money Pro - js/ui.js - v9.0.0 - Admin Panel Moגצגממגdal + Firebase */
 
 let deferredPrompt;
 let currentTab = 'home';
