@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v9.0.0 - Admin Panel Modal + Firebase */
+/* Smart Money Pro - js/ui.js - v9.0.0 - כולל יומן אירועים-Admin Panel Modal + Firebase */
 
 let deferredPrompt;
 let currentTab = 'home';
@@ -159,50 +159,6 @@ window.showConfirmModal = function(title, bodyHtml, onConfirm) {
 };
 
 // ============================================================
-// לוג כניסות מנהל
-// ============================================================
-const ADMIN_LOG_KEY = 'adminLoginLog';
-const MAX_LOG_ENTRIES = 20;
-
-function addAdminLoginLog(username) {
-    let log = [];
-    try { log = JSON.parse(localStorage.getItem(ADMIN_LOG_KEY)) || []; } catch(e) {}
-    log.unshift({
-        ts: Date.now(),
-        user: username,
-        device: getDeviceId().slice(0, 12)
-    });
-    if (log.length > MAX_LOG_ENTRIES) log = log.slice(0, MAX_LOG_ENTRIES);
-    localStorage.setItem(ADMIN_LOG_KEY, JSON.stringify(log));
-}
-
-function sanitizeText(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function renderAdminLoginLog() {
-    const el = document.getElementById('adminLoginLog');
-    if (!el) return;
-    let log = [];
-    try { log = JSON.parse(localStorage.getItem(ADMIN_LOG_KEY)) || []; } catch(e) {}
-    if (log.length === 0) {
-        el.innerHTML = '<div style="opacity:0.4;text-align:center;padding:8px;">אין רשומות</div>';
-        return;
-    }
-    el.innerHTML = log.map(function(entry, i) {
-        const d = new Date(entry.ts);
-        const dateStr = d.toLocaleDateString('he-IL', { day:'2-digit', month:'2-digit', year:'2-digit' });
-        const timeStr = d.toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-        const isFirst = i === 0;
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 6px;border-radius:6px;margin-bottom:3px;background:' + (isFirst ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.02)') + ';border:1px solid ' + (isFirst ? 'rgba(59,130,246,0.3)' : 'transparent') + ';">' +
-            '<span style="color:#38bdf8;font-weight:bold;">' + sanitizeText(entry.user) + '</span>' +
-            '<span style="opacity:0.5;font-size:10px;">' + entry.device + '...</span>' +
-            '<span style="color:#94a3b8;font-size:10px;">' + dateStr + ' ' + timeStr + '</span>' +
-            '</div>';
-    }).join('');
-}
-
-// ============================================================
 // פאנל ניהול - modal מלא ללא prompt()
 // ============================================================
 window.openAdminPanel = function() {
@@ -255,13 +211,10 @@ window.openAdminPanel = function() {
         '</div>' +
         '</div>' +
 
-        // לוג כניסות מנהל
+        // סטטיסטיקות
         '<div style="background:#1e293b;border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid #334155;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-        '<span style="font-size:12px;color:#94a3b8;">🔐 לוג כניסות מנהל</span>' +
-        '<button id="adminClearLog" style="font-size:10px;padding:3px 8px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid #ef4444;border-radius:6px;cursor:pointer;">נקה</button>' +
-        '</div>' +
-        '<div id="adminLoginLog" style="font-size:11px;color:#cbd5e1;max-height:130px;overflow-y:auto;"></div>' +
+        '<div style="font-size:12px;color:#94a3b8;margin-bottom:10px;">📊 סטטיסטיקות מערכת</div>' +
+        '<div id="adminStats" style="font-size:12px;color:#cbd5e1;line-height:1.9;"></div>' +
         '</div>' +
 
         // שינוי סיסמה
@@ -310,12 +263,6 @@ window.openAdminPanel = function() {
 
     document.body.appendChild(overlay);
 
-    // נקה לוג
-    document.getElementById('adminClearLog').onclick = function() {
-        localStorage.removeItem(ADMIN_LOG_KEY);
-        renderAdminLoginLog();
-    };
-
     // סגירה
     document.getElementById('adminClose').onclick = function() { overlay.remove(); };
     overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
@@ -340,9 +287,17 @@ window.openAdminPanel = function() {
         document.getElementById('adminLoginStep').style.display = 'none';
         document.getElementById('adminPanelStep').style.display = 'block';
 
-        // רשום כניסה ללוג
-        addAdminLoginLog(user);
-        renderAdminLoginLog();
+        // טען סטטיסטיקות
+        const ld = getLevelData(window.lifeXP || 0);
+        const totalPlayers = window.lbAllPlayersCount || '?';
+        document.getElementById('adminStats').innerHTML =
+            '💰 כסף במשחק: <b>' + Math.floor(window.money || 0).toLocaleString() + '₪</b><br>' +
+            '🏦 בבנק: <b>' + Math.floor(window.bank || 0).toLocaleString() + '₪</b><br>' +
+            '⭐ רמה: <b>' + ld.level + '</b> (' + Math.floor(ld.xpInCurrentLevel).toLocaleString() + '/' + Math.floor(ld.xpForNext).toLocaleString() + ' XP)<br>' +
+            '🚀 פסיבי: <b>' + (window.passive || 0).toFixed(1) + '₪/ד\'</b><br>' +
+            '🏦 חוב: <b>' + Math.floor(window.loan || 0).toLocaleString() + '₪</b><br>' +
+            '🏠 נדל"ן: <b>' + Object.values(window.estateData || {}).filter(e => e.count > 0).length + ' נכסים</b><br>' +
+            '🚗 רכבים: <b>' + (window.cars || []).length + '</b>';
     };
 
     // שמור הודעה
@@ -700,6 +655,7 @@ window.drawHome = function(c) {
     const ld = (typeof getLevelData === 'function')
                ? getLevelData(window.lifeXP || 0)
                : { level:1, xpInCurrentLevel:0, xpForNext:1000, progressPercent:0 };
+    const playerName = localStorage.getItem('playerName') || 'שחקן';
 
     c.innerHTML =
         '<div class="card fade-in">' +
@@ -737,8 +693,12 @@ window.drawHome = function(c) {
         '<small style="opacity:0.7;font-size:10px;display:block;margin-bottom:4px;">🏦 חוב לבנק</small>' +
         '<b style="color:#ef4444;font-size:15px;">' + (window.loan || 0).toLocaleString() + ' ₪</b></div></div>' +
 
-
-
+        /* שם שחקן
+        '<div class="card" style="padding:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);margin-bottom:15px;">' +
+        '<div style="display:flex;gap:8px;align-items:center;">' +
+        '<input id="nameInput" type="text" value="' + playerName + '" placeholder="השם שלך בדירוג" maxlength="20" style="flex:1;padding:8px;background:#000;color:#fff;border:1px solid #333;border-radius:6px;font-size:13px;">' +
+        '<button class="sys-btn" style="padding:8px 14px;" onclick="saveName()">💾</button></div></div>' +
+*/
         // לידרבורד
         '<div class="card" style="padding:12px;background:rgba(255,255,255,0.02);">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
@@ -750,13 +710,26 @@ window.drawHome = function(c) {
         '<span id="lbPageInfo" style="font-size:13px;font-weight:bold;">1 / 1</span>' +
         '<button onclick="changeLPage(1)" id="lbNext" class="sys-btn" style="padding:5px 15px;">▶</button></div></div>' +
 
+        // יומן אירועים
+        '<div class="card" style="padding:12px;background:rgba(255,255,255,0.02);margin-top:15px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<small style="opacity:0.7;font-weight:bold;font-size:12px;">📋 יומן אירועים — 12 שעות אחרונות</small>' +
+        '<div style="display:flex;gap:6px;">' +
+        '<button class="sys-btn" style="font-size:10px;padding:3px 8px;" onclick="window._eventLogPage=1;window.renderEventLog();">🔄</button>' +
+        '<button class="sys-btn" style="font-size:10px;padding:3px 8px;background:rgba(239,68,68,0.1);color:#ef4444;border-color:#ef4444;" onclick="window.clearEventLog()">🗑️</button>' +
+        '</div></div>' +
+        '<div id="event-log-container"><div style="text-align:center;opacity:0.4;padding:10px;font-size:12px;">טוען...</div></div>' +
+        '</div>' +
+
         '<div id="install-container" style="margin-top:20px;"></div>' +
-        '<button class="sys-btn" style="border:1px solid #451a1a;color:#ef4444;margin-top:15px;font-size:11px;padding:10px;width:100%;opacity:0.7;" onclick="showConfirmModal(\'🗑️ איפוס חשבון\',\'כל ההתקדמות תימחק לצמיתות!\',function(){resetGame()})">🗑️ איפוס חשבון</button>' +
+        '<button class="sys-btn" style="border:1px solid #451a1a;color:#ef4444;margin-top:15px;font-size:11px;padding:10px;width:100%;opacity:0.7;" onclick="if(confirm(\'לאפס הכל?\')) resetGame()">🗑️ איפוס חשבון</button>' +
         '</div>';
 
     startGiftTimer();
     renderInstallBtn();
     loadLeaderboard();
+    window._eventLogPage = 1;
+    window.renderEventLog();
 };
 
 // ============================================================
@@ -836,6 +809,14 @@ window.refreshLeaderboard = function() {
     fbSaveScore().then(loadLeaderboard);
 };
 
+window.saveName = function() {
+    const input = document.getElementById('nameInput');
+    if (!input || !input.value.trim()) return;
+    localStorage.setItem('playerName', input.value.trim());
+    showMsg('✅ שם עודכן: ' + input.value.trim(), 'var(--blue)');
+    fbSaveScore();
+};
+
 // ============================================================
 // בונוס יומי
 // ============================================================
@@ -883,6 +864,64 @@ function startGiftTimer() {
     update();
     setInterval(update, 1000);
 }
+
+// ============================================================
+// יומן אירועים
+// ============================================================
+window.renderEventLog = function() {
+    const cont = document.getElementById('event-log-container');
+    if (!cont) return;
+    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
+    const log = (window.eventLog || []).filter(function(e) { return e.ts >= cutoff; });
+    if (log.length === 0) {
+        cont.innerHTML = '<div style="text-align:center;opacity:0.4;padding:12px;font-size:12px;">אין אירועים ב-12 השעות האחרונות</div>';
+        return;
+    }
+    const page = window._eventLogPage || 1;
+    const totalPages = Math.ceil(log.length / 5) || 1;
+    const items = log.slice((page - 1) * 5, page * 5);
+    function fmtTime(ts) {
+        const d = new Date(ts);
+        return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    }
+    let html = items.map(function(e) {
+        const isPos  = e.type === 'positive';
+        const icon   = isPos ? '📈' : '📉';
+        const border = isPos ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)';
+        const bg     = isPos ? 'rgba(34,197,94,0.06)'  : 'rgba(239,68,68,0.06)';
+        const clr    = isPos ? '#22c55e' : '#ef4444';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:8px;background:' + bg + ';border:1px solid ' + border + ';margin-bottom:5px;">' +
+            '<span style="font-size:17px;flex-shrink:0;">' + icon + '</span>' +
+            '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:12px;font-weight:bold;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + e.title + '</div>' +
+            '<div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + e.msg + '</div>' +
+            '</div>' +
+            '<span style="font-size:10px;color:' + clr + ';font-weight:bold;flex-shrink:0;font-family:monospace;">' + fmtTime(e.ts) + '</span>' +
+            '</div>';
+    }).join('');
+    if (totalPages > 1) {
+        html += '<div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:8px;">' +
+            '<button onclick="window.changeEventLogPage(-1)" class="sys-btn" style="padding:3px 12px;font-size:11px;" ' + (page <= 1 ? 'disabled' : '') + '>◀</button>' +
+            '<span style="font-size:12px;font-weight:bold;">' + page + ' / ' + totalPages + '</span>' +
+            '<button onclick="window.changeEventLogPage(1)" class="sys-btn" style="padding:3px 12px;font-size:11px;" ' + (page >= totalPages ? 'disabled' : '') + '>▶</button>' +
+            '</div>';
+    }
+    cont.innerHTML = html;
+};
+
+window.changeEventLogPage = function(dir) {
+    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
+    const total = Math.ceil(((window.eventLog || []).filter(function(e) { return e.ts >= cutoff; }).length) / 5) || 1;
+    window._eventLogPage = Math.max(1, Math.min(total, (window._eventLogPage || 1) + dir));
+    window.renderEventLog();
+};
+
+window.clearEventLog = function() {
+    window.eventLog = [];
+    localStorage.setItem('eventLog', '[]');
+    window.renderEventLog();
+    if (typeof showMsg === 'function') showMsg('🗑️ יומן אירועים נוקה', 'var(--red)');
+};
 
 // ============================================================
 // PWA
