@@ -508,9 +508,27 @@ window.triggerRandomEvent = function() {
     }
     const positiveEvents = pool.filter(function(e) { return e.type === 'positive'; });
 const negativeEvents = pool.filter(function(e) { return e.type === 'negative'; });
-const usePositive = Math.random() < 0.5;
-const selectedPool = usePositive ? positiveEvents : negativeEvents;
+
+// 15% סיכוי לכלא ישירות — ללא תלות בחלוקה
+if (!checkJailStatus() && Math.random() < 0.15) {
+    const jailEvent = window.randomEvents.find(function(e) { return e.id === 'ev_jail'; });
+    if (jailEvent) {
+        const resultMsg = jailEvent.action();
+        addEventLog(jailEvent.title, resultMsg, jailEvent.type);
+        if (typeof showMsgLong === 'function') showMsgLong('⚠️ ' + jailEvent.title + ': ' + resultMsg, 'var(--red)');
+        if (window.updateUI) window.updateUI();
+        if (typeof saveGame === 'function') saveGame();
+        return;
+    }
+}
+
+const usePositive = Math.random() < 0.55;
+const selectedPool = (usePositive && positiveEvents.length > 0) ? positiveEvents
+                   : (negativeEvents.length > 0) ? negativeEvents
+                   : pool;
+
 const event = selectedPool[Math.floor(Math.random() * selectedPool.length)];
+
 
     const resultMsg = event.action();
     const color = event.type === 'positive' ? 'var(--green)' : 'var(--red)';
