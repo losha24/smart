@@ -313,9 +313,16 @@ function processOfflineEvents(msPassed) {
 
     // סנן החוצה אירועי כלא ואירועים שמשנים setTimout (לא עובדים offline)
     const safeEvents = window.randomEvents.filter(function(e) {
-        return e.id !== 'ev_jail' && e.id !== 'ev_passive_drop' &&
-               e.id !== 'ev_arrest' && e.id !== 'ev_passive_boost';
-    });
+    return e.id !== 'ev_passive_drop' &&
+           e.id !== 'ev_arrest' && e.id !== 'ev_passive_boost';
+});
+
+// 15% סיכוי לכלא offline
+if (!checkJailStatus && Math.random() < 0.15) {
+    const jailEv = window.randomEvents.find(function(e) { return e.id === 'ev_jail'; });
+    if (jailEv) jailEv.action();
+}
+
 
     let totalGain = 0, totalLoss = 0;
     const startTs = Date.now() - msPassed;
