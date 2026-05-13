@@ -10,6 +10,7 @@ window.loan = 0;
 window.lifeXP = 0;
 window.passive = 0;
 window.jobPassive = 0;
+window.lastKnownLevel = 0;
 window.lastGift = 0;
 window.skills = [];
 window.cars = [];
@@ -20,7 +21,6 @@ window.itemLevels = {};
 window.carLevels = {};
 window.totalEarned = 0;
 window.lastSaveTime = Date.now();
-window.lastKnownLevel = 0;
 window.estateData = {};
 window.eventLosses = 0;
 window.crimeLevel = 0;
@@ -116,38 +116,46 @@ function loadGame() {
             window.gang            = data.gang            || null;
             window.blackMoney      = data.blackMoney      ?? 0;
             window.activeShipments = data.activeShipments || [];
+            window.eventLosses     = data.eventLosses     || 0; // טוען הפסדים קודמים
             window.lastKnownLevel  = getLevelData(window.lifeXP).level;
 
-            if (data.lastSaveTime && window.passive > 0) {
+            if (data.lastSaveTime) {
                 const now = Date.now();
                 const msPassed = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
-                const offlineEarnings = (msPassed / 60000) * window.passive;
+                
+                
+                const effectivePassive = window.passive;
 
-if (offlineEarnings > 1) {
-    if (window.money + offlineEarnings > 1000000000) {
-        window.money = 1000000000;
-        showMsgLong("💰 הגעת לתקרת המזומן המקסימלית (מיליארד ₪)!", 'var(--red)');
-    } else {
-        window.money += offlineEarnings;
-    }
-    
-    window.totalEarned += offlineEarnings;
-    
-    const offlineLosses = data.eventLosses || 0;
-    setTimeout(() => {
-        if (typeof showMsgLong === 'function' && window.money < 1000000000) {
-            let msg = `💰 בזמן שלא היית: הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪`;
-            if (offlineLosses > 0) msg += ` | ⚠️ והפסדת ${Math.floor(offlineLosses).toLocaleString()} ₪ מאירועים`;
-            showMsgLong(msg, 'var(--yellow)');
-        }
-    }, 2000);
+                const offlineEarnings = (msPassed / 60000) * effectivePassive;
 
-    // אירועים offline
-    setTimeout(function() {
-        processOfflineEvents(msPassed);
-    }, 1500);
-}
+                if (offlineEarnings > 1) {
+                    if (window.money + offlineEarnings > 1000000000) {
+                        window.money = 1000000000;
+                        showMsgLong("💰 הגעת לתקרת המזומן המקסימלית (מיליארד ₪)!", 'var(--red)');
+                    } else {
+                        window.money += offlineEarnings;
+                    }
+                    
+                    window.totalEarned += offlineEarnings;
+                    
+                    const offlineLosses = window.eventLosses;
+                    setTimeout(() => {
+                        if (typeof showMsgLong === 'function' && window.money < 1000000000) {
+                            let msg = `💰 בזמן שלא היית: הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪`;
+                            if (offlineLosses > 0) msg += ` | ⚠️ והפסדת ${Math.floor(offlineLosses).toLocaleString()} ₪ מאירועים`;
+                            showMsgLong(msg, 'var(--yellow)');
+                            window.eventLosses = 0; // מאפס אחרי הדיווח
+                            saveGame();
+                        }
+                    }, 2000);
 
+                    // אירועים offline - רק אם קובץ האירועים קיים
+                    setTimeout(function() {
+                        if (typeof processOfflineEvents === 'function') {
+                            processOfflineEvents(msPassed);
+                        }
+                    }, 1500);
+                }
             }
         } else {
             window.lastKnownLevel = 1;
@@ -221,8 +229,6 @@ function resetGame() {
     localStorage.removeItem('lastTab');
     localStorage.removeItem('nextEventTime');
     localStorage.removeItem('playerName');
-    localStorage.removeItem('jailUntil');
-    localStorage.removeItem('jailPassiveSaved');
     localStorage.removeItem('eventLog');
     location.reload();
 }
@@ -239,17 +245,16 @@ function savePlayerName() {
     saveGame();
 }
 
-// Passive income tick - תיקון קטן למניעת חריגה בזמן אמת
+// Passive income tick
 setInterval(() => {
-    if (window.passive > 0 && window.money < 1000000000) { // הוספתי בדיקת מקסימום
+    if (window.passive > 0 && window.money < 1000000000) {
         const tick = window.passive / 1200;
-        window.money = Math.min(1000000000, window.money + tick); // מוודא שלא עובר מיליארד
+        window.money = Math.min(1000000000, window.money + tick);
         window.totalEarned += tick;
         const mEl = document.getElementById('money');
         if (mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
     }
 }, 50);
-
 
 // UI update every second
 setInterval(() => {
@@ -275,19 +280,16 @@ function startEventTimer() {
             timerEl.innerText = mins + ':' + (secs < 10 ? '0' : '') + secs;
         }
         if (window.nextEventTime <= 0) {
-            // סיכוי דינמי לפי מצב השחקן
             let chance = 0.5;
             if (window.money > 50000)               chance += 0.1;
             if ((window.blackMoney || 0) > 10000)   chance += 0.2;
             if ((window.wantedLevel || 0) > 2)      chance += 0.2;
-            // מקסימום 90%
             chance = Math.min(chance, 0.9);
 
             if (Math.random() < chance && typeof window.triggerRandomEvent === 'function') {
                 window.triggerRandomEvent();
             }
 
-            // זמן דינמי: ככל שיש יותר כסף — אירועים תכופים יותר (מינימום 20 שניות)
             window.nextEventTime = Math.max(
                 60,
                 60 - Math.floor((window.money || 0) / 10000) * 5
@@ -297,13 +299,11 @@ function startEventTimer() {
     }, 1000);
 }
 
-// אירועים offline — מחשב כמה אירועים היו בזמן ההיעדרות ומוסיף ליומן
 function processOfflineEvents(msPassed) {
     if (!msPassed || msPassed < 60000) return;
     if (typeof window.randomEvents === 'undefined') return;
 
-    // חישוב כמה אירועים היו בממוצע — כל 40 שניות בממוצע × 70% סיכוי
-    const avgInterval = 40; // שניות
+    const avgInterval = 40; 
     const avgChance   = 0.7;
     const hours       = msPassed / 3600000;
     const totalTicks  = Math.floor((msPassed / 1000) / avgInterval);
@@ -311,17 +311,10 @@ function processOfflineEvents(msPassed) {
 
     if (eventCount <= 0) return;
 
-    // סנן החוצה אירועי כלא ואירועים שמשנים setTimout (לא עובדים offline)
     const safeEvents = window.randomEvents.filter(function(e) {
-    return e.id !== 'ev_passive_drop' &&
-           e.id !== 'ev_arrest' && e.id !== 'ev_passive_boost';
-});
-
-// 15% סיכוי לכלא offline
-if (!checkJailStatus && Math.random() < 0.15) {
-    const jailEv = window.randomEvents.find(function(e) { return e.id === 'ev_jail'; });
-    if (jailEv) jailEv.action();
-}
+        return e.id !== 'ev_passive_drop' &&
+               e.id !== 'ev_arrest' && e.id !== 'ev_passive_boost';
+    });
 
 
     let totalGain = 0, totalLoss = 0;
@@ -331,9 +324,7 @@ if (!checkJailStatus && Math.random() < 0.15) {
         const ev = safeEvents[Math.floor(Math.random() * safeEvents.length)];
         const resultMsg = ev.action();
 
-        // רשום ביומן עם timestamp מהעבר
         if (typeof window.addEventLog === 'function') {
-            // hack: push ישירות עם זמן מהעבר
             const fakeTs = startTs + Math.floor((msPassed / eventCount) * i);
             const entry  = { title: ev.title, msg: resultMsg, type: ev.type, ts: fakeTs };
             window.eventLog = window.eventLog || [];
@@ -344,7 +335,6 @@ if (!checkJailStatus && Math.random() < 0.15) {
         else totalLoss++;
     }
 
-    // מיין לפי זמן (חדש ראשון)
     if (window.eventLog) {
         window.eventLog.sort(function(a, b) { return b.ts - a.ts; });
         const cutoff = Date.now() - 12 * 60 * 60 * 1000;
