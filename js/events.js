@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/events.js - v9.8.0 - Level Scaling ף */
+/* Smart Money Pro - js/events.js - v9.8.0 - Level Scaling + Jail System */
 
 // ============================================================
 // מערכת יומן אירועים - שומרת 12 שעות אחרונות
@@ -36,7 +36,120 @@ function scaledPct(total, pct, minBase, maxBase) {
     return Math.min(Math.floor(maxBase * s), Math.max(Math.floor(minBase * s), fromPct));
 }
 
+// ============================================================
+// מערכת כלא
+// ============================================================
+window.jailUntil        = parseInt(localStorage.getItem('jailUntil'))       || 0;
+window.jailPassiveSaved = parseFloat(localStorage.getItem('jailPassiveSaved')) || 0;
 
+function checkJailStatus() {
+    if (!window.jailUntil || Date.now() >= window.jailUntil) {
+        if (window.jailPassiveSaved > 0) {
+            window.passive = (window.passive || 0) + window.jailPassiveSaved;
+            window.jailPassiveSaved = 0;
+            window.jailUntil = 0;
+            localStorage.removeItem('jailUntil');
+            localStorage.removeItem('jailPassiveSaved');
+            if (typeof saveGame === 'function') saveGame();
+            if (typeof showMsgLong === 'function') showMsgLong('🔓 שוחררת מהכלא! ההכנסה הפסיבית חזרה.', 'var(--green)');
+        }
+        return false;
+    }
+    return true;
+}
+
+// ערבות = (רמה × 5,000) + (2% מסך כל הכסף: מזומן + בנק)
+// מינימום 10,000₪ | מקסימום 50,000,000₪
+function calcBailCost() {
+    const level = (typeof getLevelData === 'function')
+        ? getLevelData(window.lifeXP || 0).level
+        : 1;
+    const totalWealth = (window.money || 0) + (window.bank || 0);
+    const bail = Math.floor((level * 5000) + (totalWealth * 0.02));
+    return Math.max(10000, Math.min(50000000, bail));
+}
+
+function goToJail(hours) {
+    const bailCost = calcBailCost();
+    window.jailUntil = Date.now() + hours * 60 * 60 * 1000;
+    localStorage.setItem('jailUntil', window.jailUntil);
+    window.jailPassiveSaved = window.passive || 0;
+    localStorage.setItem('jailPassiveSaved', window.jailPassiveSaved);
+    window.passive = 0;
+    if (typeof saveGame === 'function') saveGame();
+    if (typeof updateUI === 'function') updateUI();
+    showJailModal(hours, bailCost);
+    return 'נכנסת לכלא ל-' + hours + ' שעות! פסיבי הוקפא.';
+}
+
+function showJailModal(hours, bailCost) {
+    const existing = document.getElementById('jailModal');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'jailModal';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:99999;display:flex;justify-content:center;align-items:center;';
+
+    function getTimeLeft() {
+        const ms = Math.max(0, window.jailUntil - Date.now());
+        const h  = Math.floor(ms / 3600000);
+        const m  = Math.floor((ms % 3600000) / 60000);
+        const s  = Math.floor((ms % 60000) / 1000);
+        return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
+
+    overlay.innerHTML =
+        '<div style="width:88%;max-width:320px;background:#0f172a;border-radius:16px;border:2px solid #ef4444;padding:24px;text-align:center;">' +
+        '<div style="font-size:48px;margin-bottom:8px;">🔒</div>' +
+        '<div style="font-size:18px;font-weight:bold;color:#ef4444;margin-bottom:8px;">אתה בכלא!</div>' +
+        '<div style="font-size:13px;color:#94a3b8;margin-bottom:16px;">כל ההכנסה הפסיבית הוקפאה.<br>ישוחרר אוטומטית בעוד:</div>' +
+        '<div id="jailCountdown" style="font-size:30px;font-weight:bold;color:#fff;font-family:monospace;margin-bottom:20px;">' + getTimeLeft() + '</div>' +
+        '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">או שלם ערבות מהבנק:</div>' +
+        '<div style="font-size:16px;font-weight:bold;color:#f59e0b;margin-bottom:16px;">' + bailCost.toLocaleString() + ' ₪</div>' +
+        '<div style="display:flex;gap:10px;">' +
+        '<button id="jailWait" style="flex:1;padding:12px;border-radius:8px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:13px;cursor:pointer;">המתן</button>' +
+        '<button id="jailBail" style="flex:1;padding:12px;border-radius:8px;border:none;background:#f59e0b;color:#000;font-size:13px;font-weight:bold;cursor:pointer;">💳 שלם ערבות</button>' +
+        '</div></div>';
+
+    document.body.appendChild(overlay);
+
+    const interval = setInterval(function() {
+        const el = document.getElementById('jailCountdown');
+        if (!el) { clearInterval(interval); return; }
+        if (!checkJailStatus()) { clearInterval(interval); overlay.remove(); return; }
+        el.innerText = getTimeLeft();
+    }, 1000);
+
+    document.getElementById('jailWait').onclick = function() { overlay.remove(); };
+
+    document.getElementById('jailBail').onclick = function() {
+        const bc = calcBailCost(); // מחשב מחדש בזמן לחיצה
+        if ((window.bank || 0) < bc) {
+            if (typeof showMsg === 'function') showMsg('❌ אין מספיק כסף בבנק לערבות! (' + bc.toLocaleString() + ' ₪ דרוש)', 'var(--red)');
+            return;
+        }
+        window.bank -= bc;
+        window.passive = (window.passive || 0) + (window.jailPassiveSaved || 0);
+        window.jailPassiveSaved = 0;
+        window.jailUntil = 0;
+        localStorage.removeItem('jailUntil');
+        localStorage.removeItem('jailPassiveSaved');
+        clearInterval(interval);
+        overlay.remove();
+        if (typeof saveGame === 'function') saveGame();
+        if (typeof updateUI === 'function') updateUI();
+        addEventLog('שוחררת מהכלא', 'שילמת ערבות ' + bc.toLocaleString() + ' ₪ מהבנק', 'negative');
+        if (typeof showMsgLong === 'function') showMsgLong('🔓 שוחררת! שילמת ערבות ' + bc.toLocaleString() + ' ₪', 'var(--yellow)');
+    };
+}
+
+// בדיקה בטעינה — אם היה בכלא לפני רענון
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        if (checkJailStatus()) {
+            showJailModal(4, calcBailCost());
+        }
+    }, 600);
+});
 
 // ============================================================
 // רשימת אירועים — מסוקיילים לפי רמה
@@ -50,7 +163,7 @@ window.randomEvents = [
         title: 'בונוס הצטיינות',
         type: 'positive',
         action: () => {
-            let amount = scaledPct(window.money, 0.25, 2000, 1500000);
+            let amount = scaledPct(window.money, 0.1, 500, 500000);
             window.money += amount;
             return 'קיבלת בונוס של ' + amount.toLocaleString() + ' ₪';
         }
@@ -60,7 +173,7 @@ window.randomEvents = [
         title: 'ירושה מפתיעה',
         type: 'positive',
         action: () => {
-            let gain = scaled(35000);
+            let gain = scaled(10000);
             window.money += gain;
             return 'קיבלת ' + gain.toLocaleString() + ' ₪ ירושה';
         }
@@ -121,7 +234,7 @@ window.randomEvents = [
         type: 'positive',
         action: () => {
             const cnt = Object.values(window.estateData || {}).reduce((s, e) => s + (e.count || 0), 0);
-            let gain = scaled(cnt * 8000 + 15000);
+            let gain = scaled(cnt * 1000 + 2500);
             window.money += gain;
             return 'שוק נדל"ן עלה +' + gain.toLocaleString() + ' ₪';
         }
@@ -152,7 +265,7 @@ window.randomEvents = [
         title: 'עלייה בקריפטו',
         type: 'positive',
         action: () => {
-            let gain = scaledPct(window.money, 0.15, 3000, 300000);
+            let gain = scaledPct(window.money, 0.05, 3000, 300000);
             window.money += gain;
             return 'ניצלת עלייה בקריפטו +' + gain.toLocaleString() + ' ₪';
         }
@@ -372,43 +485,61 @@ window.randomEvents = [
         }
     },
 
+    // 🔒 כלא
+
+    {
+        id: 'ev_jail',
+        title: 'נכנסת לכלא',
+        type: 'negative',
+        action: () => {
+            if (checkJailStatus()) return 'כבר בכלא — לא ניתן לאסור שוב';
+            return goToJail(4);
+        }
+    }
 ];
 
 // ============================================================
 // טריגר
 // ============================================================
 window.triggerRandomEvent = function() {
-    const pool = window.randomEvents;
-    
-    // סינון אירועים לפי סוג
-    const positiveEvents = pool.filter(e => e.type === 'positive');
-    const negativeEvents = pool.filter(e => e.type === 'negative');
+    let pool = window.randomEvents;
+    if (checkJailStatus()) {
+        pool = pool.filter(function(e) { return e.id !== 'ev_jail'; });
+    }
+    const positiveEvents = pool.filter(function(e) { return e.type === 'positive'; });
+const negativeEvents = pool.filter(function(e) { return e.type === 'negative'; });
 
-    // הגרלה: 60% סיכוי לאירוע חיובי, 40% לשלילי
-    const usePositive = Math.random() < 0.60;
-    
-    // בחירת מאגר האירועים המתאים
-    const selectedPool = (usePositive && positiveEvents.length > 0) ? positiveEvents 
-                       : (negativeEvents.length > 0) ? negativeEvents 
-                       : pool;
+// 15% סיכוי לכלא ישירות — ללא תלות בחלוקה
+if (!checkJailStatus() && Math.random() < 0.15) {
+    const jailEvent = window.randomEvents.find(function(e) { return e.id === 'ev_jail'; });
+    if (jailEvent) {
+        const resultMsg = jailEvent.action();
+        addEventLog(jailEvent.title, resultMsg, jailEvent.type);
+        if (typeof showMsgLong === 'function') showMsgLong('⚠️ ' + jailEvent.title + ': ' + resultMsg, 'var(--red)');
+        if (window.updateUI) window.updateUI();
+        if (typeof saveGame === 'function') saveGame();
+        return;
+    }
+}
 
-    // הגרלת אירוע ספציפי מהמאגר
-    const event = selectedPool[Math.floor(Math.random() * selectedPool.length)];
+const usePositive = Math.random() < 0.55;
+const selectedPool = (usePositive && positiveEvents.length > 0) ? positiveEvents
+                   : (negativeEvents.length > 0) ? negativeEvents
+                   : pool;
+
+const event = selectedPool[Math.floor(Math.random() * selectedPool.length)];
+
+
     const resultMsg = event.action();
-
-    // הגדרת עיצוב להודעה
     const color = event.type === 'positive' ? 'var(--green)' : 'var(--red)';
-    const icon  = event.type === 'positive' ? '💰' : '⚠️';
+    const icon  = event.type === 'positive' ? '🎉' : '⚠️';
 
-    // רישום ביומן האירועים
     addEventLog(event.title, resultMsg, event.type);
 
-    // הצגת ההודעה לשחקן
-    if (typeof showMsgLong === 'function') {
-        showMsgLong(icon + ' ' + event.title + ': ' + resultMsg, color);
-    }
+    if (typeof showMsgLong === 'function') showMsgLong(icon + ' ' + event.title + ': ' + resultMsg, color);
+    else if (typeof showMsg === 'function') showMsg(icon + ' ' + event.title + ': ' + resultMsg, color);
 
-    // עדכון הממשק ושמירת המשחק
     if (window.updateUI) window.updateUI();
     if (typeof saveGame === 'function') saveGame();
 };
+// הטריגר מנוהל ב-core.js (startEventTimer) — כל ~60 שניות, 50% סיכוי
