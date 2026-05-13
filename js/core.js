@@ -27,7 +27,25 @@ window.crimeLevel = 0;
 window.policeHeat = 0;
 window.gang = null;
 window.activeShipments = [];
+window.MAX_MONEY = 1000000000;
 
+function clampMoney() {
+    if (!isFinite(window.money) || isNaN(window.money)) {
+        window.money = 0;
+    }
+    
+    if (!isFinite(window.bank) || isNaN(window.bank)) {
+        window.bank = 0;
+    }
+    
+    if (!isFinite(window.blackMoney) || isNaN(window.blackMoney)) {
+        window.blackMoney = 0;
+    }
+    
+    window.money = Math.max(0, Math.min(window.money, window.MAX_MONEY));
+    window.bank = Math.max(0, window.bank);
+    window.blackMoney = Math.max(0, window.blackMoney);
+}
 if (!localStorage.getItem("deviceID")) {
     localStorage.setItem("deviceID", 'dev_' + Math.random().toString(36).substr(2, 12));
 }
@@ -132,13 +150,25 @@ if (offlineEarnings > 1) {
     }
     
     window.totalEarned += offlineEarnings;
-    
+    const offlineBonus = Math.floor(offlineEarnings * 0.05);
+
+window.money += offlineBonus;
+
+setTimeout(() => {
+    showMsgLong(
+        '🎁 בונוס חזרה למשחק: +' +
+        offlineBonus.toLocaleString() + ' ₪',
+        'var(--green)'
+    );
+}, 4000);
     const offlineLosses = data.eventLosses || 0;
     setTimeout(() => {
         if (typeof showMsgLong === 'function' && window.money < 1000000000) {
             let msg = `💰 בזמן שלא היית: הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪`;
             if (offlineLosses > 0) msg += ` | ⚠️ והפסדת ${Math.floor(offlineLosses).toLocaleString()} ₪ מאירועים`;
             showMsgLong(msg, 'var(--yellow)');
+            window.eventLosses = 0;
+saveGame();
         }
     }, 2000);
 
@@ -188,7 +218,7 @@ function saveGame() {
 }
 
 function updateUI() {
-    if (window.money > 1000000000) window.money = 1000000000;
+    clampMoney();
     const mEl = document.getElementById('money');
     const bEl = document.getElementById('bank');
     const lEl = document.getElementById('life-level-ui');
@@ -317,20 +347,42 @@ function processOfflineEvents(msPassed) {
            e.id !== 'ev_arrest' && e.id !== 'ev_passive_boost';
 });
 
-// 15% סיכוי לכלא offline
-if (!checkJailStatus && Math.random() < 0.15) {
-    const jailEv = window.randomEvents.find(function(e) { return e.id === 'ev_jail'; });
-    if (jailEv) jailEv.action();
-}
 
-
-    let totalGain = 0, totalLoss = 0;
+    let totalGain = 0;
+let totalLoss = 0;
+let totalGainMoney = 0;
+let totalLossMoney = 0;
     const startTs = Date.now() - msPassed;
 
     for (let i = 0; i < eventCount; i++) {
         const ev = safeEvents[Math.floor(Math.random() * safeEvents.length)];
-        const resultMsg = ev.action();
+        const beforeMoney = window.money + window.bank + window.blackMoney;
 
+let resultMsg = '';
+
+try {
+    
+    resultMsg = ev.action();
+    
+    if (typeof clampMoney === 'function') {
+        clampMoney();
+    }
+    
+} catch (err) {
+    
+    console.error('Offline event error:', err);
+    
+    resultMsg = 'שגיאת אירוע אופליין';
+}
+
+const afterMoney = window.money + window.bank + window.blackMoney;
+const diff = afterMoney - beforeMoney;
+
+if (diff > 0) {
+    totalGainMoney += diff;
+} else {
+    totalLossMoney += Math.abs(diff);
+}
         // רשום ביומן עם timestamp מהעבר
         if (typeof window.addEventLog === 'function') {
             // hack: push ישירות עם זמן מהעבר
@@ -355,10 +407,12 @@ if (!checkJailStatus && Math.random() < 0.15) {
     setTimeout(function() {
         if (typeof showMsgLong === 'function') {
             showMsgLong(
-                '📋 בזמן שלא היית: ' + eventCount + ' אירועים (' +
-                totalGain + ' חיוביים, ' + totalLoss + ' שליליים)',
-                'var(--blue)'
-            );
+    '📋 בזמן שלא היית: ' +
+    eventCount + ' אירועים | ' +
+    '🟢 +' + Math.floor(totalGainMoney).toLocaleString() + ' ₪ | ' +
+    '🔴 -' + Math.floor(totalLossMoney).toLocaleString() + ' ₪',
+    'var(--blue)'
+);
         }
     }, 3500);
 }
@@ -372,3 +426,5 @@ document.addEventListener("DOMContentLoaded", () => {
     updateUI();
     startEventTimer();
 });
+// מוודא שהפסיבי תמיד עובד
+window.passive = window.passive || 0;
