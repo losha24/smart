@@ -1,7 +1,7 @@
-/* Smart Money Pro - js/events.js - v9.9.0 - Extended Events */
+/* Smart Money Pro - js/events.js - v9.9.0 */
 
 // ============================================================
-// מערכת יומן אירועים - שומרת 12 שעות אחרונות
+// מערכת יומן אירועים
 // ============================================================
 window.eventLog = JSON.parse(localStorage.getItem('eventLog') || '[]');
 
@@ -11,22 +11,21 @@ function addEventLog(title, resultMsg, type) {
     const cutoff = Date.now() - 12 * 60 * 60 * 1000;
     window.eventLog = window.eventLog.filter(e => e.ts >= cutoff);
     localStorage.setItem('eventLog', JSON.stringify(window.eventLog));
+    // רענון יומן על המסך בזמן אמת
+    if (typeof window.renderEventLog === 'function') {
+        window.renderEventLog();
+    }
 }
 
 // ============================================================
-// פונקציות סקיילינג לפי רמה
+// סקיילינג לפי רמה
 // ============================================================
 function getLevelScale() {
     const level = (typeof getLevelData === 'function')
-        ? getLevelData(window.lifeXP || 0).level
-        : 1;
+        ? getLevelData(window.lifeXP || 0).level : 1;
     return Math.max(1, 1 + (level - 1) * 0.3);
 }
-
-function scaled(base) {
-    return Math.floor(base * getLevelScale());
-}
-
+function scaled(base) { return Math.floor(base * getLevelScale()); }
 function scaledPct(total, pct, minBase, maxBase) {
     const s = getLevelScale();
     const fromPct = Math.floor(total * pct);
@@ -34,18 +33,149 @@ function scaledPct(total, pct, minBase, maxBase) {
 }
 
 // ============================================================
-// רשימת אירועים — 30 חיוביים + 25 שליליים
+// מערכת כלא — קולדאון 12 שעות בין מעצרים
+// ============================================================
+window.jailUntil        = parseInt(localStorage.getItem('jailUntil'))         || 0;
+window.jailPassiveSaved = parseFloat(localStorage.getItem('jailPassiveSaved')) || 0;
+window.lastJailTime     = parseInt(localStorage.getItem('lastJailTime'))       || 0;
+
+const JAIL_COOLDOWN_MS = 12 * 60 * 60 * 1000;
+
+// האם ניתן לאסור? — לא בכלא כרגע + עברו 12 שעות מהפעם האחרונה
+function canBeArrested() {
+    if (checkJailStatus()) return false;
+    return (Date.now() - (window.lastJailTime || 0)) >= JAIL_COOLDOWN_MS;
+}
+
+function checkJailStatus() {
+    if (!window.jailUntil || Date.now() >= window.jailUntil) {
+        if (window.jailPassiveSaved > 0) {
+            window.passive = (window.passive || 0) + window.jailPassiveSaved;
+            window.jailPassiveSaved = 0;
+            window.jailUntil = 0;
+            localStorage.removeItem('jailUntil');
+            localStorage.removeItem('jailPassiveSaved');
+            if (typeof saveGame === 'function') saveGame();
+            if (typeof showMsgLong === 'function') showMsgLong('🔓 שוחררת מהכלא! ההכנסה הפסיבית חזרה.', 'var(--green)');
+        }
+        return false;
+    }
+    return true;
+}
+
+function calcBailCost() {
+    const level = (typeof getLevelData === 'function')
+        ? getLevelData(window.lifeXP || 0).level : 1;
+    const totalWealth = (window.money || 0) + (window.bank || 0);
+    const bail = Math.floor((level * 5000) + (totalWealth * 0.02));
+    return Math.max(10000, Math.min(50000000, bail));
+}
+
+function goToJail(hours) {
+    if (!canBeArrested()) {
+        // קולדאון פעיל — קנס חלופי במקום כלא
+        let fine = Math.min(scaled(5000), window.money);
+        window.money -= fine;
+        window.eventLosses = (window.eventLosses || 0) + fine;
+        return 'בריחה מהמשטרה! קנס ' + fine.toLocaleString() + ' ₪';
+    }
+    const bailCost = calcBailCost();
+    window.jailUntil    = Date.now() + hours * 60 * 60 * 1000;
+    window.lastJailTime = Date.now(); // שמירת זמן המעצר לקולדאון
+    localStorage.setItem('jailUntil',    window.jailUntil);
+    localStorage.setItem('lastJailTime', window.lastJailTime);
+    window.jailPassiveSaved = window.passive || 0;
+    localStorage.setItem('jailPassiveSaved', window.jailPassiveSaved);
+    window.passive = 0;
+    if (typeof saveGame === 'function') saveGame();
+    if (typeof updateUI === 'function') updateUI();
+    showJailModal(hours, bailCost);
+    return 'נכנסת לכלא ל-' + hours + ' שעות! פסיבי הוקפא.';
+}
+
+function showJailModal(hours, bailCost) {
+    const existing = document.getElementById('jailModal');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'jailModal';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:99999;display:flex;justify-content:center;align-items:center;';
+
+    function getTimeLeft() {
+        const ms = Math.max(0, window.jailUntil - Date.now());
+        const h = Math.floor(ms / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
+
+    overlay.innerHTML =
+        '<div style="width:88%;max-width:320px;background:#0f172a;border-radius:16px;border:2px solid #ef4444;padding:24px;text-align:center;">' +
+        '<div style="font-size:48px;margin-bottom:8px;">🔒</div>' +
+        '<div style="font-size:18px;font-weight:bold;color:#ef4444;margin-bottom:8px;">אתה בכלא!</div>' +
+        '<div style="font-size:13px;color:#94a3b8;margin-bottom:16px;">כל ההכנסה הפסיבית הוקפאה.<br>ישוחרר אוטומטית בעוד:</div>' +
+        '<div id="jailCountdown" style="font-size:30px;font-weight:bold;color:#fff;font-family:monospace;margin-bottom:20px;">' + getTimeLeft() + '</div>' +
+        '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">או שלם ערבות מהבנק:</div>' +
+        '<div style="font-size:16px;font-weight:bold;color:#f59e0b;margin-bottom:16px;">' + bailCost.toLocaleString() + ' ₪</div>' +
+        '<div style="display:flex;gap:10px;">' +
+        '<button id="jailWait" style="flex:1;padding:12px;border-radius:8px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:13px;cursor:pointer;">המתן</button>' +
+        '<button id="jailBail" style="flex:1;padding:12px;border-radius:8px;border:none;background:#f59e0b;color:#000;font-size:13px;font-weight:bold;cursor:pointer;">💳 שלם ערבות</button>' +
+        '</div></div>';
+
+    document.body.appendChild(overlay);
+
+    const interval = setInterval(function() {
+        const el = document.getElementById('jailCountdown');
+        if (!el) { clearInterval(interval); return; }
+        if (!checkJailStatus()) { clearInterval(interval); overlay.remove(); return; }
+        el.innerText = getTimeLeft();
+    }, 1000);
+
+    document.getElementById('jailWait').onclick = function() { overlay.remove(); };
+
+    document.getElementById('jailBail').onclick = function() {
+        const bc = calcBailCost();
+        if ((window.bank || 0) < bc) {
+            if (typeof showMsg === 'function') showMsg('❌ אין מספיק כסף בבנק! (' + bc.toLocaleString() + ' ₪ דרוש)', 'var(--red)');
+            return;
+        }
+        window.bank -= bc;
+        window.passive = (window.passive || 0) + (window.jailPassiveSaved || 0);
+        window.jailPassiveSaved = 0;
+        window.jailUntil = 0;
+        localStorage.removeItem('jailUntil');
+        localStorage.removeItem('jailPassiveSaved');
+        // lastJailTime נשאר — קולדאון פעיל גם אחרי ערבות
+        clearInterval(interval);
+        overlay.remove();
+        if (typeof saveGame === 'function') saveGame();
+        if (typeof updateUI === 'function') updateUI();
+        addEventLog('שוחררת מהכלא', 'שילמת ערבות ' + bc.toLocaleString() + ' ₪ מהבנק', 'negative');
+        if (typeof showMsgLong === 'function') showMsgLong('🔓 שוחררת! שילמת ערבות ' + bc.toLocaleString() + ' ₪', 'var(--yellow)');
+    };
+}
+
+// בדיקה בטעינה
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        if (checkJailStatus()) {
+            showJailModal(4, calcBailCost());
+        }
+    }, 600);
+});
+
+// ============================================================
+// רשימת אירועים
 // ============================================================
 window.randomEvents = [
 
-    // ========== ✅ חיוביים (30) ==========
+    // ✅ חיוביים
 
     {
         id: 'ev_bonus',
         title: 'בונוס הצטיינות',
         type: 'positive',
         action: () => {
-            let amount = scaledPct(window.money, 0.1, 500, 500000);
+            let amount = scaledPct(window.money, 0.15, 8000, 800000);
             window.money += amount;
             return 'קיבלת בונוס של ' + amount.toLocaleString() + ' ₪';
         }
@@ -55,7 +185,7 @@ window.randomEvents = [
         title: 'ירושה מפתיעה',
         type: 'positive',
         action: () => {
-            let gain = scaled(10000);
+            let gain = scaled(25000);
             window.money += gain;
             return 'קיבלת ' + gain.toLocaleString() + ' ₪ ירושה';
         }
@@ -65,7 +195,7 @@ window.randomEvents = [
         title: 'זכייה בלוטו',
         type: 'positive',
         action: () => {
-            let gain = scaled(5000);
+            let gain = scaled(15000);
             window.money += gain;
             return 'זכית ב-' + gain.toLocaleString() + ' ₪ בלוטו';
         }
@@ -75,7 +205,7 @@ window.randomEvents = [
         title: 'החזר מס',
         type: 'positive',
         action: () => {
-            let gain = scaled(2000);
+            let gain = scaled(8000);
             window.money += gain;
             return 'קיבלת החזר מס ' + gain.toLocaleString() + ' ₪';
         }
@@ -85,7 +215,7 @@ window.randomEvents = [
         title: 'עסקת שוק שחור',
         type: 'positive',
         action: () => {
-            let gain = scaled(6500);
+            let gain = scaled(18000);
             window.blackMoney = (window.blackMoney || 0) + gain;
             return 'עסקה הצליחה +' + gain.toLocaleString() + ' ₪ שחור';
         }
@@ -95,7 +225,7 @@ window.randomEvents = [
         title: 'מידע פנימי',
         type: 'positive',
         action: () => {
-            let gain = scaled(9000);
+            let gain = scaled(22000);
             window.money += gain;
             return 'מידע פנימי — רווח ' + gain.toLocaleString() + ' ₪';
         }
@@ -105,7 +235,7 @@ window.randomEvents = [
         title: 'מכירת רכב',
         type: 'positive',
         action: () => {
-            let profit = scaled(4000) + Math.floor(Math.random() * scaled(2500));
+            let profit = scaled(12000) + Math.floor(Math.random() * scaled(8000));
             window.money += profit;
             return 'מכרת רכב ברווח ' + profit.toLocaleString() + ' ₪';
         }
@@ -116,7 +246,7 @@ window.randomEvents = [
         type: 'positive',
         action: () => {
             const cnt = Object.values(window.estateData || {}).reduce((s, e) => s + (e.count || 0), 0);
-            let gain = scaled(cnt * 1000 + 2500);
+            let gain = scaled(cnt * 3000 + 8000);
             window.money += gain;
             return 'שוק נדל"ן עלה +' + gain.toLocaleString() + ' ₪';
         }
@@ -126,20 +256,24 @@ window.randomEvents = [
         title: 'עסקה מסוכנת',
         type: 'positive',
         action: () => {
-            let gain = scaled(8000);
+            let gain = scaled(20000);
             window.money += gain;
             return 'עסקה מסוכנת הצליחה +' + gain.toLocaleString() + ' ₪';
         }
     },
     {
         id: 'ev_passive_boost',
-        title: 'עלייה בהכנסות',
+        title: 'עלייה זמנית בהכנסות',
         type: 'positive',
         action: () => {
-            let boost = window.passive * 0.15;
+            // 25% בונוס ל-2 דקות בדיוק
+            let boost = Math.max(5, window.passive * 0.25);
             window.passive += boost;
-            setTimeout(() => { window.passive = Math.max(0, window.passive - boost); }, 180000);
-            return 'הכנסה פסיבית עלתה ב-' + boost.toFixed(1) + ' ₪/ד\' ל-3 דקות';
+            setTimeout(() => {
+                window.passive = Math.max(0, window.passive - boost);
+                if (typeof updateUI === 'function') updateUI();
+            }, 120000);
+            return 'הכנסה פסיבית +' + boost.toFixed(1) + ' ₪/ד\' ל-2 דקות';
         }
     },
     {
@@ -147,7 +281,7 @@ window.randomEvents = [
         title: 'עלייה בקריפטו',
         type: 'positive',
         action: () => {
-            let gain = scaledPct(window.money, 0.05, 3000, 300000);
+            let gain = scaledPct(window.money, 0.08, 8000, 600000);
             window.money += gain;
             return 'ניצלת עלייה בקריפטו +' + gain.toLocaleString() + ' ₪';
         }
@@ -157,7 +291,7 @@ window.randomEvents = [
         title: 'חוזה עסקי גדול',
         type: 'positive',
         action: () => {
-            let gain = scaled(15000);
+            let gain = scaled(40000);
             window.money += gain;
             return 'חתמת על חוזה חדש +' + gain.toLocaleString() + ' ₪';
         }
@@ -167,9 +301,9 @@ window.randomEvents = [
         title: 'מצאת שטרות',
         type: 'positive',
         action: () => {
-            let gain = scaled(1000) + Math.floor(Math.random() * scaled(2000));
+            let gain = scaled(5000) + Math.floor(Math.random() * scaled(5000));
             window.money += gain;
-            return 'מצאת ' + gain.toLocaleString() + ' ₪';
+            return 'מצאת ' + gain.toLocaleString() + ' ₪ במזרן';
         }
     },
     {
@@ -177,7 +311,7 @@ window.randomEvents = [
         title: 'ריבית על פיקדון',
         type: 'positive',
         action: () => {
-            let interest = scaledPct(window.bank, 0.02, 100, 200000);
+            let interest = scaledPct(window.bank, 0.04, 500, 500000);
             window.bank += interest;
             return 'קיבלת ' + interest.toLocaleString() + ' ₪ ריבית';
         }
@@ -187,164 +321,33 @@ window.randomEvents = [
         title: 'הצלחת הצוות',
         type: 'positive',
         action: () => {
-            let gain = scaled(7000);
+            let gain = scaled(18000);
             window.money += gain;
             return 'הצוות שלך השיג יעדים +' + gain.toLocaleString() + ' ₪';
         }
     },
-    // ========== חיוביים חדשים (15 נוספים) ==========
     {
-        id: 'ev_gift_from_fan',
-        title: 'מתנה ממעריץ',
+        id: 'ev_jackpot',
+        title: 'ג\'קפוט מפתיע',
         type: 'positive',
         action: () => {
-            let gain = scaled(3000) + Math.floor(Math.random() * scaled(2000));
+            let gain = scaled(50000) + Math.floor(Math.random() * scaled(50000));
             window.money += gain;
-            return 'קיבלת מתנה מסתורית בשווי ' + gain.toLocaleString() + ' ₪';
+            return 'פגעת בג\'קפוט! +' + gain.toLocaleString() + ' ₪';
         }
     },
     {
-        id: 'ev_stock_dividend',
-        title: 'דיבידנד ממניות',
+        id: 'ev_passive_perm_boost',
+        title: 'שיפור תשתית',
         type: 'positive',
         action: () => {
-            let gain = scaledPct(window.money, 0.03, 1000, 150000);
-            window.money += gain;
-            return 'קיבלת דיבידנד ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_rent_income',
-        title: 'הכנסה משכירות',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(3500);
-            window.money += gain;
-            return 'דמי שכירות התקבלו ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_royalties',
-        title: 'תמלוגים',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(4500);
-            window.money += gain;
-            return 'קיבלת תמלוגים ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_side_hustle',
-        title: 'פרויקט צדדי',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(2500);
-            window.money += gain;
-            return 'הרווחת מפרויקט צדדי ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_investment_return',
-        title: 'תשואה על השקעה',
-        type: 'positive',
-        action: () => {
-            let gain = scaledPct(window.money, 0.08, 2000, 200000);
-            window.money += gain;
-            return 'השקעה הניבה תשואה ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_scholarship',
-        title: 'מלגת לימודים',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(8000);
-            window.money += gain;
-            return 'קיבלת מלגה ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_cashback',
-        title: 'החזר כספי',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(1200);
-            window.money += gain;
-            return 'קיבלת החזר כספי ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_sold_old_item',
-        title: 'מכרת חפץ ישן',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(800);
-            window.money += gain;
-            return 'מכרת חפץ ישן ב-' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_birthday_gift',
-        title: 'מתנת יום הולדת',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(2000);
-            window.money += gain;
-            return 'קיבלת מתנת יום הולדת ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_prize_win',
-        title: 'זכייה בתחרות',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(5500);
-            window.money += gain;
-            return 'זכית בתחרות עם פרס ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_freelance_job',
-        title: 'פרויקט עצמאי',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(6000);
-            window.money += gain;
-            return 'סיימת פרויקט עצמאי +' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_airline_refund',
-        title: 'פיצוי טיסה',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(1800);
-            window.money += gain;
-            return 'קיבלת פיצוי מחברת תעופה ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_coupon_windfall',
-        title: 'קופון זכייה',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(3200);
-            window.money += gain;
-            return 'קופון זכייה הביא לך ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_referral_bonus',
-        title: 'בונוס הפניות',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(2800);
-            window.money += gain;
-            return 'בונוס על הפניות +' + gain.toLocaleString() + ' ₪';
+            let boost = Math.min(50, Math.max(1, window.passive * 0.02));
+            window.passive += boost;
+            return 'שיפרת תשתית! +' + boost.toFixed(1) + ' ₪/ד\' קבוע';
         }
     },
 
-    // ========== ❌ שליליים (25) ==========
+    // ❌ שליליים
 
     {
         id: 'ev_tax_fine',
@@ -375,10 +378,12 @@ window.randomEvents = [
         type: 'negative',
         action: () => {
             let lost = window.passive * 0.2;
-            window.passive -= lost;
+            window.passive = Math.max(0, window.passive - lost);
+            // חוזר בדיוק אחרי 2 דקות = 120,000ms
             setTimeout(() => {
                 window.passive += lost;
-                if (typeof showMsgLong === 'function') showMsgLong('✅ המשבר הסתיים, ההכנסה חזרה', 'var(--green)');
+                if (typeof updateUI === 'function') updateUI();
+                if (typeof showMsgLong === 'function') showMsgLong('✅ המשבר הסתיים, ההכנסה חזרה לסדרה', 'var(--green)');
             }, 120000);
             return 'שביתה! פסיבי ירד ב-' + lost.toFixed(1) + ' ₪/ד\' ל-2 דקות';
         }
@@ -428,16 +433,6 @@ window.randomEvents = [
         }
     },
     {
-        id: 'ev_arrest',
-        title: 'מעצר זמני',
-        type: 'negative',
-        action: () => {
-            window.passive = (window.passive || 0) * 0.7;
-            setTimeout(() => { window.passive = (window.passive || 1) * (1 / 0.7); }, 60000);
-            return 'נעצרת זמנית — פסיבי ירד ל-1 דקה';
-        }
-    },
-    {
         id: 'ev_hacker',
         title: 'מתקפת סייבר',
         type: 'negative',
@@ -469,16 +464,6 @@ window.randomEvents = [
             window.money -= cost;
             window.eventLosses = (window.eventLosses || 0) + cost;
             return 'שיטפון גרם נזק ' + cost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_employee_quit',
-        title: 'עובד מפתח התפטר',
-        type: 'negative',
-        action: () => {
-            let lost = window.passive * 0.1;
-            window.passive = Math.max(0, window.passive - lost);
-            return 'עובד מפתח עזב — פסיבי ירד ב-' + lost.toFixed(1) + ' ₪/ד\'';
         }
     },
     {
@@ -517,181 +502,64 @@ window.randomEvents = [
             return 'קריסת שוק הפסידה ' + lost.toLocaleString() + ' ₪';
         }
     },
-    // ========== שליליים חדשים (10 נוספים) ==========
     {
-        id: 'ev_medical_emergency',
-        title: 'חירום רפואי',
+        id: 'ev_employee_quit',
+        title: 'עובד מפתח התפטר',
         type: 'negative',
         action: () => {
-            let cost = Math.min(scaled(5000), window.money);
-            window.money -= cost;
-            window.eventLosses = (window.eventLosses || 0) + cost;
-            return 'טיפול רפואי דחוף עלה ' + cost.toLocaleString() + ' ₪';
+            let lost = window.passive * 0.1;
+            window.passive = Math.max(0, window.passive - lost);
+            return 'עובד מפתח עזב — פסיבי ירד ב-' + lost.toFixed(1) + ' ₪/ד\'';
         }
     },
+
+    // 🔒 כלא
     {
-        id: 'ev_scam',
-        title: 'הונאה',
+        id: 'ev_jail',
+        title: 'נכנסת לכלא',
         type: 'negative',
         action: () => {
-            let lost = scaledPct(window.money, 0.05, 1000, 100000);
-            lost = Math.min(lost, window.money);
-            window.money -= lost;
-            window.eventLosses = (window.eventLosses || 0) + lost;
-            return 'נפלת להונאה! הפסדת ' + lost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_pet_illness',
-        title: 'מחלת חיית מחמד',
-        type: 'negative',
-        action: () => {
-            let cost = Math.min(scaled(2500), window.money);
-            window.money -= cost;
-            window.eventLosses = (window.eventLosses || 0) + cost;
-            return 'טיפול וטרינרי עלה ' + cost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_phone_broken',
-        title: 'טלפון נשבר',
-        type: 'negative',
-        action: () => {
-            let cost = Math.min(scaled(2000), window.money);
-            window.money -= cost;
-            window.eventLosses = (window.eventLosses || 0) + cost;
-            return 'תיקון טלפון עלה ' + cost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_wedding_gift',
-        title: 'מתנת חתונה',
-        type: 'negative',
-        action: () => {
-            let cost = Math.min(scaled(1800), window.money);
-            window.money -= cost;
-            window.eventLosses = (window.eventLosses || 0) + cost;
-            return 'הוזמנת לחתונה + מתנה ' + cost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_subscription_trap',
-        title: 'מנוי יקר',
-        type: 'negative',
-        action: () => {
-            let cost = Math.min(scaled(900), window.money);
-            window.money -= cost;
-            window.eventLosses = (window.eventLosses || 0) + cost;
-            return 'התגלה מנוי ישן שחייב אותך ' + cost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_identity_theft',
-        title: 'גניבת זהות',
-        type: 'negative',
-        action: () => {
-            let lost = scaledPct(window.bank, 0.08, 2000, 180000);
-            lost = Math.min(lost, window.bank);
-            window.bank -= lost;
-            window.eventLosses = (window.eventLosses || 0) + lost;
-            return 'גניבת זהות - נגנבו ' + lost.toLocaleString() + ' ₪ מהבנק';
-        }
-    },
-    {
-        id: 'ev_overdue_fine',
-        title: 'קנס פיגורים',
-        type: 'negative',
-        action: () => {
-            let fine = Math.min(scaled(1300), window.money);
-            window.money -= fine;
-            window.eventLosses = (window.eventLosses || 0) + fine;
-            return 'קנס על איחור בתשלום ' + fine.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_burglary',
-        title: 'פריצה לבית',
-        type: 'negative',
-        action: () => {
-            let lost = scaledPct(window.money, 0.06, 1500, 120000);
-            lost = Math.min(lost, window.money);
-            window.money -= lost;
-            window.eventLosses = (window.eventLosses || 0) + lost;
-            return 'פרצו לביתך! נגנבו ' + lost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_credit_card_fee',
-        title: 'עמלת כרטיס אשראי',
-        type: 'negative',
-        action: () => {
-            let fee = Math.min(scaled(600), window.money);
-            window.money -= fee;
-            window.eventLosses = (window.eventLosses || 0) + fee;
-            return 'עמלות כרטיס אשראי ' + fee.toLocaleString() + ' ₪';
+            return goToJail(4);
         }
     }
 ];
 
 // ============================================================
-// טריגר - גרסה מתוקנת ללא כלא
+// טריגר
 // ============================================================
 window.triggerRandomEvent = function() {
-    const positiveEvents = window.randomEvents.filter(function(e) { return e.type === 'positive'; });
-    const negativeEvents = window.randomEvents.filter(function(e) { return e.type === 'negative'; });
-    
-    const usePositive = Math.random() < 0.55;
-    const selectedPool = (usePositive && positiveEvents.length > 0) ? positiveEvents :
-        (negativeEvents.length > 0) ? negativeEvents :
-        window.randomEvents;
-    
-    const event = selectedPool[Math.floor(Math.random() * selectedPool.length)];
-    
-    let resultMsg = '';
+    const positiveEvents = window.randomEvents.filter(e => e.type === 'positive');
+    const negativeEvents = window.randomEvents.filter(e => e.type === 'negative' && e.id !== 'ev_jail');
 
-try {
-    resultMsg = event.action();
-    
-    if (typeof clampMoney === 'function') {
-        clampMoney();
+    // 15% סיכוי לכלא — canBeArrested נבדק בתוך goToJail
+    if (canBeArrested() && Math.random() < 0.15) {
+        const jailEvent = window.randomEvents.find(e => e.id === 'ev_jail');
+        if (jailEvent) {
+            const resultMsg = jailEvent.action();
+            addEventLog(jailEvent.title, resultMsg, jailEvent.type);
+            if (typeof showMsgLong === 'function') showMsgLong('⚠️ ' + jailEvent.title + ': ' + resultMsg, 'var(--red)');
+            if (window.updateUI) window.updateUI();
+            if (typeof saveGame === 'function') saveGame();
+            return;
+        }
     }
-    
-} catch (err) {
-    
-    console.error('Event error:', err);
-    
-    resultMsg = 'אירעה שגיאה באירוע';
-    
-    if (typeof showMsgLong === 'function') {
-        showMsgLong(
-            '⚠️ שגיאה באירוע: ' + event.title,
-            'var(--red)'
-        );
-    }
-}
-    if (typeof clampMoney === 'function') {
-    clampMoney();
-}
+
+    // 60% חיובי / 40% שלילי
+    const usePositive = Math.random() < 0.60;
+    const pool = (usePositive && positiveEvents.length > 0) ? positiveEvents
+               : (negativeEvents.length > 0)               ? negativeEvents
+               : window.randomEvents.filter(e => e.id !== 'ev_jail');
+
+    if (pool.length === 0) return;
+    const event = pool[Math.floor(Math.random() * pool.length)];
+    const resultMsg = event.action();
     const color = event.type === 'positive' ? 'var(--green)' : 'var(--red)';
-    const icon = event.type === 'positive' ? '🎉' : '⚠️';
-    
+    const icon  = event.type === 'positive' ? '🎉' : '⚠️';
+
     addEventLog(event.title, resultMsg, event.type);
-    
     if (typeof showMsgLong === 'function') showMsgLong(icon + ' ' + event.title + ': ' + resultMsg, color);
     else if (typeof showMsg === 'function') showMsg(icon + ' ' + event.title + ': ' + resultMsg, color);
-    
+
     if (window.updateUI) window.updateUI();
     if (typeof saveGame === 'function') saveGame();
 };
-
-// נקיון localStorage מכלא ישן
-localStorage.removeItem('jailUntil');
-localStorage.removeItem('jailPassiveSaved');
-
-// פונקציות ריקות למניעת שגיאות
-window.checkJailStatus = function() { return false; };
-window.goToJail = function() { return false; };
-window.showJailModal = function() {};
-
-console.log("✅ 55 אירועים טעונים (30 חיוביים + 25 שליליים)");
-console.log("✅ מערכת הכלא הושבתה לחלוטין!");
