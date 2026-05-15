@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-money-pro-v9.1';
+const CACHE_NAME = 'smart-money-pro-v9.1.3';
 const BASE = '/smart/';
 
 // קבצים קריטיים (App Shell)
