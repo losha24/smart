@@ -1,17 +1,29 @@
-/* Smart Money Pro - js/events.js - v9.9.0 */
+/* Smart Money Pro - js/events.js - v9.9.2
+   תיקונים:
+   - timestamps אמיתיים לאירועים שקרו באופליין
+   - יומן מציג שעה אמיתית של האירוע לא שעת הטעינה
+   - אין כלא באופליין
+   - אין popups באופליין
+   - כל action מחזיר { msg, amount } לתצוגה ביומן
+*/
 
 // ============================================================
 // מערכת יומן אירועים
 // ============================================================
 window.eventLog = JSON.parse(localStorage.getItem('eventLog') || '[]');
 
-function addEventLog(title, resultMsg, type) {
-    const entry = { title, msg: resultMsg, type, ts: Date.now() };
+// ⭐ FIX: ts אופציונלי — מאפשר timestamp אמיתי מאופליין
+function addEventLog(title, resultMsg, type, ts) {
+    const entry = {
+        title,
+        msg: resultMsg,
+        type,
+        ts: ts || Date.now()
+    };
     window.eventLog.unshift(entry);
     const cutoff = Date.now() - 12 * 60 * 60 * 1000;
     window.eventLog = window.eventLog.filter(e => e.ts >= cutoff);
     localStorage.setItem('eventLog', JSON.stringify(window.eventLog));
-    // רענון יומן על המסך בזמן אמת
     if (typeof window.renderEventLog === 'function') {
         window.renderEventLog();
     }
@@ -41,7 +53,6 @@ window.lastJailTime     = parseInt(localStorage.getItem('lastJailTime'))       |
 
 const JAIL_COOLDOWN_MS = 12 * 60 * 60 * 1000;
 
-// האם ניתן לאסור? — לא בכלא כרגע + עברו 12 שעות מהפעם האחרונה
 function canBeArrested() {
     if (checkJailStatus()) return false;
     return (Date.now() - (window.lastJailTime || 0)) >= JAIL_COOLDOWN_MS;
@@ -73,7 +84,6 @@ function calcBailCost() {
 
 function goToJail(hours) {
     if (!canBeArrested()) {
-        // קולדאון פעיל — קנס חלופי במקום כלא
         let fine = Math.min(scaled(5000), window.money);
         window.money -= fine;
         window.eventLosses = (window.eventLosses || 0) + fine;
@@ -81,7 +91,7 @@ function goToJail(hours) {
     }
     const bailCost = calcBailCost();
     window.jailUntil    = Date.now() + hours * 60 * 60 * 1000;
-    window.lastJailTime = Date.now(); // שמירת זמן המעצר לקולדאון
+    window.lastJailTime = Date.now();
     localStorage.setItem('jailUntil',    window.jailUntil);
     localStorage.setItem('lastJailTime', window.lastJailTime);
     window.jailPassiveSaved = window.passive || 0;
@@ -89,7 +99,9 @@ function goToJail(hours) {
     window.passive = 0;
     if (typeof saveGame === 'function') saveGame();
     if (typeof updateUI === 'function') updateUI();
-    showJailModal(hours, bailCost);
+    if (!window._offlineMode) {
+        showJailModal(hours, bailCost);
+    }
     return 'נכנסת לכלא ל-' + hours + ' שעות! פסיבי הוקפא.';
 }
 
@@ -144,7 +156,6 @@ function showJailModal(hours, bailCost) {
         window.jailUntil = 0;
         localStorage.removeItem('jailUntil');
         localStorage.removeItem('jailPassiveSaved');
-        // lastJailTime נשאר — קולדאון פעיל גם אחרי ערבות
         clearInterval(interval);
         overlay.remove();
         if (typeof saveGame === 'function') saveGame();
@@ -154,7 +165,6 @@ function showJailModal(hours, bailCost) {
     };
 }
 
-// בדיקה בטעינה
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         if (checkJailStatus()) {
@@ -164,381 +174,226 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================================
-// רשימת אירועים
+// רשימת אירועים — כל action מחזיר { msg, amount }
+// ⭐ amount חיובי = רווח, שלילי = הפסד, 0 = אין כסף ישיר
 // ============================================================
 window.randomEvents = [
 
     // ✅ חיוביים
-
-    {
-        id: 'ev_bonus',
-        title: 'בונוס הצטיינות',
-        type: 'positive',
-        action: () => {
-            let amount = scaledPct(window.money, 0.15, 8000, 800000);
-            window.money += amount;
-            return 'קיבלת בונוס של ' + amount.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_inheritance',
-        title: 'ירושה מפתיעה',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(25000);
-            window.money += gain;
-            return 'קיבלת ' + gain.toLocaleString() + ' ₪ ירושה';
-        }
-    },
-    {
-        id: 'ev_lottery',
-        title: 'זכייה בלוטו',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(15000);
-            window.money += gain;
-            return 'זכית ב-' + gain.toLocaleString() + ' ₪ בלוטו';
-        }
-    },
-    {
-        id: 'ev_tax_refund',
-        title: 'החזר מס',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(8000);
-            window.money += gain;
-            return 'קיבלת החזר מס ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_black_market_deal',
-        title: 'עסקת שוק שחור',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(18000);
-            window.blackMoney = (window.blackMoney || 0) + gain;
-            return 'עסקה הצליחה +' + gain.toLocaleString() + ' ₪ שחור';
-        }
-    },
-    {
-        id: 'ev_insider',
-        title: 'מידע פנימי',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(22000);
-            window.money += gain;
-            return 'מידע פנימי — רווח ' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_car_sell',
-        title: 'מכירת רכב',
-        type: 'positive',
-        action: () => {
-            let profit = scaled(12000) + Math.floor(Math.random() * scaled(8000));
-            window.money += profit;
-            return 'מכרת רכב ברווח ' + profit.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_realestate_boom',
-        title: 'בום נדל"ן',
-        type: 'positive',
-        action: () => {
-            const cnt = Object.values(window.estateData || {}).reduce((s, e) => s + (e.count || 0), 0);
-            let gain = scaled(cnt * 3000 + 8000);
-            window.money += gain;
-            return 'שוק נדל"ן עלה +' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_risky_deal_win',
-        title: 'עסקה מסוכנת',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(20000);
-            window.money += gain;
-            return 'עסקה מסוכנת הצליחה +' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_passive_boost',
-        title: 'עלייה זמנית בהכנסות',
-        type: 'positive',
-        action: () => {
-            // 25% בונוס ל-2 דקות בדיוק
-            let boost = Math.max(5, window.passive * 0.25);
-            window.passive += boost;
-            setTimeout(() => {
-                window.passive = Math.max(0, window.passive - boost);
-                if (typeof updateUI === 'function') updateUI();
-            }, 120000);
-            return 'הכנסה פסיבית +' + boost.toFixed(1) + ' ₪/ד\' ל-2 דקות';
-        }
-    },
-    {
-        id: 'ev_crypto_pump',
-        title: 'עלייה בקריפטו',
-        type: 'positive',
-        action: () => {
-            let gain = scaledPct(window.money, 0.08, 8000, 600000);
-            window.money += gain;
-            return 'ניצלת עלייה בקריפטו +' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_business_contract',
-        title: 'חוזה עסקי גדול',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(40000);
-            window.money += gain;
-            return 'חתמת על חוזה חדש +' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_found_cash',
-        title: 'מצאת שטרות',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(5000) + Math.floor(Math.random() * scaled(5000));
-            window.money += gain;
-            return 'מצאת ' + gain.toLocaleString() + ' ₪ במזרן';
-        }
-    },
-    {
-        id: 'ev_bank_interest',
-        title: 'ריבית על פיקדון',
-        type: 'positive',
-        action: () => {
-            let interest = scaledPct(window.bank, 0.04, 500, 500000);
-            window.bank += interest;
-            return 'קיבלת ' + interest.toLocaleString() + ' ₪ ריבית';
-        }
-    },
-    {
-        id: 'ev_staff_bonus',
-        title: 'הצלחת הצוות',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(18000);
-            window.money += gain;
-            return 'הצוות שלך השיג יעדים +' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_jackpot',
-        title: 'ג\'קפוט מפתיע',
-        type: 'positive',
-        action: () => {
-            let gain = scaled(50000) + Math.floor(Math.random() * scaled(50000));
-            window.money += gain;
-            return 'פגעת בג\'קפוט! +' + gain.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_passive_perm_boost',
-        title: 'שיפור תשתית',
-        type: 'positive',
-        action: () => {
-            let boost = Math.min(50, Math.max(1, window.passive * 0.02));
-            window.passive += boost;
-            return 'שיפרת תשתית! +' + boost.toFixed(1) + ' ₪/ד\' קבוע';
-        }
-    },
+    { id: 'ev_bonus', title: 'בונוס הצטיינות', type: 'positive', action: () => {
+        let amount = scaledPct(window.money, 0.15, 8000, 800000);
+        window.money += amount;
+        return { msg: 'קיבלת בונוס של ' + amount.toLocaleString() + ' ₪', amount };
+    }},
+    { id: 'ev_inheritance', title: 'ירושה מפתיעה', type: 'positive', action: () => {
+        let gain = scaled(25000);
+        window.money += gain;
+        return { msg: 'קיבלת ' + gain.toLocaleString() + ' ₪ ירושה', amount: gain };
+    }},
+    { id: 'ev_lottery', title: 'זכייה בלוטו', type: 'positive', action: () => {
+        let gain = scaled(15000);
+        window.money += gain;
+        return { msg: 'זכית ב-' + gain.toLocaleString() + ' ₪ בלוטו', amount: gain };
+    }},
+    { id: 'ev_tax_refund', title: 'החזר מס', type: 'positive', action: () => {
+        let gain = scaled(8000);
+        window.money += gain;
+        return { msg: 'קיבלת החזר מס ' + gain.toLocaleString() + ' ₪', amount: gain };
+    }},
+    { id: 'ev_black_market_deal', title: 'עסקת שוק שחור', type: 'positive', action: () => {
+        let gain = scaled(18000);
+        window.blackMoney = (window.blackMoney || 0) + gain;
+        return { msg: 'עסקה הצליחה +' + gain.toLocaleString() + ' ₪ שחור', amount: gain };
+    }},
+    { id: 'ev_insider', title: 'מידע פנימי', type: 'positive', action: () => {
+        let gain = scaled(22000);
+        window.money += gain;
+        return { msg: 'מידע פנימי — רווח ' + gain.toLocaleString() + ' ₪', amount: gain };
+    }},
+    { id: 'ev_car_sell', title: 'מכירת רכב', type: 'positive', action: () => {
+        let profit = scaled(12000) + Math.floor(Math.random() * scaled(8000));
+        window.money += profit;
+        return { msg: 'מכרת רכב ברווח ' + profit.toLocaleString() + ' ₪', amount: profit };
+    }},
+    { id: 'ev_realestate_boom', title: 'בום נדל"ן', type: 'positive', action: () => {
+        const cnt = Object.values(window.estateData || {}).reduce((s, e) => s + (e.count || 0), 0);
+        let gain = scaled(cnt * 3000 + 8000);
+        window.money += gain;
+        return { msg: 'שוק נדל"ן עלה +' + gain.toLocaleString() + ' ₪', amount: gain };
+    }},
+    { id: 'ev_risky_deal_win', title: 'עסקה מסוכנת', type: 'positive', action: () => {
+        let gain = scaled(20000);
+        window.money += gain;
+        return { msg: 'עסקה מסוכנת הצליחה +' + gain.toLocaleString() + ' ₪', amount: gain };
+    }},
+    { id: 'ev_passive_boost', title: 'עלייה זמנית בהכנסות', type: 'positive', action: () => {
+        let boost = Math.max(5, window.passive * 0.25);
+        window.passive += boost;
+        setTimeout(() => {
+            window.passive = Math.max(0, window.passive - boost);
+            if (typeof updateUI === 'function') updateUI();
+        }, 120000);
+        return { msg: 'הכנסה פסיבית +' + boost.toFixed(1) + ' ₪/ד\' ל-2 דקות', amount: 0 };
+    }},
+    { id: 'ev_crypto_pump', title: 'עלייה בקריפטו', type: 'positive', action: () => {
+        let gain = scaledPct(window.money, 0.08, 8000, 600000);
+        window.money += gain;
+        return { msg: 'ניצלת עלייה בקריפטו +' + gain.toLocaleString() + ' ₪', amount: gain };
+    }},
+    { id: 'ev_business_contract', title: 'חוזה עסקי גדול', type: 'positive', action: () => {
+        let gain = scaled(40000);
+        window.money += gain;
+        return { msg: 'חתמת על חוזה חדש +' + gain.toLocaleString() + ' ₪', amount: gain };
+    }},
+    { id: 'ev_found_cash', title: 'מצאת שטרות', type: 'positive', action: () => {
+        let gain = scaled(5000) + Math.floor(Math.random() * scaled(5000));
+        window.money += gain;
+        return { msg: 'מצאת ' + gain.toLocaleString() + ' ₪ במזרן', amount: gain };
+    }},
+    { id: 'ev_bank_interest', title: 'ריבית על פיקדון', type: 'positive', action: () => {
+        let interest = scaledPct(window.bank, 0.04, 500, 500000);
+        window.bank += interest;
+        return { msg: 'קיבלת ' + interest.toLocaleString() + ' ₪ ריבית', amount: interest };
+    }},
+    { id: 'ev_staff_bonus', title: 'הצלחת הצוות', type: 'positive', action: () => {
+        let gain = scaled(18000);
+        window.money += gain;
+        return { msg: 'הצוות שלך השיג יעדים +' + gain.toLocaleString() + ' ₪', amount: gain };
+    }},
+    { id: 'ev_jackpot', title: 'ג\'קפוט מפתיע', type: 'positive', action: () => {
+        let gain = scaled(50000) + Math.floor(Math.random() * scaled(50000));
+        window.money += gain;
+        return { msg: 'פגעת בג\'קפוט! +' + gain.toLocaleString() + ' ₪', amount: gain };
+    }},
+    { id: 'ev_passive_perm_boost', title: 'שיפור תשתית', type: 'positive', action: () => {
+        let boost = Math.min(50, Math.max(1, window.passive * 0.02));
+        window.passive += boost;
+        return { msg: 'שיפרת תשתית! +' + boost.toFixed(1) + ' ₪/ד\' קבוע', amount: 0 };
+    }},
 
     // ❌ שליליים
-
-    {
-        id: 'ev_tax_fine',
-        title: 'ביקורת מס הכנסה',
-        type: 'negative',
-        action: () => {
-            let fine = scaledPct(window.money, 0.08, 500, 400000);
-            fine = Math.min(fine, window.money);
-            window.money -= fine;
-            window.eventLosses = (window.eventLosses || 0) + fine;
-            return 'קנס מס הכנסה ' + fine.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_appliance_broken',
-        title: 'תקלה בבית',
-        type: 'negative',
-        action: () => {
-            let cost = Math.min(scaled(1200), window.money);
-            window.money -= cost;
-            window.eventLosses = (window.eventLosses || 0) + cost;
-            return 'תיקון בית עלה ' + cost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_passive_drop',
-        title: 'משבר ניהולי',
-        type: 'negative',
-        action: () => {
-            let lost = window.passive * 0.2;
-            window.passive = Math.max(0, window.passive - lost);
-            // חוזר בדיוק אחרי 2 דקות = 120,000ms
-            setTimeout(() => {
-                window.passive += lost;
-                if (typeof updateUI === 'function') updateUI();
-                if (typeof showMsgLong === 'function') showMsgLong('✅ המשבר הסתיים, ההכנסה חזרה לסדרה', 'var(--green)');
-            }, 120000);
-            return 'שביתה! פסיבי ירד ב-' + lost.toFixed(1) + ' ₪/ד\' ל-2 דקות';
-        }
-    },
-    {
-        id: 'ev_dentist',
-        title: 'טיפול שיניים',
-        type: 'negative',
-        action: () => {
-            let cost = Math.min(scaled(1500), window.money);
-            window.money -= cost;
-            window.eventLosses = (window.eventLosses || 0) + cost;
-            return 'טיפול שיניים עלה ' + cost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_police_raid',
-        title: 'פשיטה משטרתית',
-        type: 'negative',
-        action: () => {
-            let lost = Math.floor((window.blackMoney || 0) * 0.3);
-            window.blackMoney = Math.max(0, (window.blackMoney || 0) - lost);
-            return 'הוחרמו ' + lost.toLocaleString() + ' ₪ מהכסף השחור';
-        }
-    },
-    {
-        id: 'ev_car_crash',
-        title: 'תאונת רכב',
-        type: 'negative',
-        action: () => {
-            let cost = Math.min(scaled(4000), window.money);
-            window.money -= cost;
-            window.eventLosses = (window.eventLosses || 0) + cost;
-            return 'תאונת רכב עלתה ' + cost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_realestate_crash',
-        title: 'קריסת נדל"ן',
-        type: 'negative',
-        action: () => {
-            const cnt = Object.values(window.estateData || {}).reduce((s, e) => s + (e.count || 0), 0);
-            let loss = Math.min(scaled(cnt * 800 + 1000), window.money);
-            window.money -= loss;
-            window.eventLosses = (window.eventLosses || 0) + loss;
-            return 'שוק נדל"ן קרס -' + loss.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_hacker',
-        title: 'מתקפת סייבר',
-        type: 'negative',
-        action: () => {
-            let lost = scaledPct(window.bank, 0.05, 500, 250000);
-            lost = Math.min(lost, window.bank);
-            window.bank -= lost;
-            window.eventLosses = (window.eventLosses || 0) + lost;
-            return 'האקרים גנבו ' + lost.toLocaleString() + ' ₪ מהבנק';
-        }
-    },
-    {
-        id: 'ev_fine_traffic',
-        title: 'דוח תנועה',
-        type: 'negative',
-        action: () => {
-            let fine = Math.min(scaled(750), window.money);
-            window.money -= fine;
-            window.eventLosses = (window.eventLosses || 0) + fine;
-            return 'קיבלת דוח תנועה ' + fine.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_flood',
-        title: 'נזקי שיטפון',
-        type: 'negative',
-        action: () => {
-            let cost = Math.min(scaled(3000), window.money);
-            window.money -= cost;
-            window.eventLosses = (window.eventLosses || 0) + cost;
-            return 'שיטפון גרם נזק ' + cost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_lawsuit',
-        title: 'תביעה משפטית',
-        type: 'negative',
-        action: () => {
-            let cost = scaledPct(window.money, 0.06, 2000, 300000);
-            cost = Math.min(cost, window.money);
-            window.money -= cost;
-            window.eventLosses = (window.eventLosses || 0) + cost;
-            return 'תביעה משפטית עלתה ' + cost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_robbery',
-        title: 'שוד מזומנים',
-        type: 'negative',
-        action: () => {
-            let lost = scaledPct(window.money, 0.07, 1000, 350000);
-            lost = Math.min(lost, window.money);
-            window.money -= lost;
-            window.eventLosses = (window.eventLosses || 0) + lost;
-            return 'נשדדת! אבדת ' + lost.toLocaleString() + ' ₪ מזומן';
-        }
-    },
-    {
-        id: 'ev_market_crash',
-        title: 'קריסת שוק',
-        type: 'negative',
-        action: () => {
-            let lost = scaledPct(window.money, 0.04, 1000, 200000);
-            lost = Math.min(lost, window.money);
-            window.money -= lost;
-            window.eventLosses = (window.eventLosses || 0) + lost;
-            return 'קריסת שוק הפסידה ' + lost.toLocaleString() + ' ₪';
-        }
-    },
-    {
-        id: 'ev_employee_quit',
-        title: 'עובד מפתח התפטר',
-        type: 'negative',
-        action: () => {
-            let lost = window.passive * 0.1;
-            window.passive = Math.max(0, window.passive - lost);
-            return 'עובד מפתח עזב — פסיבי ירד ב-' + lost.toFixed(1) + ' ₪/ד\'';
-        }
-    },
+    { id: 'ev_tax_fine', title: 'ביקורת מס הכנסה', type: 'negative', action: () => {
+        let fine = scaledPct(window.money, 0.08, 500, 400000);
+        fine = Math.min(fine, window.money);
+        window.money -= fine;
+        window.eventLosses = (window.eventLosses || 0) + fine;
+        return { msg: 'קנס מס הכנסה ' + fine.toLocaleString() + ' ₪', amount: -fine };
+    }},
+    { id: 'ev_appliance_broken', title: 'תקלה בבית', type: 'negative', action: () => {
+        let cost = Math.min(scaled(1200), window.money);
+        window.money -= cost;
+        window.eventLosses = (window.eventLosses || 0) + cost;
+        return { msg: 'תיקון בית עלה ' + cost.toLocaleString() + ' ₪', amount: -cost };
+    }},
+    { id: 'ev_passive_drop', title: 'משבר ניהולי', type: 'negative', action: () => {
+        let lost = window.passive * 0.2;
+        window.passive = Math.max(0, window.passive - lost);
+        setTimeout(() => {
+            window.passive += lost;
+            if (typeof updateUI === 'function') updateUI();
+            if (!window._offlineMode && typeof showMsgLong === 'function')
+                showMsgLong('✅ המשבר הסתיים, ההכנסה חזרה לסדרה', 'var(--green)');
+        }, 120000);
+        return { msg: 'שביתה! פסיבי ירד ב-' + lost.toFixed(1) + ' ₪/ד\' ל-2 דקות', amount: 0 };
+    }},
+    { id: 'ev_dentist', title: 'טיפול שיניים', type: 'negative', action: () => {
+        let cost = Math.min(scaled(1500), window.money);
+        window.money -= cost;
+        window.eventLosses = (window.eventLosses || 0) + cost;
+        return { msg: 'טיפול שיניים עלה ' + cost.toLocaleString() + ' ₪', amount: -cost };
+    }},
+    { id: 'ev_police_raid', title: 'פשיטה משטרתית', type: 'negative', action: () => {
+        let lost = Math.floor((window.blackMoney || 0) * 0.3);
+        window.blackMoney = Math.max(0, (window.blackMoney || 0) - lost);
+        return { msg: 'הוחרמו ' + lost.toLocaleString() + ' ₪ מהכסף השחור', amount: -lost };
+    }},
+    { id: 'ev_car_crash', title: 'תאונת רכב', type: 'negative', action: () => {
+        let cost = Math.min(scaled(4000), window.money);
+        window.money -= cost;
+        window.eventLosses = (window.eventLosses || 0) + cost;
+        return { msg: 'תאונת רכב עלתה ' + cost.toLocaleString() + ' ₪', amount: -cost };
+    }},
+    { id: 'ev_realestate_crash', title: 'קריסת נדל"ן', type: 'negative', action: () => {
+        const cnt = Object.values(window.estateData || {}).reduce((s, e) => s + (e.count || 0), 0);
+        let loss = Math.min(scaled(cnt * 800 + 1000), window.money);
+        window.money -= loss;
+        window.eventLosses = (window.eventLosses || 0) + loss;
+        return { msg: 'שוק נדל"ן קרס -' + loss.toLocaleString() + ' ₪', amount: -loss };
+    }},
+    { id: 'ev_hacker', title: 'מתקפת סייבר', type: 'negative', action: () => {
+        let lost = scaledPct(window.bank, 0.05, 500, 250000);
+        lost = Math.min(lost, window.bank);
+        window.bank -= lost;
+        window.eventLosses = (window.eventLosses || 0) + lost;
+        return { msg: 'האקרים גנבו ' + lost.toLocaleString() + ' ₪ מהבנק', amount: -lost };
+    }},
+    { id: 'ev_fine_traffic', title: 'דוח תנועה', type: 'negative', action: () => {
+        let fine = Math.min(scaled(750), window.money);
+        window.money -= fine;
+        window.eventLosses = (window.eventLosses || 0) + fine;
+        return { msg: 'קיבלת דוח תנועה ' + fine.toLocaleString() + ' ₪', amount: -fine };
+    }},
+    { id: 'ev_flood', title: 'נזקי שיטפון', type: 'negative', action: () => {
+        let cost = Math.min(scaled(3000), window.money);
+        window.money -= cost;
+        window.eventLosses = (window.eventLosses || 0) + cost;
+        return { msg: 'שיטפון גרם נזק ' + cost.toLocaleString() + ' ₪', amount: -cost };
+    }},
+    { id: 'ev_lawsuit', title: 'תביעה משפטית', type: 'negative', action: () => {
+        let cost = scaledPct(window.money, 0.06, 2000, 300000);
+        cost = Math.min(cost, window.money);
+        window.money -= cost;
+        window.eventLosses = (window.eventLosses || 0) + cost;
+        return { msg: 'תביעה משפטית עלתה ' + cost.toLocaleString() + ' ₪', amount: -cost };
+    }},
+    { id: 'ev_robbery', title: 'שוד מזומנים', type: 'negative', action: () => {
+        let lost = scaledPct(window.money, 0.07, 1000, 350000);
+        lost = Math.min(lost, window.money);
+        window.money -= lost;
+        window.eventLosses = (window.eventLosses || 0) + lost;
+        return { msg: 'נשדדת! אבדת ' + lost.toLocaleString() + ' ₪ מזומן', amount: -lost };
+    }},
+    { id: 'ev_market_crash', title: 'קריסת שוק', type: 'negative', action: () => {
+        let lost = scaledPct(window.money, 0.04, 1000, 200000);
+        lost = Math.min(lost, window.money);
+        window.money -= lost;
+        window.eventLosses = (window.eventLosses || 0) + lost;
+        return { msg: 'קריסת שוק הפסידה ' + lost.toLocaleString() + ' ₪', amount: -lost };
+    }},
+    { id: 'ev_employee_quit', title: 'עובד מפתח התפטר', type: 'negative', action: () => {
+        let lost = window.passive * 0.1;
+        window.passive = Math.max(0, window.passive - lost);
+        return { msg: 'עובד מפתח עזב — פסיבי ירד ב-' + lost.toFixed(1) + ' ₪/ד\'', amount: 0 };
+    }},
 
     // 🔒 כלא
-    {
-        id: 'ev_jail',
-        title: 'נכנסת לכלא',
-        type: 'negative',
-        action: () => {
-            return goToJail(4);
-        }
-    }
+    { id: 'ev_jail', title: 'נכנסת לכלא', type: 'negative', action: () => {
+        const msg = goToJail(4);
+        return { msg, amount: 0 };
+    }}
 ];
 
 // ============================================================
-// טריגר
+// ⭐ טריגר ראשי — תומך ב-timestamps אמיתיים מאופליין
+// forcedTs = timestamp אמיתי שחישבנו בcore.js לפי זמן היציאה
 // ============================================================
-window.triggerRandomEvent = function() {
+window.triggerRandomEvent = function(forcedTs) {
+    const eventTs  = forcedTs || Date.now();
+    const isOffline = window._offlineMode || false;
+
     const positiveEvents = window.randomEvents.filter(e => e.type === 'positive');
     const negativeEvents = window.randomEvents.filter(e => e.type === 'negative' && e.id !== 'ev_jail');
 
-    // 15% סיכוי לכלא — canBeArrested נבדק בתוך goToJail
-    if (canBeArrested() && Math.random() < 0.15) {
+    // כלא — רק כשלא אופליין
+    if (!isOffline && canBeArrested() && Math.random() < 0.15) {
         const jailEvent = window.randomEvents.find(e => e.id === 'ev_jail');
         if (jailEvent) {
-            const resultMsg = jailEvent.action();
-            addEventLog(jailEvent.title, resultMsg, jailEvent.type);
-            if (typeof showMsgLong === 'function') showMsgLong('⚠️ ' + jailEvent.title + ': ' + resultMsg, 'var(--red)');
-            if (window.updateUI) window.updateUI();
+            const result    = jailEvent.action();
+            const resultMsg = typeof result === 'object' ? result.msg : result;
+            addEventLog(jailEvent.title, resultMsg, jailEvent.type, eventTs);
+            if (typeof showMsgLong === 'function')
+                showMsgLong('⚠️ ' + jailEvent.title + ': ' + resultMsg, 'var(--red)');
+            if (typeof updateUI === 'function') updateUI();
             if (typeof saveGame === 'function') saveGame();
             return;
         }
@@ -551,15 +406,34 @@ window.triggerRandomEvent = function() {
                : window.randomEvents.filter(e => e.id !== 'ev_jail');
 
     if (pool.length === 0) return;
-    const event = pool[Math.floor(Math.random() * pool.length)];
-    const resultMsg = event.action();
-    const color = event.type === 'positive' ? 'var(--green)' : 'var(--red)';
-    const icon  = event.type === 'positive' ? '🎉' : '⚠️';
 
-    addEventLog(event.title, resultMsg, event.type);
-    if (typeof showMsgLong === 'function') showMsgLong(icon + ' ' + event.title + ': ' + resultMsg, color);
-    else if (typeof showMsg === 'function') showMsg(icon + ' ' + event.title + ': ' + resultMsg, color);
+    const event  = pool[Math.floor(Math.random() * pool.length)];
+    const result = event.action();
 
-    if (window.updateUI) window.updateUI();
+    // תמיכה בשני סוגי return — string ישן וobj חדש
+    const resultMsg = typeof result === 'object' ? result.msg : result;
+    const amount    = (typeof result === 'object' && result.amount) ? result.amount : 0;
+
+    // ⭐ בנה הודעת יומן עם סכום בסוגריים
+    let logMsg = resultMsg;
+    if (amount !== 0) {
+        const sign = amount > 0 ? '+' : '';
+        logMsg += ' | ' + sign + Math.abs(amount).toLocaleString() + ' ₪';
+    }
+
+    // ⭐ שמור ביומן עם timestamp אמיתי (forcedTs אם אופליין)
+    addEventLog(event.title, logMsg, event.type, eventTs);
+
+    // הצג הודעה רק כשלא אופליין
+    if (!isOffline) {
+        const color = event.type === 'positive' ? 'var(--green)' : 'var(--red)';
+        const icon  = event.type === 'positive' ? '🎉' : '⚠️';
+        if (typeof showMsgLong === 'function')
+            showMsgLong(icon + ' ' + event.title + ': ' + resultMsg, color);
+        else if (typeof showMsg === 'function')
+            showMsg(icon + ' ' + event.title + ': ' + resultMsg, color);
+    }
+
+    if (typeof updateUI === 'function') updateUI();
     if (typeof saveGame === 'function') saveGame();
 };
