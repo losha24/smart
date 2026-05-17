@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/events.js - v9.9.2
+/* Smart Money Pro - js/events.js - v9.9.3
    תיקונים:
    - timestamps אמיתיים לאירועים שקרו באופליין
    - יומן מציג שעה אמיתית של האירוע לא שעת הטעינה
@@ -384,8 +384,9 @@ window.triggerRandomEvent = function(forcedTs) {
     const positiveEvents = window.randomEvents.filter(e => e.type === 'positive');
     const negativeEvents = window.randomEvents.filter(e => e.type === 'negative' && e.id !== 'ev_jail');
 
-    // כלא — רק כשלא אופליין
-    if (!isOffline && canBeArrested() && Math.random() < 0.15) {
+    // ⭐ v9.9.3: כלא — 5% נפרד לפני חלוקה חיובי/שלילי
+    // כך 60/40 נשמר אמיתי ולא נחתך ע"י הכלא
+    if (!isOffline && canBeArrested() && Math.random() < 0.05) {
         const jailEvent = window.randomEvents.find(e => e.id === 'ev_jail');
         if (jailEvent) {
             const result    = jailEvent.action();
@@ -399,7 +400,7 @@ window.triggerRandomEvent = function(forcedTs) {
         }
     }
 
-    // 60% חיובי / 40% שלילי
+    // ⭐ v9.9.3: 60% חיובי / 40% שלילי — אמיתי (כלא כבר טופל נפרד)
     const usePositive = Math.random() < 0.60;
     const pool = (usePositive && positiveEvents.length > 0) ? positiveEvents
                : (negativeEvents.length > 0)               ? negativeEvents
