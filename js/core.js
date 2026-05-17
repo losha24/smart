@@ -5,7 +5,7 @@
    - lastEventTick נשמר נכון
 */
 
-const VERSION = "9.9.2";
+const VERSION = "9.9.3";
 const SAVE_KEY = "smartMoneySave_v8_main";
 
 window.money = 1200;
@@ -305,7 +305,11 @@ setInterval(() => {
 setInterval(saveGame, 15000);
 
 // Event timer
-window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 60;
+// ⭐ v9.9.3: טיימר קבוע — 45 שניות, 70% סיכוי לאירוע (לכולם שווה)
+window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 45;
+
+const EVENT_INTERVAL  = 45;   // שניות קבועות בין ניסיונות
+const EVENT_CHANCE    = 0.70; // 70% שאירוע יתרחש
 
 function startEventTimer() {
     setInterval(() => {
@@ -318,20 +322,13 @@ function startEventTimer() {
             timerEl.innerText = mins + ':' + (secs < 10 ? '0' : '') + secs;
         }
         if (window.nextEventTime <= 0) {
-            let chance = 0.5;
-            if (window.money > 50000)             chance += 0.1;
-            if ((window.blackMoney || 0) > 10000) chance += 0.2;
-            chance = Math.min(chance, 0.9);
-
-            if (Math.random() < chance && typeof window.triggerRandomEvent === 'function') {
-                // ⭐ אירועים בזמן אמת — ללא forcedTs
+            // ⭐ 70% קבוע — לא תלוי בכמות כסף
+            if (Math.random() < EVENT_CHANCE && typeof window.triggerRandomEvent === 'function') {
                 window.triggerRandomEvent();
             }
 
-            window.nextEventTime = Math.max(
-                60,
-                60 - Math.floor((window.money || 0) / 10000) * 5
-            );
+            // ⭐ 45 שניות קבועות — לא תלוי בכמות כסף
+            window.nextEventTime = EVENT_INTERVAL;
             localStorage.setItem('nextEventTime', window.nextEventTime);
         }
     }, 1000);
