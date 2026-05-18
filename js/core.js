@@ -4,8 +4,7 @@
    - כסף אופליין מתעדכן ומוצג מיד
    - lastEventTick נשמר נכון
 */
-
-const VERSION = "9.9.3";
+const VERSION = "9.9.5";
 const SAVE_KEY = "smartMoneySave_v8_main";
 
 window.money = 1200;
@@ -143,21 +142,22 @@ function loadGame() {
                     if (typeof updateUI === 'function') updateUI();
 
                     // ⭐ חישוב אירועים אופליין עם timestamps אמיתיים
-                    const eventLast   = parseInt(data.lastEventTick || data.lastSaveTime || now);
+                    // מטרה: ~40 אירועים לשעה = max 60 דקות × 70% סיכוי
+                    const eventLast        = parseInt(data.lastEventTick || data.lastSaveTime || now);
                     const msSinceLastEvent = Math.min(now - eventLast, 12 * 60 * 60 * 1000);
                     const minutesPassed    = Math.floor(msSinceLastEvent / 60000);
-                    const maxEvents        = Math.min(minutesPassed, 30);
+                    const maxEvents        = Math.min(minutesPassed, 60); // ⭐ הועלה מ-30 ל-60
 
                     window._offlineMode       = true;
                     window._offlineEventCount = 0;
 
                     if (maxEvents > 0 && typeof window.triggerRandomEvent === 'function') {
                         for (let i = 0; i < maxEvents; i++) {
-                            if (Math.random() < 0.35) {
+                            if (Math.random() < 0.70) { // ⭐ הועלה מ-35% ל-70%
                                 // ⭐ חישוב timestamp אמיתי לכל אירוע
                                 // מחלק את הזמן שחלף לפי מיקום האירוע בסדר
-                                const fraction  = (i + 1) / maxEvents;
-                                const eventTs   = Math.floor(eventLast + (msSinceLastEvent * fraction));
+                                const fraction = (i + 1) / maxEvents;
+                                const eventTs  = Math.floor(eventLast + (msSinceLastEvent * fraction));
 
                                 window.triggerRandomEvent(eventTs);
                                 window._offlineEventCount++;
@@ -306,10 +306,10 @@ setInterval(saveGame, 15000);
 
 // Event timer
 // ⭐ v9.9.3: טיימר קבוע — 45 שניות, 70% סיכוי לאירוע (לכולם שווה)
-window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 45;
+window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 90;
 
-const EVENT_INTERVAL  = 45;   // שניות קבועות בין ניסיונות
-const EVENT_CHANCE    = 0.70; // 70% שאירוע יתרחש
+const EVENT_INTERVAL  = 60;   // שניות קבועות בין ניסיונות → ~32 אירועים/שעה
+const EVENT_CHANCE    = 0.80; // 80% שאירוע יתרחש
 
 function startEventTimer() {
     setInterval(() => {
