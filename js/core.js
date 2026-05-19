@@ -146,16 +146,16 @@ function loadGame() {
                     const eventLast        = parseInt(data.lastEventTick || data.lastSaveTime || now);
                     const msSinceLastEvent = Math.min(now - eventLast, 12 * 60 * 60 * 1000);
                     const minutesPassed    = Math.floor(msSinceLastEvent / 60000);
-                    const maxEvents        = Math.min(minutesPassed, 60); // ⭐ הועלה מ-30 ל-60
+                    // ⭐ v9.9.6: אין הגבלה — כל הדקות שעברו
+                    const maxEvents        = minutesPassed;
 
                     window._offlineMode       = true;
                     window._offlineEventCount = 0;
 
                     if (maxEvents > 0 && typeof window.triggerRandomEvent === 'function') {
                         for (let i = 0; i < maxEvents; i++) {
-                            if (Math.random() < 0.70) { // ⭐ הועלה מ-35% ל-70%
-                                // ⭐ חישוב timestamp אמיתי לכל אירוע
-                                // מחלק את הזמן שחלף לפי מיקום האירוע בסדר
+                            if (Math.random() < 0.70) {
+                                // ⭐ timestamp אמיתי — מפוזר על פני הזמן שחלף
                                 const fraction = (i + 1) / maxEvents;
                                 const eventTs  = Math.floor(eventLast + (msSinceLastEvent * fraction));
 
@@ -305,10 +305,10 @@ setInterval(() => {
 setInterval(saveGame, 15000);
 
 // Event timer
-// ⭐ v9.9.3: טיימר קבוע — 45 שניות, 70% סיכוי לאירוע (לכולם שווה)
-window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 90;
+// ⭐ v9.9.5: טיימר קבוע — 60 שניות, 80% סיכוי → ~48 אירועים/שעה
+window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 60;
 
-const EVENT_INTERVAL  = 60;   // שניות קבועות בין ניסיונות → ~32 אירועים/שעה
+const EVENT_INTERVAL  = 60;   // שניות קבועות בין ניסיונות
 const EVENT_CHANCE    = 0.80; // 80% שאירוע יתרחש
 
 function startEventTimer() {
