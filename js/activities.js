@@ -1,12 +1,34 @@
 /* Smart Money Pro - js/activities.js - v9.9.9
-   תיקונים מלאים:
+   תיקונים מלאים + איזון מחדש:
    1. recalcPassive - מחשב מחדש מכל המקורות
    2. דף הבית מציג סך הכנסה פסיבית כוללת
    3. עבודות: passive לא גדל מעבר לcap של jobPassive
    4. נדל"ן: מכירה מורידה בדיוק מה שנוסף
    5. צוות: פיטורים מורידים בדיוק מה שנוסף
    6. עסקים: מכירה מורידה בדיוק מה שנוסף
+   7. איזון מחדש - הורדת הכנסות נדל"ן וצוות ב-30-40%
 */
+
+// ⭐⚖️ קונפיגורציית איזון המשחק - שנה כאן כדי לאזן מחדש
+const BALANCE_CONFIG = {
+    // נדל"ן - כמה מהערך המקורי מקבלים (0.60 = 60%)
+    ESTATE_INCOME: 0.60,      // ⬇️ הורדה מ-75% ל-60%
+    
+    // צוות - כמה מהערך המקורי מקבלים
+    STAFF_INCOME: 0.55,       // ⬇️ הורדה מ-70% ל-55%
+    
+    // בונוס רמה נדל"ן (0.15 = 15% לרמה)
+    ESTATE_LEVEL_BONUS: 0.15, // ⬇️ הורדה מ-20% ל-15%
+    
+    // בונוס רמה צוות
+    STAFF_LEVEL_BONUS: 0.10,  // ⬇️ הורדה מ-15% ל-10%
+    
+    // מקסימום יחידות נדל"ן מסוג אחד (0 = אין הגבלה)
+    MAX_ESTATE_COUNT: 0,
+    
+    // מקסימום צוות מסוג אחד
+    MAX_STAFF_COUNT: 0
+};
 
 // ── נתונים ─────────────────────────────────────────────────
 
@@ -112,11 +134,11 @@ window.recalcPassive = function() {
     // עבודות — jobPassive כפי שנשמר
     total += (window.jobPassive || 0);
 
-    // נדל"ן
+    // נדל"ן - עם הקונפיגורציה החדשה
     estateList.forEach(function(e) {
         var d = window.estateData[e.id] || { count: 0, level: 0 };
         if (d.count > 0) {
-            total += (e.passive * 0.75) * d.count * (1 + (d.level || 0) * 0.20);
+            total += (e.passive * BALANCE_CONFIG.ESTATE_INCOME) * d.count * (1 + (d.level || 0) * BALANCE_CONFIG.ESTATE_LEVEL_BONUS);
         }
     });
 
@@ -128,12 +150,12 @@ window.recalcPassive = function() {
         }
     });
 
-    // צוות
+    // צוות - עם הקונפיגורציה החדשה
     Object.keys(window.staffData || {}).forEach(function(sid) {
         var s = staffList.find(function(x) { return x.id === sid; });
         if (s) {
             var d = window.staffData[sid];
-            total += (s.passive * 0.7) * (d.count || 0) * (1 + (d.level || 0) * 0.15);
+            total += (s.passive * BALANCE_CONFIG.STAFF_INCOME) * (d.count || 0) * (1 + (d.level || 0) * BALANCE_CONFIG.STAFF_LEVEL_BONUS);
         }
     });
 
@@ -223,7 +245,7 @@ window.drawEstate = function(c) {
     estateList.forEach(function(e) {
         var d = window.estateData[e.id] || { count: 0, level: 0 };
         if (d.count > 0) {
-            totalEstatePassive += (e.passive * 0.75) * d.count * (1 + (d.level || 0) * 0.20);
+            totalEstatePassive += (e.passive * BALANCE_CONFIG.ESTATE_INCOME) * d.count * (1 + (d.level || 0) * BALANCE_CONFIG.ESTATE_LEVEL_BONUS);
         }
     });
 
@@ -238,7 +260,7 @@ window.drawEstate = function(c) {
         var count = d.count || 0;
         var level = d.level || 0;
         var currentPrice = Math.floor(e.price * Math.pow(1.20, count));
-        var totalPassive = ((e.passive * 0.75) * count * (1 + level * 0.20)).toLocaleString();
+        var totalPassive = ((e.passive * BALANCE_CONFIG.ESTATE_INCOME) * count * (1 + level * BALANCE_CONFIG.ESTATE_LEVEL_BONUS)).toLocaleString();
         var upgradePrice = count > 0 ? Math.floor(e.price * Math.pow(1.8, level + 1)) : 0;
         var borderStyle = count > 0 ? 'border-top:4px solid var(--green)' : 'border-top:4px solid var(--border)';
 
@@ -271,7 +293,7 @@ window.buyEstate = function(id) {
     var pricePerOne = Math.floor(e.price * Math.pow(1.20, d.count || 0));
     if (window.money < pricePerOne) return showMsg('אין מספיק כסף!', 'var(--red)');
     window.money -= pricePerOne;
-    var reducedPassive = e.passive * 0.75;
+    var reducedPassive = e.passive * BALANCE_CONFIG.ESTATE_INCOME;
     window.estateData[id] = { count: (d.count || 0) + 1, level: d.level || 0 };
     window.passive += reducedPassive;
     showMsg('🏠 רכשת ' + e.name, 'var(--green)');
@@ -284,7 +306,7 @@ window.upgradeEstate = function(id) {
     if (!e || !d || d.count === 0) return;
     var upgradePrice = Math.floor(e.price * Math.pow(1.8, (d.level || 0) + 1));
     if (window.money < upgradePrice) return showMsg('השיפוץ יקר!', 'var(--red)');
-    var bonusPassive = (e.passive * 0.75) * d.count * 0.20;
+    var bonusPassive = (e.passive * BALANCE_CONFIG.ESTATE_INCOME) * d.count * BALANCE_CONFIG.ESTATE_LEVEL_BONUS;
     window.money -= upgradePrice;
     window.estateData[id].level = (d.level || 0) + 1;
     window.passive += bonusPassive;
@@ -297,7 +319,7 @@ window.sellEstate = function(id) {
     if (!e || !window.estateData[id] || window.estateData[id].count === 0) return;
     var eData = window.estateData[id];
     var sellValue = Math.floor(e.price * eData.count * 0.7);
-    var passiveLost = (e.passive * 0.75) * eData.count * (1 + (eData.level || 0) * 0.20);
+    var passiveLost = (e.passive * BALANCE_CONFIG.ESTATE_INCOME) * eData.count * (1 + (eData.level || 0) * BALANCE_CONFIG.ESTATE_LEVEL_BONUS);
     showConfirmModal('🏠 מכירת נכס',
         'מכור את כל ' + e.name + '?<br><br>✅ תקבל: <b>' + sellValue.toLocaleString() + '₪</b><br>❌ תאבד: <b>' + passiveLost.toFixed(1) + '₪/ד\'</b>',
         function() {
@@ -560,7 +582,7 @@ window.drawStaff = function(c) {
         var s = staffList.find(function(x) { return x.id === sid; });
         if (s) {
             var d = window.staffData[sid];
-            totalStaffPassive += (s.passive * 0.7) * (d.count || 0) * (1 + (d.level || 0) * 0.15);
+            totalStaffPassive += (s.passive * BALANCE_CONFIG.STAFF_INCOME) * (d.count || 0) * (1 + (d.level || 0) * BALANCE_CONFIG.STAFF_LEVEL_BONUS);
         }
     });
 
@@ -575,7 +597,7 @@ window.drawStaff = function(c) {
         var count = d.count || 0;
         var level = d.level || 0;
         var currentPrice  = Math.floor(s.price * Math.pow(1.15, count));
-        var totalTypePass = ((s.passive * 0.7) * count * (1 + level * 0.15)).toFixed(1);
+        var totalTypePass = ((s.passive * BALANCE_CONFIG.STAFF_INCOME) * count * (1 + level * BALANCE_CONFIG.STAFF_LEVEL_BONUS)).toFixed(1);
         var upgradePrice  = count > 0 ? Math.floor(s.price * Math.pow(1.35, level + 1)) : 0;
 
         html += '<div class="card fade-in" style="text-align:center; display:flex; flex-direction:column; justify-content:space-between; border-top:4px solid ' + (count > 0 ? 'var(--purple)' : 'var(--border)') + '; padding: 10px; min-height: 230px;">' +
@@ -607,8 +629,8 @@ window.hireStaff = function(id) {
     var d = window.staffData[id];
     var currentPrice = Math.floor(s.price * Math.pow(1.15, d.count));
     if (window.money < currentPrice) { return showMsg('אין מספיק כסף!', 'var(--red)'); }
-    var incomeBase   = s.passive * 0.7;
-    var levelBonus   = 1 + (d.level * 0.15);
+    var incomeBase   = s.passive * BALANCE_CONFIG.STAFF_INCOME;
+    var levelBonus   = 1 + (d.level * BALANCE_CONFIG.STAFF_LEVEL_BONUS);
     var addedPassive = incomeBase * levelBonus;
     window.money -= currentPrice;
     d.count += 1;
@@ -626,7 +648,7 @@ window.upgradeStaff = function(id) {
     var currentLevel = d.level || 0;
     var upgradePrice = Math.floor(s.price * Math.pow(1.35, currentLevel + 1));
     if (window.money < upgradePrice) return showMsg('שדרוג יקר!', 'var(--red)');
-    var bonusPassive = (s.passive * 0.7) * d.count * 0.15;
+    var bonusPassive = (s.passive * BALANCE_CONFIG.STAFF_INCOME) * d.count * BALANCE_CONFIG.STAFF_LEVEL_BONUS;
     window.money -= upgradePrice;
     window.staffData[id].level = currentLevel + 1;
     window.passive += bonusPassive;
@@ -639,7 +661,7 @@ window.fireStaff = function(id) {
     if (!s || !window.staffData[id] || window.staffData[id].count === 0) return;
     var d         = window.staffData[id];
     var fireValue = Math.floor(s.price * d.count * 0.6);
-    var passiveLost = (s.passive * 0.7) * d.count * (1 + (d.level || 0) * 0.15);
+    var passiveLost = (s.passive * BALANCE_CONFIG.STAFF_INCOME) * d.count * (1 + (d.level || 0) * BALANCE_CONFIG.STAFF_LEVEL_BONUS);
     showConfirmModal('🔴 פיטורים',
         'לפטר את כל ' + s.name + '?<br><br>✅ תקבל: <b>' + fireValue.toLocaleString() + '₪</b><br>❌ תאבד: <b>' + passiveLost.toFixed(1) + '₪/ד\'</b>',
         function() {
