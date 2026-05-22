@@ -1,10 +1,13 @@
-/* Smart Money Pro - js/core.js - v9.9.2
-   תיקונים:
-   - העברת timestamps אמיתיים לairEvents אופליין
-   - כסף אופליין מתעדכן ומוצג מיד
-   - lastEventTick נשמר נכון
+/* Smart Money Pro - js/core.js - v9.9.9
+   תיקונים סופיים:
+   - טיפול מושלם באירועי אופליין ללא פגיעה בפסיבי
+   - הצגת כסף אמיתי בהודעה
+   - שמירת timestamps אמיתיים לאירועים
+   - אין איבוד כסף מאירועים לפני הצגת הרווח
+   - קריאה ל-recalcPassive לאחר טעינה ואירועי אופליין
 */
-const VERSION = "9.9.5";
+
+const VERSION = "9.9.9";
 const SAVE_KEY = "smartMoneySave_v8_main";
 
 window.money = 1200;
@@ -127,9 +130,11 @@ function loadGame() {
                 const now       = Date.now();
                 const msPassed  = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
                 const offlineEarnings = (msPassed / 60000) * window.passive;
+                
+                const initialMoney = window.money;
+                let eventLosses = 0;
 
                 if (offlineEarnings > 1) {
-                    // ⭐ הוסף כסף אופליין
                     if (window.money + offlineEarnings > 1000000000) {
                         window.money = 1000000000;
                         showMsgLong("💰 הגעת לתקרת המזומן המקסימלית (מיליארד ₪)!", 'var(--red)');
@@ -138,15 +143,11 @@ function loadGame() {
                     }
                     window.totalEarned += offlineEarnings;
 
-                    // ⭐ עדכן UI מיידי
-                    if (typeof updateUI === 'function') updateUI();
-
-                    // ⭐ חישוב אירועים אופליין עם timestamps אמיתיים
-                    // מטרה: ~40 אירועים לשעה = max 60 דקות × 70% סיכוי
+                    const moneyBeforeEvents = window.money;
+                    
                     const eventLast        = parseInt(data.lastEventTick || data.lastSaveTime || now);
                     const msSinceLastEvent = Math.min(now - eventLast, 12 * 60 * 60 * 1000);
                     const minutesPassed    = Math.floor(msSinceLastEvent / 60000);
-                    // ⭐ v9.9.6: אין הגבלה — כל הדקות שעברו
                     const maxEvents        = minutesPassed;
 
                     window._offlineMode       = true;
@@ -155,7 +156,6 @@ function loadGame() {
                     if (maxEvents > 0 && typeof window.triggerRandomEvent === 'function') {
                         for (let i = 0; i < maxEvents; i++) {
                             if (Math.random() < 0.70) {
-                                // ⭐ timestamp אמיתי — מפוזר על פני הזמן שחלף
                                 const fraction = (i + 1) / maxEvents;
                                 const eventTs  = Math.floor(eventLast + (msSinceLastEvent * fraction));
 
@@ -166,23 +166,37 @@ function loadGame() {
                     }
 
                     window._offlineMode = false;
-
-                    // עדכן lastEventTick
+                    
+                    // ⭐ חישוב מחדש של פסיבי אחרי אירועי אופליין
+                    if (typeof window.recalcPassive === 'function') {
+                        window.recalcPassive();
+                    }
+                    
+                    eventLosses = moneyBeforeEvents - window.money;
+                    if (eventLosses < 0) eventLosses = 0;
+                    
                     window.lastEventTick = now;
                     localStorage.setItem('lastEventTick', now);
-
-                    const offlineLosses = data.eventLosses || 0;
-
+                    
                     setTimeout(() => {
-                        if (typeof showMsgLong === 'function' && window.money < 1000000000) {
-                            let msg = `💰 בזמן שלא היית: הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪`;
+                        if (typeof showMsgLong === 'function') {
+                            const finalGain = offlineEarnings - eventLosses;
+                            let msg = `💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪`;
+                            
+                            if (eventLosses > 0) {
+                                msg += `\n⚠️ הפסדת ${Math.floor(eventLosses).toLocaleString()} ₪ מאירועים`;
+                                msg += `\n✅ נשאר לך: ${Math.floor(finalGain).toLocaleString()} ₪`;
+                            } else {
+                                msg += `\n✅ התקבל במלואו!`;
+                            }
+                            
                             const eventCount = window._offlineEventCount || 0;
                             if (eventCount > 0) {
-                                msg += ` | 📊 קרו ${eventCount} אירועים`;
+                                msg += `\n📊 אירועים: ${eventCount}`;
                             }
-                            showMsgLong(msg, 'var(--yellow)');
+                            
+                            showMsgLong(msg, eventLosses > 0 ? 'var(--orange)' : 'var(--green)');
                         }
-                        // ⭐ עדכון UI סופי
                         if (typeof updateUI === 'function') updateUI();
                     }, 2000);
                 }
@@ -224,7 +238,6 @@ function saveGame() {
         activeShipments: window.activeShipments || []
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify({ data, hash: createHash(data) }));
-    // עדכן lastEventTick גם בlocalStorage נפרד כגיבוי
     window.lastEventTick = Date.now();
     localStorage.setItem('lastEventTick', window.lastEventTick);
 }
@@ -283,7 +296,6 @@ function savePlayerName() {
     saveGame();
 }
 
-// ⭐ Passive income tick — כסף זורם כל 50ms
 setInterval(() => {
     if (window.passive > 0 && window.money < 1000000000) {
         const tick = window.passive / 1200;
@@ -294,22 +306,18 @@ setInterval(() => {
     }
 }, 50);
 
-// UI update every second
 setInterval(() => {
     if (typeof window.renderUIUpdate === 'function') {
         window.renderUIUpdate(getLevelData(window.lifeXP));
     }
 }, 1000);
 
-// Auto save every 15 seconds
 setInterval(saveGame, 15000);
 
-// Event timer
-// ⭐ v9.9.5: טיימר קבוע — 60 שניות, 80% סיכוי → ~48 אירועים/שעה
 window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 60;
 
-const EVENT_INTERVAL  = 60;   // שניות קבועות בין ניסיונות
-const EVENT_CHANCE    = 0.80; // 80% שאירוע יתרחש
+const EVENT_INTERVAL  = 60;
+const EVENT_CHANCE    = 0.80;
 
 function startEventTimer() {
     setInterval(() => {
@@ -322,12 +330,9 @@ function startEventTimer() {
             timerEl.innerText = mins + ':' + (secs < 10 ? '0' : '') + secs;
         }
         if (window.nextEventTime <= 0) {
-            // ⭐ 70% קבוע — לא תלוי בכמות כסף
             if (Math.random() < EVENT_CHANCE && typeof window.triggerRandomEvent === 'function') {
                 window.triggerRandomEvent();
             }
-
-            // ⭐ 45 שניות קבועות — לא תלוי בכמות כסף
             window.nextEventTime = EVENT_INTERVAL;
             localStorage.setItem('nextEventTime', window.nextEventTime);
         }
@@ -342,10 +347,13 @@ document.addEventListener("DOMContentLoaded", () => {
     loadGame();
 
     setTimeout(() => {
+        // ⭐ חישוב מחדש של פסיבי אחרי טעינת המשחק
         if (typeof window.recalcPassive === 'function') {
             window.recalcPassive();
         }
-        updateUI();
+        if (typeof updateUI === 'function') {
+            updateUI();
+        }
         startEventTimer();
     }, 200);
 });
