@@ -1,10 +1,9 @@
 /* Smart Money Pro - js/core.js - v9.9.9
-   תיקונים סופיים:
-   - טיפול מושלם באירועי אופליין ללא פגיעה בפסיבי
-   - הצגת כסף אמיתי בהודעה
-   - שמירת timestamps אמיתיים לאירועים
-   - אין איבוד כסף מאירועים לפני הצגת הרווח
-   - קריאה ל-recalcPassive לאחר טעינה ואירועי אופליין
+   תיקונים:
+   - מקסימום כסף: 2 מיליארד (במקום 1)
+   - הודעת אופליין מוצגת אחרי 3.5 שניות (לא תיחסם)
+   - הודעה נשארת על המסך 8 שניות
+   - בנק: ללא הגבלה
 */
 
 const VERSION = "9.9.9";
@@ -89,11 +88,15 @@ function showMsgLong(txt, color = "var(--blue)") {
     else bar.innerText = txt;
     bar.style.opacity = "1";
     bar.style.color = color;
+    bar.style.borderColor = color;
+    // ⭐ 8 שניות — מספיק זמן לקרוא הודעת אופליין
     msgTimer = setTimeout(() => {
         bar.style.opacity = "0.8";
         if (statusText) statusText.innerText = "";
-    }, 5000);
+    }, 8000);
 }
+
+const MAX_MONEY = 2000000000; // ⭐ 2 מיליארד
 
 function loadGame() {
     try {
@@ -130,25 +133,24 @@ function loadGame() {
                 const now       = Date.now();
                 const msPassed  = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
                 const offlineEarnings = (msPassed / 60000) * window.passive;
-                
-                const initialMoney = window.money;
-                let eventLosses = 0;
 
                 if (offlineEarnings > 1) {
-                    if (window.money + offlineEarnings > 2000000000) {
-                        window.money = 2000000000;
+                    // ⭐ הוסף כסף אופליין — תקרה 2 מיליארד
+                    if (window.money + offlineEarnings > MAX_MONEY) {
+                        window.money = MAX_MONEY;
                         showMsgLong("💰 הגעת לתקרת המזומן המקסימלית (2 מיליארד ₪)!", 'var(--red)');
                     } else {
                         window.money += offlineEarnings;
                     }
                     window.totalEarned += offlineEarnings;
 
-                    const moneyBeforeEvents = window.money;
-                    
+                    // ⭐ חישוב אירועים אופליין
                     const eventLast        = parseInt(data.lastEventTick || data.lastSaveTime || now);
                     const msSinceLastEvent = Math.min(now - eventLast, 12 * 60 * 60 * 1000);
                     const minutesPassed    = Math.floor(msSinceLastEvent / 60000);
                     const maxEvents        = minutesPassed;
+
+                    const moneyBeforeEvents = window.money;
 
                     window._offlineMode       = true;
                     window._offlineEventCount = 0;
@@ -158,7 +160,6 @@ function loadGame() {
                             if (Math.random() < 0.70) {
                                 const fraction = (i + 1) / maxEvents;
                                 const eventTs  = Math.floor(eventLast + (msSinceLastEvent * fraction));
-
                                 window.triggerRandomEvent(eventTs);
                                 window._offlineEventCount++;
                             }
@@ -166,39 +167,31 @@ function loadGame() {
                     }
 
                     window._offlineMode = false;
-                    
-                    // ⭐ חישוב מחדש של פסיבי אחרי אירועי אופליין
+
+                    // ⭐ recalcPassive אחרי אירועי אופליין
                     if (typeof window.recalcPassive === 'function') {
                         window.recalcPassive();
                     }
-                    
-                    eventLosses = moneyBeforeEvents - window.money;
-                    if (eventLosses < 0) eventLosses = 0;
-                    
+
+                    const eventLosses = Math.max(0, moneyBeforeEvents - window.money);
+
                     window.lastEventTick = now;
                     localStorage.setItem('lastEventTick', now);
-                    
-                    setTimeout(() => {
-                        if (typeof showMsgLong === 'function') {
-                            const finalGain = offlineEarnings - eventLosses;
-                            let msg = `💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪`;
-                            
-                            if (eventLosses > 0) {
-                                msg += `\n⚠️ הפסדת ${Math.floor(eventLosses).toLocaleString()} ₪ מאירועים`;
-                                msg += `\n✅ נשאר לך: ${Math.floor(finalGain).toLocaleString()} ₪`;
-                            } else {
-                                msg += `\n✅ התקבל במלואו!`;
-                            }
-                            
-                            const eventCount = window._offlineEventCount || 0;
-                            if (eventCount > 0) {
-                                msg += `\n📊 אירועים: ${eventCount}`;
-                            }
-                            
-                            showMsgLong(msg, eventLosses > 0 ? 'var(--orange)' : 'var(--green)');
+
+                    // ⭐ הצג הודעה אחרי 3500ms — לא תיחסם ע"י הודעות טעינה
+                    clearTimeout(window._offlineMsgTimer);
+                    window._offlineMsgTimer = setTimeout(() => {
+                        const finalGain    = offlineEarnings - eventLosses;
+                        const eventCount   = window._offlineEventCount || 0;
+                        let msg = `💰 הרווחת ${Math.floor(offlineEarnings).toLocaleString()} ₪`;
+                        if (eventLosses > 0) {
+                            msg += ` | ⚠️ הפסדת ${Math.floor(eventLosses).toLocaleString()} ₪`;
+                            msg += ` | ✅ נשאר: ${Math.floor(finalGain).toLocaleString()} ₪`;
                         }
+                        if (eventCount > 0) msg += ` | 📊 אירועים: ${eventCount}`;
+                        showMsgLong(msg, eventLosses > 0 ? 'var(--yellow)' : 'var(--green)');
                         if (typeof updateUI === 'function') updateUI();
-                    }, 2000);
+                    }, 3500);
                 }
             }
         } else {
@@ -243,7 +236,8 @@ function saveGame() {
 }
 
 function updateUI() {
-    if (window.money > 2000000000) window.money = 2000000000;
+    // ⭐ תקרה 2 מיליארד — בנק לא נגוע
+    if (window.money > MAX_MONEY) window.money = MAX_MONEY;
     const mEl = document.getElementById('money');
     const bEl = document.getElementById('bank');
     const lEl = document.getElementById('life-level-ui');
@@ -296,22 +290,25 @@ function savePlayerName() {
     saveGame();
 }
 
+// ⭐ Passive income tick — תקרה 2 מיליארד
 setInterval(() => {
-    if (window.passive > 0 && window.money < 2000000000) {
+    if (window.passive > 0 && window.money < MAX_MONEY) {
         const tick = window.passive / 1200;
-        window.money = Math.min(2000000000, window.money + tick);
+        window.money = Math.min(MAX_MONEY, window.money + tick);
         window.totalEarned += tick;
         const mEl = document.getElementById('money');
         if (mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
     }
 }, 50);
 
+// UI update every second
 setInterval(() => {
     if (typeof window.renderUIUpdate === 'function') {
         window.renderUIUpdate(getLevelData(window.lifeXP));
     }
 }, 1000);
 
+// Auto save every 15 seconds
 setInterval(saveGame, 15000);
 
 window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 60;
@@ -347,13 +344,10 @@ document.addEventListener("DOMContentLoaded", () => {
     loadGame();
 
     setTimeout(() => {
-        // ⭐ חישוב מחדש של פסיבי אחרי טעינת המשחק
         if (typeof window.recalcPassive === 'function') {
             window.recalcPassive();
         }
-        if (typeof updateUI === 'function') {
-            updateUI();
-        }
+        updateUI();
         startEventTimer();
     }, 200);
 });
