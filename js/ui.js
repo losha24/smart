@@ -36,7 +36,7 @@ function checkAdminCredentials(user, pass) {
 
 // ⭐ window.updateUI גלובלית — זמינה מכל קובץ
 window.updateUI = function() {
-    if (window.money > 1000000000) window.money = 1000000000;
+    if (window.money > 2000000000) window.money = 2000000000;
     const mEl = document.getElementById('money');
     const bEl = document.getElementById('bank');
     const lEl = document.getElementById('life-level-ui');
