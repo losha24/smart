@@ -135,9 +135,9 @@ function loadGame() {
                 let eventLosses = 0;
 
                 if (offlineEarnings > 1) {
-                    if (window.money + offlineEarnings > 1000000000) {
-                        window.money = 1000000000;
-                        showMsgLong("💰 הגעת לתקרת המזומן המקסימלית (מיליארד ₪)!", 'var(--red)');
+                    if (window.money + offlineEarnings > 2000000000) {
+                        window.money = 2000000000;
+                        showMsgLong("💰 הגעת לתקרת המזומן המקסימלית (2 מיליארד ₪)!", 'var(--red)');
                     } else {
                         window.money += offlineEarnings;
                     }
@@ -243,7 +243,7 @@ function saveGame() {
 }
 
 function updateUI() {
-    if (window.money > 1000000000) window.money = 1000000000;
+    if (window.money > 2000000000) window.money = 2000000000;
     const mEl = document.getElementById('money');
     const bEl = document.getElementById('bank');
     const lEl = document.getElementById('life-level-ui');
@@ -297,9 +297,9 @@ function savePlayerName() {
 }
 
 setInterval(() => {
-    if (window.passive > 0 && window.money < 1000000000) {
+    if (window.passive > 0 && window.money < 2000000000) {
         const tick = window.passive / 1200;
-        window.money = Math.min(1000000000, window.money + tick);
+        window.money = Math.min(2000000000, window.money + tick);
         window.totalEarned += tick;
         const mEl = document.getElementById('money');
         if (mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
