@@ -74,16 +74,25 @@
 </div>
 <footer class="main-footer">© 2026 Smart Money Pro v9.9.9 | אלכסיי זבודיסקר</footer>
 
-<!-- Firebase SDK - נטען ראשון -->
+<!-- ⭐ Firebase SDK — סדר חובה: app → database → auth → initializeApp -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-    firebase.initializeApp({
-        databaseURL: "https://smart-money-faf43-default-rtdb.europe-west1.firebasedatabase.app"
-    });
+    if (!firebase.apps.length) {
+        firebase.initializeApp({
+            apiKey:            "AIzaSyBtohjQmS8h2ecDkbNaJbpHTtpWXbm-M5Y",
+            authDomain:        "smart-money-faf43.firebaseapp.com",
+            databaseURL:       "https://smart-money-faf43-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId:         "smart-money-faf43",
+            storageBucket:     "smart-money-faf43.firebasestorage.app",
+            messagingSenderId: "55641338232",
+            appId:             "1:55641338232:web:85ad1f1243fb2eefcd988d"
+        });
+    }
 </script>
 
-<!-- ⭐ סדר טעינה נכון: events קודם (ללא defer), אחר כך הכל עם defer -->
+<!-- ⭐ סדר טעינה: events (ללא defer) → שאר הקבצים עם defer -->
 <script src="js/events.js?v=9.9.1"></script>
 
 <script defer src="js/core.js?v=9.9.1"></script>
