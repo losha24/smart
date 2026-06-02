@@ -160,8 +160,7 @@ window.recalcPassive = function() {
     });
 
     window.passive = Math.max(0, total);
-    if (typeof updateUI === 'function') updateUI();
-    return total;
+return total;
 };
 
 // ── דף הבית ────────────────────────────────────────────────
