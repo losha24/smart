@@ -1,8 +1,8 @@
 [{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "io.github.losha24.twa",
-        "sha256_cert_fingerprints": ["8C:2E:D2:49:8D:E9:F5:87:14:2F:C9:C1:AB:39:9F:0D:BB:FE:70:0C:F6:5A:BE:DC:99:62:DF:FB:58:0D:B9:B0"]
-      }
-    }]
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.smartmoney.app",
+    "sha256_cert_fingerprints": ["8C:2E:D2:49:8D:E9:F5:87:14:2F:C9:C1:AB:39:9F:0D:BB:FE:70:0C:F6:5A:BE:DC:99:62:DF:FB:58:0D:B9:B0"]
+  }
+}]
