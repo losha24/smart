@@ -2,8 +2,8 @@
   "id": "/smart/",
   "short_name": "SmartMoney",
   "name": "Smart Money Pro - סימולטור פיננסי",
-  "description": "נהל אימפריה כלכלית: עבודות, נדל\"ן, עסקים, שוק שחור ועוד.",
-  "version": "9.1.0",
+  "description": "נהל אימפריה כלכלית: עבודות, נדל\"ן, עסקים, שוק שחור ועוד. צבור עושר, קנה נכסים והגע לפסגת הדירוג העולמי!",
+  "version": "9.9.9",
   "start_url": "/smart/index.html",
   "scope": "/smart/",
   "display": "standalone",
@@ -40,16 +40,45 @@
       "purpose": "maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "screenshots/screen1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "מסך הבית - מרכז שליטה"
+    },
+    {
+      "src": "screenshots/screen2.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "עבודות - הרוויח כסף"
+    },
+    {
+      "src": "screenshots/screen3.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "נדל\"ן - קנה נכסים"
+    }
+  ],
   "shortcuts": [
     {
       "name": "עבודות",
-      "url": "index.html",
-      "description": "בצע עבודות להרוויח כסף"
+      "short_name": "עבודות",
+      "url": "/smart/index.html",
+      "description": "בצע עבודות להרוויח כסף",
+      "icons": [{ "src": "icons/icon_192.png", "sizes": "192x192" }]
     },
     {
       "name": "שוק שחור",
-      "url": "index.html",
-      "description": "כנס לשוק השחור"
+      "short_name": "שוק שחור",
+      "url": "/smart/index.html",
+      "description": "כנס לשוק השחור",
+      "icons": [{ "src": "icons/icon_192.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "prefer_related_applications": false,
+  "related_applications": []
 }
