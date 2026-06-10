@@ -34,12 +34,13 @@ window.updateUI = function() {
         if (bEl) bEl.innerText = Math.floor(window.bank).toLocaleString();
         return;
     }
-    if (window.money > 2000000000) window.money = 2000000000;
-    const mEl = document.getElementById('money');
-    const bEl = document.getElementById('bank');
-    const lEl = document.getElementById('life-level-ui');
-    if (mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
-    if (bEl) bEl.innerText = Math.floor(window.bank).toLocaleString();
+    const mEl  = document.getElementById('money');
+    const bEl  = document.getElementById('bank');
+    const lEl  = document.getElementById('life-level-ui');
+    const gbEl = document.getElementById('gold-bricks');
+    if (mEl)  mEl.innerText  = Math.floor(window.money).toLocaleString();
+    if (bEl)  bEl.innerText  = Math.floor(window.bank).toLocaleString();
+    if (gbEl) gbEl.innerText = window.goldBricks || 0;
     const ld = (typeof getLevelData === 'function')
         ? getLevelData(window.lifeXP || 0)
         : { level: 1, xpInCurrentLevel: 0, xpForNext: 1000, progressPercent: 0 };
@@ -55,16 +56,23 @@ const FB_URL = 'https://smart-money-faf43-default-rtdb.europe-west1.firebasedata
 
 async function fbSaveScore() {
     try {
-        const ld = getLevelData(window.lifeXP || 0);
+        const ld       = getLevelData(window.lifeXP || 0);
         const deviceId = getDeviceId();
-        await fetch(FB_URL + '/leaderboard/' + deviceId + '.json', {
-            method: 'PUT',
-            body: JSON.stringify({
-                name: localStorage.getItem('playerName') || 'שחקן',
-                money: Math.floor(window.money || 0),
-                level: ld.level,
-                ts: Date.now()
-            })
+        const payload  = {
+            name:   localStorage.getItem('playerName') || 'שחקן',
+            bricks: window.goldBricks || 0,
+            level:  ld.level,
+            ts:     Date.now()
+        };
+        let url = FB_URL + '/leaderboard/' + deviceId + '.json';
+        try {
+            const user = firebase.auth().currentUser;
+            if (user) { const token = await user.getIdToken(); url += '?auth=' + token; }
+        } catch(e) {}
+        await fetch(url, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload)
         });
     } catch(e) { console.warn('FB score save failed:', e); }
 }
@@ -77,14 +85,14 @@ async function fbGetLeaderboard() {
         if (!data) return [];
         return Object.entries(data)
             .map(([id, p]) => ({ ...p, id }))
-            .sort((a, b) => b.level - a.level || b.money - a.money)
+            .sort((a, b) => (b.bricks || 0) - (a.bricks || 0) || b.level - a.level)
             .slice(0, 50);
     } catch(e) { return null; }
 }
 
 function getDeviceId() {
-    let id = localStorage.getItem('deviceId');
-    if (!id) { id = 'dev_' + Math.random().toString(36).substr(2, 12); localStorage.setItem('deviceId', id); }
+    let id = localStorage.getItem('deviceID');
+    if (!id) { id = 'dev_' + Math.random().toString(36).substr(2, 12); localStorage.setItem('deviceID', id); }
     return id;
 }
 
@@ -422,10 +430,12 @@ function renderUIUpdate(ld) {
         const progressEl = document.getElementById('xp-progress-bar');
         const xpTextEl   = document.getElementById('xp-text-detail');
         const levelValEl = document.getElementById('home-level-val');
+        const hgbEl      = document.getElementById('home-gold-bricks');
         if (passiveEl)  passiveEl.innerText = (window.passive || 0).toLocaleString(undefined, {minimumFractionDigits:1, maximumFractionDigits:1}) + ' ₪/ד\'';
         if (progressEl) progressEl.style.width = ld.progressPercent + '%';
         if (xpTextEl)   xpTextEl.innerText = Math.floor(ld.xpInCurrentLevel).toLocaleString() + ' / ' + Math.floor(ld.xpForNext).toLocaleString() + ' XP';
         if (levelValEl) levelValEl.innerText = ld.level;
+        if (hgbEl)      hgbEl.innerText = window.goldBricks || 0;
     }
 }
 
@@ -532,6 +542,13 @@ window.drawHome = function(c) {
         '<div class="card" style="margin:0;padding:12px;text-align:center;border:1px solid rgba(239,68,68,0.2);">' +
         '<small style="opacity:0.7;font-size:10px;display:block;margin-bottom:4px;">🏦 חוב לבנק</small>' +
         '<b style="color:#ef4444;font-size:15px;">' + (window.loan || 0).toLocaleString() + ' ₪</b></div></div>' +
+        // ⭐ כרטיס זהב
+        '<div class="card" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.4);text-align:center;padding:15px;margin-bottom:15px;">' +
+        '<div style="font-size:12px;color:var(--yellow);font-weight:bold;margin-bottom:6px;">🪎 זהב</div>' +
+        '<div style="font-size:28px;font-weight:bold;color:var(--yellow);" id="home-gold-bricks">' + (window.goldBricks || 0) + '</div>' +
+        '<div style="font-size:11px;opacity:0.6;margin-bottom:10px;">כל לבנה = 2,000,000,000 ₪ לבנק | מצטבר גם אופליין</div>' +
+        '<button onclick="window.convertGoldBrick()" style="background:var(--yellow);color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">🏦 המר לבנה לבנק</button>' +
+        '</div>' +
         '<div class="card" style="padding:12px;background:rgba(255,255,255,0.02);">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
         '<small style="opacity:0.6;font-weight:bold;">🏆 דירוג עולמי אמיתי</small>' +
@@ -571,7 +588,7 @@ async function loadLeaderboard() {
     const players = await fbGetLeaderboard();
     if (players === null) {
         const ld = getLevelData(window.lifeXP || 0);
-        lbAllPlayers = [{ name: localStorage.getItem('playerName') || 'אתה', money: Math.floor(window.money), level: ld.level, isPlayer: true }];
+        lbAllPlayers = [{ name: localStorage.getItem('playerName') || 'אתה', bricks: window.goldBricks || 0, level: ld.level, isPlayer: true }];
         cont.innerHTML = '<div style="text-align:center;font-size:11px;opacity:0.5;padding:8px;">📡 אין חיבור - מציג מקומי</div>' + renderLbPage();
         return;
     }
@@ -580,8 +597,8 @@ async function loadLeaderboard() {
     const ld = getLevelData(window.lifeXP || 0);
     lbAllPlayers = players.map(p => ({ ...p, isPlayer: p.id === deviceId }));
     if (!lbAllPlayers.find(p => p.isPlayer)) {
-        lbAllPlayers.push({ name: localStorage.getItem('playerName') || 'אתה', money: Math.floor(window.money), level: ld.level, isPlayer: true });
-        lbAllPlayers.sort((a, b) => b.level - a.level || b.money - a.money);
+        lbAllPlayers.push({ name: localStorage.getItem('playerName') || 'אתה', bricks: window.goldBricks || 0, level: ld.level, isPlayer: true });
+        lbAllPlayers.sort((a, b) => (b.bricks || 0) - (a.bricks || 0) || b.level - a.level);
     }
     renderLbFull();
 }
@@ -607,7 +624,7 @@ function renderLbPage() {
             '<span style="font-size:15px;width:24px;">' + medal + '</span>' +
             '<div><div style="font-size:13px;font-weight:bold;color:' + (p.isPlayer ? 'var(--blue)' : '#fff') + ';">' + p.name + (p.isPlayer ? ' (אתה)' : '') + '</div>' +
             '<div style="font-size:11px;color:var(--yellow);font-weight:bold;">⭐ רמה ' + p.level + '</div></div></div>' +
-            '<div style="font-size:13px;color:var(--green);font-weight:bold;">' + Math.floor(p.money).toLocaleString() + '₪</div></div>';
+            '<div style="font-size:13px;color:#f59e0b;font-weight:bold;">🪎 ' + (p.bricks || 0) + '</div></div>';
     }).join('');
 }
 
@@ -753,6 +770,36 @@ async function triggerInstall() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') { deferredPrompt = null; renderInstallBtn(); }
 }
+
+// ============================================================
+// ⭐ המרת לבנת זהב — הכסף נכנס לבנק
+// ============================================================
+window.convertGoldBrick = function() {
+    if (!window.goldBricks || window.goldBricks <= 0) {
+        if (typeof showMsg === 'function') showMsg('אין זהב להמרה!', 'var(--red)');
+        return;
+    }
+    if (typeof window.showConfirmModal === 'function') {
+        window.showConfirmModal(
+            '🪎 המרת זהב',
+            'להמיר לבנה אחת ל-<b>2,000,000,000 ₪</b>?<br><br>' +
+            '💡 הכסף יכנס ישירות ל<b>בנק</b><br><br>' +
+            'זהב נותרות: <b>' + (window.goldBricks - 1) + '</b>',
+            function() {
+                window.goldBricks--;
+                window.bank += 2000000000;
+                const gbEl  = document.getElementById('gold-bricks');
+                const hgbEl = document.getElementById('home-gold-bricks');
+                if (gbEl)  gbEl.innerText  = window.goldBricks;
+                if (hgbEl) hgbEl.innerText = window.goldBricks;
+                if (typeof showMsg === 'function') showMsg('🏦 +2,000,000,000 ₪ נכנסו לבנק!', 'var(--yellow)');
+                if (typeof saveGame === 'function') saveGame();
+                if (typeof updateUI === 'function') updateUI();
+                if (typeof window.openTab === 'function') window.openTab('home');
+            }
+        );
+    }
+};
 
 // ============================================================
 // אתחול
