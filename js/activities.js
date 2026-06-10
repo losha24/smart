@@ -163,29 +163,7 @@ window.recalcPassive = function() {
 return total;
 };
 
-// ── דף הבית ────────────────────────────────────────────────
-window.drawHome = function(c) {
-    var hasItem = function(id, name) { return window.inventory.includes(id) || window.inventory.includes(name); };
-    var itemIcons = shopItems.filter(function(si) { return hasItem(si.id, si.name); })
-        .map(function(si) { return '<span title="' + si.name + '" style="font-size:32px;background:rgba(255,255,255,0.05);padding:8px;border-radius:10px;display:inline-block;margin:4px;">' + si.icon + '</span>'; }).join('');
-    var carIcons = carList.filter(function(car) { return window.cars.includes(car.name); })
-        .map(function(car) { return '<span title="' + car.name + '" style="font-size:32px;background:rgba(255,255,255,0.05);padding:8px;border-radius:10px;display:inline-block;margin:4px;">' + car.icon + '</span>'; }).join('');
-    var skillIcons = skillList.filter(function(sk) { return window.skills.includes(sk.name); })
-        .map(function(sk) { return '<span title="' + sk.name + '" style="font-size:32px;background:rgba(255,255,255,0.05);padding:8px;border-radius:10px;display:inline-block;margin:4px;">' + sk.icon + '</span>'; }).join('');
-    
-    // ⭐ חישוב סך פסיבי לתצוגה
-    var totalPassive = window.recalcPassive();
-    
-    c.innerHTML = '<div class="fade-in"><h3 style="margin-bottom:15px;text-align:center;">🏠 מרכז שליטה אישי</h3>' +
-        '<div class="card" style="margin-bottom:12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);text-align:center;">' +
-        '<div style="font-size:12px;opacity:0.7;">💰 הכנסה פסיבית כוללת</div>' +
-        '<div style="font-size:24px;font-weight:bold;color:var(--green);">' + totalPassive.toFixed(1) + ' ₪/דקה</div>' +
-        '</div>' +
-        '<div class="card" style="margin-bottom:12px;border-right:4px solid var(--purple);"><div style="font-weight:bold;color:var(--purple);font-size:14px;margin-bottom:10px;">📦 ארון ציוד וחפצים</div><div style="display:flex;flex-wrap:wrap;gap:5px;min-height:45px;">' + (itemIcons || '<small style="opacity:0.4;">הארון ריק...</small>') + '</div></div>' +
-        '<div class="card" style="margin-bottom:12px;border-right:4px solid var(--blue);"><div style="font-weight:bold;color:var(--blue);font-size:14px;margin-bottom:10px;">🏎️ החניה שלי</div><div style="display:flex;flex-wrap:wrap;gap:5px;min-height:45px;">' + (carIcons || '<small style="opacity:0.4;">אין רכבים בחניה</small>') + '</div></div>' +
-        '<div class="card" style="border-right:4px solid var(--green);"><div style="font-weight:bold;color:var(--green);font-size:14px;margin-bottom:10px;">🎓 הסמכות וכישורים</div><div style="display:flex;flex-wrap:wrap;gap:5px;min-height:45px;">' + (skillIcons || '<small style="opacity:0.4;">טרם נרכשו כישורים</small>') + '</div></div>' +
-        '</div>';
-};
+// ──נמצא בקובץ ui דף הבית ────────────────────────────────────────────────
 
 // ── עבודות ─────────────────────────────────────────────────
 window.drawWork = function(c) {
