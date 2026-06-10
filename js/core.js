@@ -29,6 +29,7 @@ window.crimeLevel = 0;
 window.policeHeat = 0;
 window.gang = null;
 window.activeShipments = [];
+window.goldBricks = 0;
 
 if (!localStorage.getItem("deviceID")) {
     localStorage.setItem("deviceID", 'dev_' + Math.random().toString(36).substr(2, 12));
@@ -183,6 +184,7 @@ function loadGame() {
             window.gang            = data.gang            || null;
             window.blackMoney      = data.blackMoney      ?? 0;
             window.activeShipments = data.activeShipments || [];
+            window.goldBricks      = data.goldBricks      ?? 0;
             window.lastKnownLevel  = getLevelData(window.lifeXP).level;
 
             if (data.lastSaveTime && window.passive > 0) {
@@ -191,8 +193,11 @@ function loadGame() {
                 const offlineEarnings = (msPassed / 60000) * window.passive;
 
                 if (offlineEarnings > 1) {
-                    if (window.money + offlineEarnings > MAX_MONEY) {
-                        window.money = MAX_MONEY;
+                    const totalMoney = window.money + offlineEarnings;
+                    const newBricks  = Math.floor(totalMoney / MAX_MONEY);
+                    if (newBricks > 0) {
+                        window.goldBricks = (window.goldBricks || 0) + newBricks;
+                        window.money = totalMoney % MAX_MONEY;
                     } else {
                         window.money += offlineEarnings;
                     }
@@ -273,7 +278,8 @@ function saveGame() {
         policeHeat:      window.policeHeat   || 0,
         gang:            window.gang         || null,
         blackMoney:      window.blackMoney   || 0,
-        activeShipments: window.activeShipments || []
+        activeShipments: window.activeShipments || [],
+        goldBricks:      window.goldBricks      || 0
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify({ data, hash: createHash(data) }));
     window.lastEventTick = Date.now();
@@ -281,12 +287,13 @@ function saveGame() {
 }
 
 function updateUI() {
-    if (window.money > MAX_MONEY) window.money = MAX_MONEY;
-    const mEl = document.getElementById('money');
-    const bEl = document.getElementById('bank');
-    const lEl = document.getElementById('life-level-ui');
-    if (mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
-    if (bEl) bEl.innerText = Math.floor(window.bank).toLocaleString();
+    const mEl  = document.getElementById('money');
+    const bEl  = document.getElementById('bank');
+    const lEl  = document.getElementById('life-level-ui');
+    const gbEl = document.getElementById('gold-bricks');
+    if (mEl)  mEl.innerText  = Math.floor(window.money).toLocaleString();
+    if (bEl)  bEl.innerText  = Math.floor(window.bank).toLocaleString();
+    if (gbEl) gbEl.innerText = window.goldBricks || 0;
     const ld = getLevelData(window.lifeXP);
     if (lEl) lEl.innerText = ld.level;
     if (typeof window.renderUIUpdate === 'function') window.renderUIUpdate(ld);
@@ -335,10 +342,18 @@ function savePlayerName() {
 }
 
 setInterval(() => {
-    if (window.passive > 0 && window.money < MAX_MONEY) {
+    if (window.passive > 0) {
         const tick = window.passive / 1200;
-        window.money = Math.min(MAX_MONEY, window.money + tick);
+        window.money += tick;
         window.totalEarned += tick;
+        if (window.money >= MAX_MONEY) {
+            window.goldBricks = (window.goldBricks || 0) + 1;
+            window.money -= MAX_MONEY;
+            const gbEl = document.getElementById('gold-bricks');
+            if (gbEl) gbEl.innerText = window.goldBricks;
+            showMsg('🏅 צברת 2B ₪! קיבלת לבנת זהב! סה"כ: ' + window.goldBricks, 'var(--yellow)');
+            saveGame();
+        }
         const mEl = document.getElementById('money');
         if (mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
     }
