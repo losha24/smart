@@ -1,17 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Money Pro | v9.9.9</title>
-    <link rel="manifest" href="manifest.json?v=9.9.1">
+    <title>Smart Money Pro | v9.1</title>
+    <link rel="manifest" href="manifest.json?v=9.1.0">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon_32.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon_192.png">
-    <link rel="stylesheet" href="style.css?v=9.9.1">
+    <link rel="stylesheet" href="style.css?v=9.1.0">
     <style>
         .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;}
         .modal-card{width:85%;max-width:320px;text-align:center;padding:25px;background:#1e293b;border-radius:15px;border:1px solid #3b82f6;}
@@ -31,10 +32,15 @@
 <header class="main-header">
     <img src="logo.png" alt="Smart Money Pro" class="header-logo-big" onclick="if(window.openTab) window.openTab('home')" style="cursor:pointer;">
 </header>
-<div class="stats-bar-top">
-    <div class="stat-item">💰 <span id="money">0</span>₪</div>
-    <div class="stat-item">🏦 <span id="bank">0</span>₪</div>
-    <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
+<div class="stats-bar-top" style="flex-direction:column;gap:4px;padding:8px 5px;">
+    <div style="display:flex;justify-content:space-around;width:100%;">
+        <div class="stat-item">💰 <span id="money">0</span>₪</div>
+        <div class="stat-item">🏦 <span id="bank">0</span>₪</div>
+        <div class="stat-item">⭐ רמה <span id="life-level-ui">1</span></div>
+    </div>
+    <div style="display:flex;justify-content:center;width:100%;">
+        <div class="stat-item" style="color:var(--yellow);font-size:12px;">🪎זהב: <span id="gold-bricks" style="color:var(--yellow);">0</span></div>
+    </div>
 </div>
 <div id="status-bar" class="status-msg" style="display:flex;justify-content:space-between;align-items:center;padding:0 15px;">
     <span id="status-text">המערכת מוכנה...</span>
@@ -72,9 +78,8 @@
         <button class="action" onclick="closeInstallGuide()" style="background:#ef4444;color:#fff;width:100%;margin-top:15px;border-radius:8px;">סגור</button>
     </div>
 </div>
-<footer class="main-footer">© 2026 Smart Money Pro v9.9.9 | אלכסיי זבודיסקר</footer>
-
-<!-- ⭐ Firebase SDK — סדר חובה: app → database → auth → initializeApp -->
+<footer class="main-footer">© 2026 Smart Money Pro v9.1.0 | אלכסיי זבודיסקר</footer>
+<!-- Firebase SDK - נטען ראשון -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -92,19 +97,24 @@
     }
 </script>
 
-<!-- ⭐ סדר טעינה: events (ללא defer) → שאר הקבצים עם defer -->
-<script src="js/events.js?v=9.9.1"></script>
+<!-- סדר טעינה נכון: events → core → activities → economy → ui → blackmarket -->
 
-<script defer src="js/core.js?v=9.9.1"></script>
-<script defer src="js/activities.js?v=9.9.1"></script>
-<script defer src="js/economy.js?v=9.9.1"></script>
-<script defer src="js/ui.js?v=9.9.1"></script>
-<script defer src="js/blackmarket.js?v=9.9.1"></script>
+<script src="js/events.js?v=9.1.0"></script>
+
+<script src="js/core.js?v=9.1.0"></script>
+
+<script defer src="js/activities.js?v=9.1.0"></script>
+
+<script defer src="js/economy.js?v=9.1.0"></script>
+
+<script defer src="js/ui.js?v=9.1.0"></script>
+
+<script defer src="js/blackmarket.js?v=9.1.0"></script>
 
 <script>
     function closeInstallGuide() { document.getElementById('installModal').style.display = 'none'; }
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=9.9.1').then(function() { console.log("SW v9.9.1"); });
+        navigator.serviceWorker.register('./sw.js?v=9.1.0').then(function() { console.log("SW v9.1"); });
     }
     window.addEventListener('load', function() {
         if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
