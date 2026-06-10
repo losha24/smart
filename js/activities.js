@@ -70,16 +70,16 @@ const businessList = [
 ];
 
 const shopItems = [
-    { id: 's1',  name: 'חולצת טי פשוטה',    price: 150,   xp: 25,    icon: '👕' },
+    { id: 's1',  name: 'חולצת טי',    price: 150,   xp: 25,    icon: '👕' },
     { id: 's2',  name: 'ג\'ינס אופנתי',       price: 450,   xp: 70,    icon: '👖' },
     { id: 's3',  name: 'נעלי ספורט',          price: 850,   xp: 130,   icon: '👟' },
     { id: 's4',  name: 'זקט עור',             price: 2200,  xp: 350,   icon: '🧥' },
     { id: 's5',  name: 'שעון חכם',            price: 3500,  xp: 550,   icon: '⌚' },
-    { id: 's6',  name: 'משקפי שמש יוקרתיים', price: 1800,  xp: 280,   icon: '🕶️' },
+    { id: 's6',  name: 'משקפי שמש', price: 1800,  xp: 280,   icon: '🕶️' },
     { id: 's7',  name: 'חליפת עסקים',         price: 6000,  xp: 1000,  icon: '👔' },
     { id: 's8',  name: 'תיק מעצבים',          price: 12000, xp: 2000,  icon: '👜' },
     { id: 's9',  name: 'טבעת יהלום',          price: 45000, xp: 8000,  icon: '💎' },
-    { id: 's10', name: 'שעון רולקס זהב',      price: 85000, xp: 15000, icon: '👑' }
+    { id: 's10', name: 'כתר זהב',      price: 85000, xp: 15000, icon: '👑' }
 ];
 
 const skillList = [
