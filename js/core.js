@@ -1,8 +1,8 @@
-/* Smart Money Pro - js/core.js - v9.9.9
-   תיקון הודעת אופליין: modal נפרד במקום status-bar
+/* Smart Money Pro - js/core.js - v9.9.10
+   תיקון הודעת אופליין: modal נפרד + הצגת לבנות זהב
 */
 
-const VERSION = "9.9.9";
+const VERSION = "9.9.10";
 const SAVE_KEY = "smartMoneySave_v8_main";
 
 window.money = 1200;
@@ -92,50 +92,62 @@ function showMsgLong(txt, color = "var(--blue)") {
     }, 8000);
 }
 
-// ⭐ הודעת אופליין כ-MODAL — נראית תמיד, לא נחתכת
-function showOfflineModal(offlineEarnings, eventLosses, eventCount) {
+// ⭐ הודעת אופליין כ-MODAL — כולל הצגת לבנות זהב
+function showOfflineModal(offlineEarnings, eventLosses, eventCount, goldGained) {
     const existing = document.getElementById('offlineModal');
     if (existing) existing.remove();
 
     const finalGain = offlineEarnings - eventLosses;
     const hasLoss   = eventLosses > 0;
+    const hasGold   = goldGained > 0;
 
     const overlay = document.createElement('div');
     overlay.id = 'offlineModal';
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.80);z-index:99998;display:flex;justify-content:center;align-items:center;';
 
-    overlay.innerHTML =
-        '<div style="width:88%;max-width:320px;background:#0f172a;border-radius:16px;border:2px solid #22c55e;padding:24px;text-align:center;">' +
+    let innerHtml = '<div style="width:88%;max-width:320px;background:#0f172a;border-radius:16px;border:2px solid #22c55e;padding:24px;text-align:center;">' +
         '<div style="font-size:32px;margin-bottom:8px;">📴➡️💰</div>' +
-        '<div style="font-size:16px;font-weight:bold;color:#22c55e;margin-bottom:16px;">בזמן שלא היית...</div>' +
+        '<div style="font-size:16px;font-weight:bold;color:#22c55e;margin-bottom:16px;">בזמן שלא היית...</div>';
 
-        // רווח פסיבי
-        '<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
+    // רווח פסיבי
+    innerHtml += '<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
         '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">💰 הרווחת מפסיבי</div>' +
         '<div style="font-size:22px;font-weight:bold;color:#22c55e;">+' + Math.floor(offlineEarnings).toLocaleString() + ' ₪</div>' +
-        '</div>' +
+        '</div>';
 
-        // הפסד מאירועים (רק אם יש)
-        (hasLoss ?
-        '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
-        '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">⚠️ הפסדת מאירועים</div>' +
-        '<div style="font-size:22px;font-weight:bold;color:#ef4444;">-' + Math.floor(eventLosses).toLocaleString() + ' ₪</div>' +
-        '</div>' : '') +
+    // ⭐ כרטיס לבנות זהב (אם יש)
+    if (hasGold) {
+        innerHtml += '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
+            '<div style="font-size:12px;color:#f59e0b;margin-bottom:4px;">🪎 לבנות זהב חדשות</div>' +
+            '<div style="font-size:22px;font-weight:bold;color:#f59e0b;">+' + goldGained + '</div>' +
+            '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">כל לבנה = 2,000,000,000 ₪</div>' +
+            '</div>';
+    }
 
-        // סה"כ
-        '<div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:12px;margin-bottom:16px;">' +
+    // הפסד מאירועים (רק אם יש)
+    if (hasLoss) {
+        innerHtml += '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
+            '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">⚠️ הפסדת מאירועים</div>' +
+            '<div style="font-size:22px;font-weight:bold;color:#ef4444;">-' + Math.floor(eventLosses).toLocaleString() + ' ₪</div>' +
+            '</div>';
+    }
+
+    // סה"כ
+    innerHtml += '<div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:12px;margin-bottom:16px;">' +
         '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">✅ סה"כ נשאר</div>' +
         '<div style="font-size:24px;font-weight:bold;color:' + (finalGain >= 0 ? '#38bdf8' : '#ef4444') + ';">' +
         (finalGain >= 0 ? '+' : '') + Math.floor(finalGain).toLocaleString() + ' ₪</div>' +
-        '</div>' +
-
-        // מספר אירועים
-        (eventCount > 0 ?
-        '<div style="font-size:11px;color:#64748b;margin-bottom:14px;">📊 קרו ' + eventCount + ' אירועים בזמן היעדרותך</div>' : '') +
-
-        '<button id="offlineModalClose" style="width:100%;padding:12px;border-radius:8px;border:none;background:#22c55e;color:#000;font-size:14px;font-weight:bold;cursor:pointer;">המשך לשחק 🚀</button>' +
         '</div>';
 
+    // מספר אירועים
+    if (eventCount > 0) {
+        innerHtml += '<div style="font-size:11px;color:#64748b;margin-bottom:14px;">📊 קרו ' + eventCount + ' אירועים בזמן היעדרותך</div>';
+    }
+
+    innerHtml += '<button id="offlineModalClose" style="width:100%;padding:12px;border-radius:8px;border:none;background:#22c55e;color:#000;font-size:14px;font-weight:bold;cursor:pointer;">המשך לשחק 🚀</button>' +
+        '</div>';
+
+    overlay.innerHTML = innerHtml;
     document.body.appendChild(overlay);
 
     document.getElementById('offlineModalClose').onclick = function() {
@@ -195,7 +207,10 @@ function loadGame() {
                 if (offlineEarnings > 1) {
                     const totalMoney = window.money + offlineEarnings;
                     const newBricks  = Math.floor(totalMoney / MAX_MONEY);
+                    let goldGained = 0;
+                    
                     if (newBricks > 0) {
+                        goldGained = newBricks;
                         window.goldBricks = (window.goldBricks || 0) + newBricks;
                         window.money = totalMoney % MAX_MONEY;
                     } else {
@@ -233,12 +248,13 @@ function loadGame() {
                     window.lastEventTick = now;
                     localStorage.setItem('lastEventTick', now);
 
-                    // ⭐ הצג MODAL אחרי 1.5 שניות — אחרי שה-DOM מוכן
+                    // ⭐ הצג MODAL אחרי 1.5 שניות — כולל מידע על זהב
                     setTimeout(() => {
                         showOfflineModal(
                             offlineEarnings,
                             eventLosses,
-                            window._offlineEventCount || 0
+                            window._offlineEventCount || 0,
+                            goldGained
                         );
                         if (typeof updateUI === 'function') updateUI();
                     }, 1500);
