@@ -4,6 +4,7 @@
 
 const VERSION = "9.9.10";
 const SAVE_KEY = "smartMoneySave_v8_main";
+const MAX_MONEY = 2000000000; // ⭐ 2 מיליארד
 
 window.money = 1200;
 window.blackMoney = 0;
@@ -92,7 +93,7 @@ function showMsgLong(txt, color = "var(--blue)") {
     }, 8000);
 }
 
-// ⭐ הודעת אופליין כ-MODAL — כולל הצגת לבנות זהב
+// ⭐ Modal אופליין — נראה תמיד, כולל לבנות זהב ואירועים
 function showOfflineModal(offlineEarnings, eventLosses, eventCount, goldGained) {
     const existing = document.getElementById('offlineModal');
     if (existing) existing.remove();
@@ -105,35 +106,39 @@ function showOfflineModal(offlineEarnings, eventLosses, eventCount, goldGained) 
     overlay.id = 'offlineModal';
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.80);z-index:99998;display:flex;justify-content:center;align-items:center;';
 
-    let innerHtml = '<div style="width:88%;max-width:320px;background:#0f172a;border-radius:16px;border:2px solid #22c55e;padding:24px;text-align:center;">' +
+    let innerHtml =
+        '<div style="width:88%;max-width:320px;background:#0f172a;border-radius:16px;border:2px solid #22c55e;padding:24px;text-align:center;">' +
         '<div style="font-size:32px;margin-bottom:8px;">📴➡️💰</div>' +
-        '<div style="font-size:16px;font-weight:bold;color:#22c55e;margin-bottom:16px;">בזמן שלא היית...</div>';
+        '<div style="font-size:16px;font-weight:bold;color:#22c55e;margin-bottom:16px;">בזמן שלא היית...</div>' +
 
-    // רווח פסיבי
-    innerHtml += '<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
+        // רווח פסיבי
+        '<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
         '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">💰 הרווחת מפסיבי</div>' +
         '<div style="font-size:22px;font-weight:bold;color:#22c55e;">+' + Math.floor(offlineEarnings).toLocaleString() + ' ₪</div>' +
         '</div>';
 
-    // ⭐ כרטיס לבנות זהב (אם יש)
+    // ⭐ לבנות זהב
     if (hasGold) {
-        innerHtml += '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
+        innerHtml +=
+            '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
             '<div style="font-size:12px;color:#f59e0b;margin-bottom:4px;">🪎 לבנות זהב חדשות</div>' +
             '<div style="font-size:22px;font-weight:bold;color:#f59e0b;">+' + goldGained + '</div>' +
             '<div style="font-size:10px;color:#94a3b8;margin-top:4px;">כל לבנה = 2,000,000,000 ₪</div>' +
             '</div>';
     }
 
-    // הפסד מאירועים (רק אם יש)
+    // הפסד מאירועים
     if (hasLoss) {
-        innerHtml += '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
+        innerHtml +=
+            '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px;margin-bottom:10px;">' +
             '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">⚠️ הפסדת מאירועים</div>' +
             '<div style="font-size:22px;font-weight:bold;color:#ef4444;">-' + Math.floor(eventLosses).toLocaleString() + ' ₪</div>' +
             '</div>';
     }
 
     // סה"כ
-    innerHtml += '<div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:12px;margin-bottom:16px;">' +
+    innerHtml +=
+        '<div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:12px;margin-bottom:16px;">' +
         '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">✅ סה"כ נשאר</div>' +
         '<div style="font-size:24px;font-weight:bold;color:' + (finalGain >= 0 ? '#38bdf8' : '#ef4444') + ';">' +
         (finalGain >= 0 ? '+' : '') + Math.floor(finalGain).toLocaleString() + ' ₪</div>' +
@@ -144,28 +149,23 @@ function showOfflineModal(offlineEarnings, eventLosses, eventCount, goldGained) 
         innerHtml += '<div style="font-size:11px;color:#64748b;margin-bottom:14px;">📊 קרו ' + eventCount + ' אירועים בזמן היעדרותך</div>';
     }
 
-    innerHtml += '<button id="offlineModalClose" style="width:100%;padding:12px;border-radius:8px;border:none;background:#22c55e;color:#000;font-size:14px;font-weight:bold;cursor:pointer;">המשך לשחק 🚀</button>' +
+    innerHtml +=
+        '<button id="offlineModalClose" style="width:100%;padding:12px;border-radius:8px;border:none;background:#22c55e;color:#000;font-size:14px;font-weight:bold;cursor:pointer;">המשך לשחק 🚀</button>' +
         '</div>';
 
     overlay.innerHTML = innerHtml;
     document.body.appendChild(overlay);
 
-    document.getElementById('offlineModalClose').onclick = function() {
-        overlay.remove();
-    };
-    overlay.onclick = function(e) {
-        if (e.target === overlay) overlay.remove();
-    };
+    document.getElementById('offlineModalClose').onclick = function() { overlay.remove(); };
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
-    // סגור אוטומטית אחרי 15 שניות
+    // סגירה אוטומטית אחרי 15 שניות
     setTimeout(() => {
         if (document.getElementById('offlineModal')) {
             document.getElementById('offlineModal').remove();
         }
     }, 15000);
 }
-
-const MAX_MONEY = 2000000000; // ⭐ 2 מיליארד
 
 function loadGame() {
     try {
@@ -200,24 +200,26 @@ function loadGame() {
             window.lastKnownLevel  = getLevelData(window.lifeXP).level;
 
             if (data.lastSaveTime && window.passive > 0) {
-                const now      = Date.now();
-                const msPassed = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
+                const now             = Date.now();
+                const msPassed        = Math.min(now - data.lastSaveTime, 12 * 60 * 60 * 1000);
                 const offlineEarnings = (msPassed / 60000) * window.passive;
 
                 if (offlineEarnings > 1) {
+                    // ⭐ חישוב לבנות זהב
                     const totalMoney = window.money + offlineEarnings;
                     const newBricks  = Math.floor(totalMoney / MAX_MONEY);
-                    let goldGained = 0;
-                    
+                    let goldGained   = 0;
+
                     if (newBricks > 0) {
-                        goldGained = newBricks;
-                        window.goldBricks = (window.goldBricks || 0) + newBricks;
-                        window.money = totalMoney % MAX_MONEY;
+                        goldGained            = newBricks;
+                        window.goldBricks     = (window.goldBricks || 0) + newBricks;
+                        window.money          = totalMoney % MAX_MONEY;
                     } else {
                         window.money += offlineEarnings;
                     }
                     window.totalEarned += offlineEarnings;
 
+                    // ⭐ סימולציית אירועים אופליין
                     const eventLast        = parseInt(data.lastEventTick || data.lastSaveTime || now);
                     const msSinceLastEvent = Math.min(now - eventLast, 12 * 60 * 60 * 1000);
                     const minutesPassed    = Math.floor(msSinceLastEvent / 60000);
@@ -248,7 +250,7 @@ function loadGame() {
                     window.lastEventTick = now;
                     localStorage.setItem('lastEventTick', now);
 
-                    // ⭐ הצג MODAL אחרי 1.5 שניות — כולל מידע על זהב
+                    // ⭐ הצג Modal אחרי 1.5 שניות
                     setTimeout(() => {
                         showOfflineModal(
                             offlineEarnings,
@@ -357,6 +359,7 @@ function savePlayerName() {
     saveGame();
 }
 
+// ⭐ Passive tick — 2B → לבנת זהב
 setInterval(() => {
     if (window.passive > 0) {
         const tick = window.passive / 1200;
@@ -375,14 +378,17 @@ setInterval(() => {
     }
 }, 50);
 
+// UI update every second
 setInterval(() => {
     if (typeof window.renderUIUpdate === 'function') {
         window.renderUIUpdate(getLevelData(window.lifeXP));
     }
 }, 1000);
 
+// Auto save every 15 seconds
 setInterval(saveGame, 15000);
 
+// Event timer
 window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 60;
 const EVENT_INTERVAL = 60;
 const EVENT_CHANCE   = 0.80;
