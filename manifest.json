@@ -7,13 +7,20 @@
   "start_url": "/smart/index.html",
   "scope": "/smart/",
   "display": "standalone",
-  "display_override": ["standalone", "window-controls-overlay"],
+  "display_override": [
+    "standalone",
+    "window-controls-overlay"
+  ],
   "orientation": "portrait",
   "theme_color": "#0f172a",
   "background_color": "#0f172a",
   "dir": "rtl",
   "lang": "he",
-  "categories": ["finance", "games", "business"],
+  "categories": [
+    "finance",
+    "games",
+    "business"
+  ],
   "icons": [
     {
       "src": "icons/icon_192.png",
@@ -69,16 +76,25 @@
       "short_name": "עבודות",
       "url": "/smart/index.html",
       "description": "בצע עבודות להרוויח כסף",
-      "icons": [{ "src": "icons/icon_192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "icons/icon_192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "שוק שחור",
       "short_name": "שוק שחור",
       "url": "/smart/index.html",
       "description": "כנס לשוק השחור",
-      "icons": [{ "src": "icons/icon_192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "icons/icon_192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ],
-  "prefer_related_applications": false,
-  "related_applications": []
+  "prefer_related_applications": false
 }
