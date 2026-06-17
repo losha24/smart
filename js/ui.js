@@ -116,14 +116,24 @@ async function fbLoadConfig() {
 
 async function fbDeletePlayer(deviceId) {
     try {
-        await fetch(FB_URL + '/leaderboard/' + deviceId + '.json', { method: 'DELETE' });
+        let url = FB_URL + '/leaderboard/' + deviceId + '.json';
+        try {
+            const user = firebase.auth().currentUser;
+            if (user) { const token = await user.getIdToken(); url += '?auth=' + token; }
+        } catch(e) {}
+        await fetch(url, { method: 'DELETE' });
         return true;
     } catch(e) { return false; }
 }
 
 async function fbResetLeaderboard() {
     try {
-        await fetch(FB_URL + '/leaderboard.json', { method: 'DELETE' });
+        let url = FB_URL + '/leaderboard.json';
+        try {
+            const user = firebase.auth().currentUser;
+            if (user) { const token = await user.getIdToken(); url += '?auth=' + token; }
+        } catch(e) {}
+        await fetch(url, { method: 'DELETE' });
         return true;
     } catch(e) { return false; }
 }
@@ -408,7 +418,12 @@ window.openAdminPanel = function() {
         }
         this.innerText = '⏳ שומר...'; this.disabled = true;
         try {
-            await fetch(FB_URL + '/leaderboard/' + pid + '.json', { method: 'PUT', body: JSON.stringify(updated) });
+            let saveUrl = FB_URL + '/leaderboard/' + pid + '.json';
+            try {
+                const user = firebase.auth().currentUser;
+                if (user) { const token = await user.getIdToken(); saveUrl += '?auth=' + token; }
+            } catch(e) {}
+            await fetch(saveUrl, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updated) });
             msgEl.style.color = '#22c55e'; msgEl.innerText = '✅ נשמר בהצלחה!';
             player.name = updated.name; player.bricks = updated.bricks; player.level = updated.level;
             document.getElementById('adminEditTarget').innerText = 'נבחר: ' + updated.name + ' | 🪎 ' + updated.bricks + ' זהב | רמה ' + updated.level;
@@ -573,6 +588,16 @@ window.drawHome = function(c) {
         '<span id="lbPageInfo" style="font-size:13px;font-weight:bold;">1 / 1</span>' +
         '<button onclick="changeLPage(1)" id="lbNext" class="sys-btn" style="padding:5px 15px;">▶</button></div></div>' +
 
+        // יומן אירועים
+        '<div class="card" style="padding:12px;background:rgba(255,255,255,0.02);margin-top:15px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<small style="opacity:0.7;font-weight:bold;font-size:12px;">📋 יומן אירועים — 12 שעות אחרונות</small>' +
+        '<div style="display:flex;gap:6px;">' +
+        '<button class="sys-btn" style="font-size:10px;padding:3px 8px;" onclick="window._eventLogPage=1;window.renderEventLog();">🔄</button>' +
+        '<button class="sys-btn" style="font-size:10px;padding:3px 8px;background:rgba(239,68,68,0.1);color:#ef4444;border-color:#ef4444;" onclick="window.clearEventLog()">🗑️</button>' +
+        '</div></div>' +
+        '<div id="event-log-container"><div style="text-align:center;opacity:0.4;padding:10px;font-size:12px;">טוען...</div></div></div>' +
+
         '<div id="install-container" style="margin-top:20px;"></div>' +
         '<button class="sys-btn" style="border:1px solid #451a1a;color:#ef4444;margin-top:15px;font-size:11px;padding:10px;width:100%;opacity:0.7;" onclick="if(confirm(\'לאפס הכל?\')) resetGame()">🗑️ איפוס חשבון</button>' +
         '</div>';
@@ -580,7 +605,9 @@ window.drawHome = function(c) {
     startGiftTimer();
     renderInstallBtn();
     loadLeaderboard();
-    startLbAutoRefresh(); // ⭐ רענון אוטומטי
+    startLbAutoRefresh();
+    window._eventLogPage = 1;
+    window.renderEventLog();
 };
 
 // ============================================================
@@ -758,6 +785,73 @@ window.convertGoldBrick = function() {
             if (typeof window.openTab === 'function') window.openTab('home');
         }
     );
+};
+
+// ============================================================
+// יומן אירועים
+// ============================================================
+window.renderEventLog = function() {
+    const cont = document.getElementById('event-log-container');
+    if (!cont) return;
+    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
+    const log = (window.eventLog || []).filter(function(e) { return e.ts >= cutoff; });
+
+    if (log.length === 0) {
+        cont.innerHTML = '<div style="text-align:center;opacity:0.4;padding:12px;font-size:12px;">אין אירועים ב-12 השעות האחרונות</div>';
+        return;
+    }
+
+    const page       = window._eventLogPage || 1;
+    const totalPages = Math.ceil(log.length / 5) || 1;
+    const items      = log.slice((page - 1) * 5, page * 5);
+
+    function fmtDateTime(ts) {
+        if (!ts || isNaN(ts)) return '--:--';
+        const d   = new Date(ts);
+        const now = new Date();
+        const isToday = d.toDateString() === now.toDateString();
+        if (isToday) return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+        return (d.getMonth()+1) + '/' + d.getDate() + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    }
+
+    let html = items.map(function(e) {
+        const isPos  = e.type === 'positive';
+        const icon   = isPos ? '📈' : '📉';
+        const border = isPos ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)';
+        const bg     = isPos ? 'rgba(34,197,94,0.06)'  : 'rgba(239,68,68,0.06)';
+        const clr    = isPos ? '#22c55e' : '#ef4444';
+        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;background:' + bg + ';border:1px solid ' + border + ';margin-bottom:5px;">' +
+            '<span style="font-size:16px;flex-shrink:0;">' + icon + '</span>' +
+            '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:12px;font-weight:bold;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (e.title || '') + '</div>' +
+            '<div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (e.msg || '') + '</div>' +
+            '</div>' +
+            '<span style="font-size:10px;color:' + clr + ';font-weight:bold;flex-shrink:0;font-family:monospace;min-width:38px;text-align:left;">' + fmtDateTime(e.ts) + '</span>' +
+            '</div>';
+    }).join('');
+
+    if (totalPages > 1) {
+        html += '<div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:8px;">' +
+            '<button onclick="window.changeEventLogPage(-1)" class="sys-btn" style="padding:3px 12px;font-size:11px;" ' + (page <= 1 ? 'disabled' : '') + '>◀</button>' +
+            '<span style="font-size:12px;font-weight:bold;">' + page + ' / ' + totalPages + '</span>' +
+            '<button onclick="window.changeEventLogPage(1)" class="sys-btn" style="padding:3px 12px;font-size:11px;" ' + (page >= totalPages ? 'disabled' : '') + '>▶</button>' +
+            '</div>';
+    }
+    cont.innerHTML = html;
+};
+
+window.changeEventLogPage = function(dir) {
+    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
+    const total  = Math.ceil(((window.eventLog || []).filter(function(e) { return e.ts >= cutoff; }).length) / 5) || 1;
+    window._eventLogPage = Math.max(1, Math.min(total, (window._eventLogPage || 1) + dir));
+    window.renderEventLog();
+};
+
+window.clearEventLog = function() {
+    window.eventLog = [];
+    localStorage.setItem('eventLog', '[]');
+    window.renderEventLog();
+    if (typeof showMsg === 'function') showMsg('🗑️ יומן אירועים נוקה', 'var(--red)');
 };
 
 // ============================================================
