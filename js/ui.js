@@ -1,11 +1,4 @@
-/* Smart Money Pro - js/ui.js - v9.9.3
-   שינויים מ-v9.9.2:
-   - כניסת מנהל: Firebase Auth במקום hash מקומי
-   - checkAdminCredentials החלפה ל-signInWithEmailAndPassword
-   - כניסת מנהל הפכה ל-async עם הודעת טעינה
-   - הוסר כל קוד hash מקומי
-   - כל שאר הפאנל זהה לחלוטין
-*/
+/* Smart Money Pro - js/ui.js - v9.9.4 */
 
 let deferredPrompt;
 let currentTab = 'home';
@@ -13,7 +6,7 @@ let leaderboardPage = 1;
 const playersPerPage = 5;
 
 // ============================================================
-// ⭐ Firebase Auth — כניסת מנהל (החליף hash מקומי)
+// ⭐ Firebase Auth — כניסת מנהל
 // ============================================================
 async function checkAdminCredentials(email, password) {
     try {
@@ -98,7 +91,6 @@ function getDeviceId() {
 
 async function fbSaveAdminMsg(msg) {
     try {
-        // ⭐ שלח עם Firebase Auth token
         const user = firebase.auth().currentUser;
         if (!user) { console.warn('לא מחובר'); return; }
         const token = await user.getIdToken();
@@ -116,16 +108,19 @@ async function fbLoadAdminMsg() {
         return data ? data.text : null;
     } catch(e) { return null; }
 }
+
 async function fbLoadConfig() {
     const msg = await fbLoadAdminMsg();
     if (msg) window.adminMsgText = msg;
 }
+
 async function fbDeletePlayer(deviceId) {
     try {
         await fetch(FB_URL + '/leaderboard/' + deviceId + '.json', { method: 'DELETE' });
         return true;
     } catch(e) { return false; }
 }
+
 async function fbResetLeaderboard() {
     try {
         await fetch(FB_URL + '/leaderboard.json', { method: 'DELETE' });
@@ -148,11 +143,11 @@ window.showConfirmModal = function(title, bodyHtml, onConfirm) {
         '<div style="font-size:13px;color:#cbd5e1;margin-bottom:20px;line-height:1.6;">' + bodyHtml + '</div>' +
         '<div style="display:flex;gap:10px;">' +
         '<button id="confirmModalCancel" style="flex:1;padding:12px;border-radius:8px;border:1px solid #64748b;background:transparent;color:#94a3b8;font-size:13px;cursor:pointer;">ביטול</button>' +
-        '<button id="confirmModalYes" style="flex:1;padding:12px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:bold;cursor:pointer;">אשר מכירה</button>' +
+        '<button id="confirmModalYes" style="flex:1;padding:12px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:bold;cursor:pointer;">אשר</button>' +
         '</div></div>';
     document.body.appendChild(overlay);
     document.getElementById('confirmModalCancel').onclick = function() { overlay.remove(); };
-    document.getElementById('confirmModalYes').onclick = function() { overlay.remove(); onConfirm(); };
+    document.getElementById('confirmModalYes').onclick   = function() { overlay.remove(); onConfirm(); };
 };
 
 // ============================================================
@@ -169,7 +164,6 @@ window.openAdminPanel = function() {
     overlay.innerHTML =
         '<div style="width:90%;max-width:360px;background:#0f172a;border-radius:16px;border:1px solid #3b82f6;padding:20px;margin:auto;">' +
 
-        // כותרת
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
         '<div style="font-size:17px;font-weight:bold;color:#3b82f6;">🛡️ פאנל ניהול</div>' +
         '<button id="adminClose" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;">✕</button>' +
@@ -184,7 +178,7 @@ window.openAdminPanel = function() {
         '<div id="adminLoginErr" style="color:#ef4444;font-size:12px;text-align:center;margin-top:8px;display:none;">אימייל או סיסמה שגויים!</div>' +
         '</div>' +
 
-        // שלב 2 — פאנל (מוסתר)
+        // שלב 2 — פאנל
         '<div id="adminPanelStep" style="display:none;">' +
 
         // הודעת מערכת
@@ -194,18 +188,24 @@ window.openAdminPanel = function() {
         '<button id="adminSaveMsg" style="width:100%;padding:10px;background:#22c55e;color:#000;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;margin-top:8px;">💾 שמור הודעה</button>' +
         '</div>' +
 
-        // כסף + XP
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
-        '<div style="background:#1e293b;border-radius:10px;padding:12px;border:1px solid #334155;">' +
+        // כסף, XP וזהב — גריד 3 עמודות
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">' +
+        '<div style="background:#1e293b;border-radius:10px;padding:10px;border:1px solid #334155;">' +
         '<div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">💰 הוסף כסף</div>' +
         '<input id="adminMoneyInput" type="number" placeholder="סכום" style="width:100%;padding:8px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:6px;font-size:13px;margin-bottom:8px;">' +
         '<button id="adminAddMoney" style="width:100%;padding:8px;background:#f59e0b;color:#000;border:none;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;">הוסף</button>' +
         '</div>' +
-        '<div style="background:#1e293b;border-radius:10px;padding:12px;border:1px solid #334155;">' +
+        '<div style="background:#1e293b;border-radius:10px;padding:10px;border:1px solid #334155;">' +
         '<div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">⭐ הוסף XP</div>' +
         '<input id="adminXpInput" type="number" placeholder="כמות" style="width:100%;padding:8px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:6px;font-size:13px;margin-bottom:8px;">' +
         '<button id="adminAddXp" style="width:100%;padding:8px;background:#a855f7;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;">הוסף</button>' +
-        '</div></div>' +
+        '</div>' +
+        '<div style="background:#1e293b;border-radius:10px;padding:10px;border:1px solid #334155;">' +
+        '<div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">🪎 הוסף זהב</div>' +
+        '<input id="adminBricksInput" type="number" placeholder="כמות" style="width:100%;padding:8px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:6px;font-size:13px;margin-bottom:8px;">' +
+        '<button id="adminAddBricks" style="width:100%;padding:8px;background:#f59e0b;color:#000;border:none;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;">הוסף</button>' +
+        '</div>' +
+        '</div>' +
 
         // סטטיסטיקות
         '<div style="background:#1e293b;border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid #334155;">' +
@@ -231,7 +231,7 @@ window.openAdminPanel = function() {
         '<div style="font-size:11px;color:#64748b;margin-bottom:8px;">לחץ על שחקן ברשימה למעלה, ואז ערוך:</div>' +
         '<input id="adminEditName" type="text" placeholder="שם חדש" style="width:100%;padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;margin-bottom:8px;">' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
-        '<input id="adminEditMoney" type="number" placeholder="כסף חדש" style="padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;width:100%;">' +
+        '<input id="adminEditMoney" type="number" placeholder="🪎 לבנות זהב חדש" style="padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;width:100%;">' +
         '<input id="adminEditXp" type="number" placeholder="XP חדש" style="padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;font-size:13px;width:100%;">' +
         '</div>' +
         '<div id="adminEditTarget" style="font-size:11px;color:#f59e0b;margin-bottom:8px;">לא נבחר שחקן</div>' +
@@ -239,20 +239,18 @@ window.openAdminPanel = function() {
         '<div id="adminEditMsg" style="font-size:12px;text-align:center;margin-top:6px;"></div>' +
         '</div>' +
 
-        // איפוס מלא
         '<div style="display:block;">' +
         '<button id="adminReset" style="width:100%;padding:12px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid #ef4444;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;">🗑️ איפוס מלא</button>' +
         '</div>' +
 
-        '</div></div>'; // adminPanelStep + card
+        '</div></div>';
 
     document.body.appendChild(overlay);
 
-    // סגירה
     document.getElementById('adminClose').onclick = function() { overlay.remove(); };
     overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
-    // ⭐ כניסה — Firebase Auth (async)
+    // ⭐ כניסה — Firebase Auth
     const userInput = document.getElementById('adminUserInput');
     const passInput = document.getElementById('adminPassInput');
     userInput.focus();
@@ -263,30 +261,25 @@ window.openAdminPanel = function() {
         const email = document.getElementById('adminUserInput').value.trim();
         const pass  = document.getElementById('adminPassInput').value;
         if (!email || !pass) return;
-
         this.innerText = '⏳ מתחבר...';
         this.disabled  = true;
-
         const ok = await checkAdminCredentials(email, pass);
-
         this.innerText = 'כניסה';
         this.disabled  = false;
-
         if (!ok) {
             document.getElementById('adminLoginErr').style.display = 'block';
             passInput.value = '';
             userInput.focus();
             return;
         }
-
         document.getElementById('adminLoginStep').style.display = 'none';
         document.getElementById('adminPanelStep').style.display = 'block';
 
-        // סטטיסטיקות
         const ld = getLevelData(window.lifeXP || 0);
         document.getElementById('adminStats').innerHTML =
             '💰 כסף: <b>' + Math.floor(window.money || 0).toLocaleString() + '₪</b><br>' +
             '🏦 בנק: <b>' + Math.floor(window.bank || 0).toLocaleString() + '₪</b><br>' +
+            '🪎 זהב: <b>' + (window.goldBricks || 0) + ' לבנות</b><br>' +
             '⭐ רמה: <b>' + ld.level + '</b> (' + Math.floor(ld.xpInCurrentLevel).toLocaleString() + '/' + Math.floor(ld.xpForNext).toLocaleString() + ' XP)<br>' +
             '🚀 פסיבי: <b>' + (window.passive || 0).toFixed(1) + '₪/ד\'</b><br>' +
             '🏦 חוב: <b>' + Math.floor(window.loan || 0).toLocaleString() + '₪</b><br>' +
@@ -294,7 +287,6 @@ window.openAdminPanel = function() {
             '🚗 רכבים: <b>' + (window.cars || []).length + '</b>';
     };
 
-    // שמור הודעה
     document.getElementById('adminSaveMsg').onclick = async function() {
         const msg = document.getElementById('adminMsgInput').value.trim();
         if (!msg) return;
@@ -306,7 +298,6 @@ window.openAdminPanel = function() {
         if (typeof window.openTab === 'function') window.openTab('home');
     };
 
-    // הוסף כסף
     document.getElementById('adminAddMoney').onclick = function() {
         const amt = parseInt(document.getElementById('adminMoneyInput').value);
         if (!amt || amt <= 0) return;
@@ -317,7 +308,6 @@ window.openAdminPanel = function() {
         document.getElementById('adminMoneyInput').value = '';
     };
 
-    // הוסף XP
     document.getElementById('adminAddXp').onclick = function() {
         const amt = parseInt(document.getElementById('adminXpInput').value);
         if (!amt || amt <= 0) return;
@@ -328,13 +318,21 @@ window.openAdminPanel = function() {
         document.getElementById('adminXpInput').value = '';
     };
 
-    // איפוס מלא
+    document.getElementById('adminAddBricks').onclick = function() {
+        const amt = parseInt(document.getElementById('adminBricksInput').value);
+        if (!amt || amt <= 0) return;
+        window.goldBricks = (window.goldBricks || 0) + amt;
+        if (typeof updateUI === 'function') updateUI();
+        if (typeof saveGame === 'function') saveGame();
+        if (typeof showMsg === 'function') showMsg('🪎 נוספו ' + amt + ' לבנות זהב', 'var(--yellow)');
+        document.getElementById('adminBricksInput').value = '';
+    };
+
     document.getElementById('adminReset').onclick = function() {
         showConfirmModal('🗑️ איפוס מלא', 'כל ההתקדמות תימחק לצמיתות!<br><br>האם אתה בטוח?',
             function() { overlay.remove(); if (typeof resetGame === 'function') resetGame(); });
     };
 
-    // טען שחקנים
     let adminLoadedPlayers = [];
 
     document.getElementById('adminLoadPlayers').onclick = async function() {
@@ -347,8 +345,8 @@ window.openAdminPanel = function() {
         adminLoadedPlayers = players;
         listEl.innerHTML = players.map(p =>
             '<div data-pid="' + p.id + '" class="lb-player-row" style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:#0f172a;border-radius:6px;margin-bottom:4px;font-size:11px;cursor:pointer;border:1px solid transparent;">' +
-            '<span style="color:#fff;">' + p.name + ' (רמה ' + p.level + ')</span>' +
-            '<span style="color:#22c55e;">' + Math.floor(p.money).toLocaleString() + '₪</span></div>'
+            '<span style="color:#fff;">' + (p.name || '?') + ' (רמה ' + (p.level || 0) + ')</span>' +
+            '<span style="color:#f59e0b;">🪎 ' + (p.bricks || 0) + '</span></div>'
         ).join('');
         listEl.querySelectorAll('.lb-player-row').forEach(function(row) {
             row.onclick = function() {
@@ -358,17 +356,16 @@ window.openAdminPanel = function() {
                 document.getElementById('adminDeleteId').value = pid;
                 const player = adminLoadedPlayers.find(p => p.id === pid);
                 if (player) {
-                    document.getElementById('adminEditName').value = player.name || '';
-                    document.getElementById('adminEditMoney').value = Math.floor(player.money) || 0;
-                    document.getElementById('adminEditXp').value = '';
-                    document.getElementById('adminEditTarget').innerText = 'נבחר: ' + player.name;
+                    document.getElementById('adminEditName').value  = player.name || '';
+                    document.getElementById('adminEditMoney').value = player.bricks || 0;
+                    document.getElementById('adminEditXp').value    = '';
+                    document.getElementById('adminEditTarget').innerText = 'נבחר: ' + (player.name || '?') + ' | 🪎 ' + (player.bricks || 0) + ' זהב | רמה ' + (player.level || 0);
                     document.getElementById('adminEditMsg').innerText = '';
                 }
             };
         });
     };
 
-    // מחק שחקן
     document.getElementById('adminDeletePlayer').onclick = function() {
         const id = document.getElementById('adminDeleteId').value.trim();
         if (!id) { if (typeof showMsg === 'function') showMsg('הכנס Device ID', 'var(--red)'); return; }
@@ -381,7 +378,6 @@ window.openAdminPanel = function() {
             });
     };
 
-    // איפוס דירוג
     document.getElementById('adminResetLb').onclick = function() {
         showConfirmModal('⚠️ איפוס דירוג מלא', 'כל השחקנים יימחקו מהדירוג!<br><br>האם אתה בטוח לחלוטין?',
             async function() {
@@ -391,23 +387,31 @@ window.openAdminPanel = function() {
             });
     };
 
-    // שמור עריכת שחקן
     document.getElementById('adminSavePlayer').onclick = async function() {
         const pid   = document.getElementById('adminDeleteId').value.trim();
         const msgEl = document.getElementById('adminEditMsg');
         if (!pid) { msgEl.style.color = '#ef4444'; msgEl.innerText = 'בחר שחקן מהרשימה קודם'; return; }
         const player = adminLoadedPlayers.find(p => p.id === pid);
         if (!player) { msgEl.style.color = '#ef4444'; msgEl.innerText = 'שחקן לא נמצא — טען שחקנים שוב'; return; }
-        const newName  = document.getElementById('adminEditName').value.trim();
-        const newMoney = parseInt(document.getElementById('adminEditMoney').value);
-        const addXp    = parseInt(document.getElementById('adminEditXp').value) || 0;
-        const updated  = { name: newName || player.name, money: isNaN(newMoney) ? player.money : newMoney, level: player.level, ts: Date.now() };
-        if (addXp > 0 && typeof getLevelData === 'function') { updated.level = getLevelData((player.level * 1000) + addXp).level; }
+
+        const newName   = document.getElementById('adminEditName').value.trim();
+        const newBricks = parseInt(document.getElementById('adminEditMoney').value);
+        const addXp     = parseInt(document.getElementById('adminEditXp').value) || 0;
+        const updated   = {
+            name:   newName || player.name,
+            bricks: isNaN(newBricks) ? (player.bricks || 0) : Math.max(0, newBricks),
+            level:  player.level,
+            ts:     Date.now()
+        };
+        if (addXp > 0 && typeof getLevelData === 'function') {
+            updated.level = getLevelData((player.level * 1000) + addXp).level;
+        }
         this.innerText = '⏳ שומר...'; this.disabled = true;
         try {
             await fetch(FB_URL + '/leaderboard/' + pid + '.json', { method: 'PUT', body: JSON.stringify(updated) });
             msgEl.style.color = '#22c55e'; msgEl.innerText = '✅ נשמר בהצלחה!';
-            player.name = updated.name; player.money = updated.money; player.level = updated.level;
+            player.name = updated.name; player.bricks = updated.bricks; player.level = updated.level;
+            document.getElementById('adminEditTarget').innerText = 'נבחר: ' + updated.name + ' | 🪎 ' + updated.bricks + ' זהב | רמה ' + updated.level;
         } catch(e) { msgEl.style.color = '#ef4444'; msgEl.innerText = '❌ שגיאה בשמירה'; }
         this.innerText = '💾 שמור שינויים לשחקן'; this.disabled = false;
     };
@@ -523,18 +527,25 @@ window.drawHome = function(c) {
         '<button class="edit-admin-btn" onclick="window.openAdminPanel()" title="פאנל ניהול">⚙️</button>' +
         '📢 <b>הודעה מהמערכת:</b><br>' +
         '<span style="font-size:13px;">' + (window.adminMsgText || 'ברוכים הבאים!') + '</span></div>' +
+
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">' +
         '<h3 style="margin:0;">🏠 מרכז שליטה</h3>' +
         '<button onclick="location.reload();" class="sys-btn" style="padding:5px 12px;font-size:12px;">🔄</button></div>' +
+
+        // XP בר
         '<div class="card" style="background:rgba(255,255,255,0.03);margin-bottom:15px;padding:12px;">' +
         '<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px;">' +
         '<span>⭐ רמת חיים <b id="home-level-val">' + ld.level + '</b></span>' +
         '<span id="xp-text-detail" style="opacity:0.8;">' + Math.floor(ld.xpInCurrentLevel).toLocaleString() + ' / ' + Math.floor(ld.xpForNext).toLocaleString() + ' XP</span></div>' +
         '<div style="height:10px;background:rgba(0,0,0,0.3);border-radius:10px;overflow:hidden;">' +
         '<div id="xp-progress-bar" style="width:' + ld.progressPercent + '%;height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);transition:width 0.4s ease;"></div></div></div>' +
+
+        // בונוס יומי
         '<div class="card" style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.3);text-align:center;padding:15px;margin-bottom:15px;">' +
         '<button id="giftBtn" onclick="claimDailyGift()" style="width:100%;background:var(--yellow);color:#000;font-weight:bold;border:none;padding:12px;border-radius:8px;font-size:14px;cursor:pointer;">🎁 קבלת בונוס</button>' +
         '<div id="giftTimer" style="font-size:12px;margin-top:8px;color:var(--yellow);font-weight:bold;">טוען...</div></div>' +
+
+        // פסיבי + חוב
         '<div class="grid-2" style="margin-bottom:15px;">' +
         '<div class="card" style="margin:0;padding:12px;text-align:center;border:1px solid rgba(34,197,94,0.2);">' +
         '<small style="opacity:0.7;font-size:10px;display:block;margin-bottom:4px;">💰 הכנסה פסיבית</small>' +
@@ -542,13 +553,16 @@ window.drawHome = function(c) {
         '<div class="card" style="margin:0;padding:12px;text-align:center;border:1px solid rgba(239,68,68,0.2);">' +
         '<small style="opacity:0.7;font-size:10px;display:block;margin-bottom:4px;">🏦 חוב לבנק</small>' +
         '<b style="color:#ef4444;font-size:15px;">' + (window.loan || 0).toLocaleString() + ' ₪</b></div></div>' +
+
         // ⭐ כרטיס זהב
         '<div class="card" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.4);text-align:center;padding:15px;margin-bottom:15px;">' +
-        '<div style="font-size:12px;color:var(--yellow);font-weight:bold;margin-bottom:6px;">🪎 זהב</div>' +
+        '<div style="font-size:12px;color:var(--yellow);font-weight:bold;margin-bottom:6px;">🪎 לבנות זהב</div>' +
         '<div style="font-size:28px;font-weight:bold;color:var(--yellow);" id="home-gold-bricks">' + (window.goldBricks || 0) + '</div>' +
         '<div style="font-size:11px;opacity:0.6;margin-bottom:10px;">כל לבנה = 2,000,000,000 ₪ לבנק | מצטבר גם אופליין</div>' +
         '<button onclick="window.convertGoldBrick()" style="background:var(--yellow);color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">🏦 המר לבנה לבנק</button>' +
         '</div>' +
+
+        // לידרבורד
         '<div class="card" style="padding:12px;background:rgba(255,255,255,0.02);">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
         '<small style="opacity:0.6;font-weight:bold;">🏆 דירוג עולמי אמיתי</small>' +
@@ -558,14 +572,7 @@ window.drawHome = function(c) {
         '<button onclick="changeLPage(-1)" id="lbPrev" class="sys-btn" style="padding:5px 15px;">◀</button>' +
         '<span id="lbPageInfo" style="font-size:13px;font-weight:bold;">1 / 1</span>' +
         '<button onclick="changeLPage(1)" id="lbNext" class="sys-btn" style="padding:5px 15px;">▶</button></div></div>' +
-        '<div class="card" style="padding:12px;background:rgba(255,255,255,0.02);margin-top:15px;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-        '<small style="opacity:0.7;font-weight:bold;font-size:12px;">📋 יומן אירועים — 12 שעות אחרונות</small>' +
-        '<div style="display:flex;gap:6px;">' +
-        '<button class="sys-btn" style="font-size:10px;padding:3px 8px;" onclick="window._eventLogPage=1;window.renderEventLog();">🔄</button>' +
-        '<button class="sys-btn" style="font-size:10px;padding:3px 8px;background:rgba(239,68,68,0.1);color:#ef4444;border-color:#ef4444;" onclick="window.clearEventLog()">🗑️</button>' +
-        '</div></div>' +
-        '<div id="event-log-container"><div style="text-align:center;opacity:0.4;padding:10px;font-size:12px;">טוען...</div></div></div>' +
+
         '<div id="install-container" style="margin-top:20px;"></div>' +
         '<button class="sys-btn" style="border:1px solid #451a1a;color:#ef4444;margin-top:15px;font-size:11px;padding:10px;width:100%;opacity:0.7;" onclick="if(confirm(\'לאפס הכל?\')) resetGame()">🗑️ איפוס חשבון</button>' +
         '</div>';
@@ -573,9 +580,24 @@ window.drawHome = function(c) {
     startGiftTimer();
     renderInstallBtn();
     loadLeaderboard();
-    window._eventLogPage = 1;
-    window.renderEventLog();
+    startLbAutoRefresh(); // ⭐ רענון אוטומטי
 };
+
+// ============================================================
+// ⭐ רענון אוטומטי של לידרבורד כל 2 דקות
+// ============================================================
+let _lbRefreshInterval = null;
+function startLbAutoRefresh() {
+    if (_lbRefreshInterval) clearInterval(_lbRefreshInterval);
+    _lbRefreshInterval = setInterval(function() {
+        if (currentTab === 'home') {
+            loadLeaderboard();
+        } else {
+            clearInterval(_lbRefreshInterval);
+            _lbRefreshInterval = null;
+        }
+    }, 2 * 60 * 1000);
+}
 
 // ============================================================
 // לידרבורד
@@ -622,8 +644,8 @@ function renderLbPage() {
         return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:' + (p.isPlayer ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)') + ';border-radius:6px;border:1px solid ' + (p.isPlayer ? 'var(--blue)' : 'transparent') + ';margin-bottom:5px;">' +
             '<div style="display:flex;align-items:center;gap:10px;">' +
             '<span style="font-size:15px;width:24px;">' + medal + '</span>' +
-            '<div><div style="font-size:13px;font-weight:bold;color:' + (p.isPlayer ? 'var(--blue)' : '#fff') + ';">' + p.name + (p.isPlayer ? ' (אתה)' : '') + '</div>' +
-            '<div style="font-size:11px;color:var(--yellow);font-weight:bold;">⭐ רמה ' + p.level + '</div></div></div>' +
+            '<div><div style="font-size:13px;font-weight:bold;color:' + (p.isPlayer ? 'var(--blue)' : '#fff') + ';">' + (p.name || '?') + (p.isPlayer ? ' (אתה)' : '') + '</div>' +
+            '<div style="font-size:11px;color:var(--yellow);font-weight:bold;">⭐ רמה ' + (p.level || 0) + '</div></div></div>' +
             '<div style="font-size:13px;color:#f59e0b;font-weight:bold;">🪎 ' + (p.bricks || 0) + '</div></div>';
     }).join('');
 }
@@ -651,6 +673,14 @@ window.refreshLeaderboard = function() {
     const cont = document.getElementById('leaderboard-container');
     if (cont) cont.innerHTML = '<div style="text-align:center;opacity:0.5;padding:20px;">⏳ טוען...</div>';
     fbSaveScore().then(loadLeaderboard);
+};
+
+window.saveName = function() {
+    const input = document.getElementById('nameInput');
+    if (!input || !input.value.trim()) return;
+    localStorage.setItem('playerName', input.value.trim());
+    showMsg('✅ שם עודכן: ' + input.value.trim(), 'var(--blue)');
+    fbSaveScore();
 };
 
 // ============================================================
@@ -689,73 +719,6 @@ function startGiftTimer() {
 }
 
 // ============================================================
-// יומן אירועים
-// ============================================================
-window.renderEventLog = function() {
-    const cont = document.getElementById('event-log-container');
-    if (!cont) return;
-    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
-    const log = (window.eventLog || []).filter(function(e) { return e.ts >= cutoff; });
-
-    if (log.length === 0) {
-        cont.innerHTML = '<div style="text-align:center;opacity:0.4;padding:12px;font-size:12px;">אין אירועים ב-12 השעות האחרונות</div>';
-        return;
-    }
-
-    const page       = window._eventLogPage || 1;
-    const totalPages = Math.ceil(log.length / 5) || 1;
-    const items      = log.slice((page - 1) * 5, page * 5);
-
-    function fmtDateTime(ts) {
-        if (!ts || isNaN(ts)) return '--:--';
-        const d   = new Date(ts);
-        const now = new Date();
-        const isToday = d.toDateString() === now.toDateString();
-        if (isToday) return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
-        return (d.getMonth()+1) + '/' + d.getDate() + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
-    }
-
-    let html = items.map(function(e) {
-        const isPos  = e.type === 'positive';
-        const icon   = isPos ? '📈' : '📉';
-        const border = isPos ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)';
-        const bg     = isPos ? 'rgba(34,197,94,0.06)'  : 'rgba(239,68,68,0.06)';
-        const clr    = isPos ? '#22c55e' : '#ef4444';
-        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;background:' + bg + ';border:1px solid ' + border + ';margin-bottom:5px;">' +
-            '<span style="font-size:16px;flex-shrink:0;">' + icon + '</span>' +
-            '<div style="flex:1;min-width:0;">' +
-            '<div style="font-size:12px;font-weight:bold;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + e.title + '</div>' +
-            '<div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + e.msg + '</div>' +
-            '</div>' +
-            '<span style="font-size:10px;color:' + clr + ';font-weight:bold;flex-shrink:0;font-family:monospace;min-width:38px;text-align:left;">' + fmtDateTime(e.ts) + '</span>' +
-            '</div>';
-    }).join('');
-
-    if (totalPages > 1) {
-        html += '<div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:8px;">' +
-            '<button onclick="window.changeEventLogPage(-1)" class="sys-btn" style="padding:3px 12px;font-size:11px;" ' + (page <= 1 ? 'disabled' : '') + '>◀</button>' +
-            '<span style="font-size:12px;font-weight:bold;">' + page + ' / ' + totalPages + '</span>' +
-            '<button onclick="window.changeEventLogPage(1)" class="sys-btn" style="padding:3px 12px;font-size:11px;" ' + (page >= totalPages ? 'disabled' : '') + '>▶</button>' +
-            '</div>';
-    }
-    cont.innerHTML = html;
-};
-
-window.changeEventLogPage = function(dir) {
-    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
-    const total = Math.ceil(((window.eventLog || []).filter(function(e) { return e.ts >= cutoff; }).length) / 5) || 1;
-    window._eventLogPage = Math.max(1, Math.min(total, (window._eventLogPage || 1) + dir));
-    window.renderEventLog();
-};
-
-window.clearEventLog = function() {
-    window.eventLog = [];
-    localStorage.setItem('eventLog', '[]');
-    window.renderEventLog();
-    if (typeof showMsg === 'function') showMsg('🗑️ יומן אירועים נוקה', 'var(--red)');
-};
-
-// ============================================================
 // PWA install
 // ============================================================
 function renderInstallBtn() {
@@ -779,26 +742,22 @@ window.convertGoldBrick = function() {
         if (typeof showMsg === 'function') showMsg('אין זהב להמרה!', 'var(--red)');
         return;
     }
-    if (typeof window.showConfirmModal === 'function') {
-        window.showConfirmModal(
-            '🪎 המרת זהב',
-            'להמיר לבנה אחת ל-<b>2,000,000,000 ₪</b>?<br><br>' +
-            '💡 הכסף יכנס ישירות ל<b>בנק</b><br><br>' +
-            'זהב נותרות: <b>' + (window.goldBricks - 1) + '</b>',
-            function() {
-                window.goldBricks--;
-                window.bank += 2000000000;
-                const gbEl  = document.getElementById('gold-bricks');
-                const hgbEl = document.getElementById('home-gold-bricks');
-                if (gbEl)  gbEl.innerText  = window.goldBricks;
-                if (hgbEl) hgbEl.innerText = window.goldBricks;
-                if (typeof showMsg === 'function') showMsg('🏦 +2,000,000,000 ₪ נכנסו לבנק!', 'var(--yellow)');
-                if (typeof saveGame === 'function') saveGame();
-                if (typeof updateUI === 'function') updateUI();
-                if (typeof window.openTab === 'function') window.openTab('home');
-            }
-        );
-    }
+    window.showConfirmModal(
+        '🪎 המרת זהב',
+        'להמיר לבנה אחת ל-<b>2,000,000,000 ₪</b>?<br><br>💡 הכסף יכנס ישירות ל<b>בנק</b><br><br>זהב נותרות: <b>' + (window.goldBricks - 1) + '</b>',
+        function() {
+            window.goldBricks--;
+            window.bank += 2000000000;
+            const gbEl  = document.getElementById('gold-bricks');
+            const hgbEl = document.getElementById('home-gold-bricks');
+            if (gbEl)  gbEl.innerText  = window.goldBricks;
+            if (hgbEl) hgbEl.innerText = window.goldBricks;
+            if (typeof showMsg === 'function') showMsg('🏦 +2,000,000,000 ₪ נכנסו לבנק!', 'var(--yellow)');
+            if (typeof saveGame === 'function') saveGame();
+            if (typeof updateUI === 'function') updateUI();
+            if (typeof window.openTab === 'function') window.openTab('home');
+        }
+    );
 };
 
 // ============================================================
