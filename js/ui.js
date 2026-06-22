@@ -5,6 +5,7 @@ let currentTab = 'home';
 
 async function checkAdminCredentials(email, password) {
     try {
+        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
         await firebase.auth().signInWithEmailAndPassword(email, password);
         return true;
     } catch(e) {
@@ -115,12 +116,35 @@ async function fbGetAllPlayers() {
 
 async function fbUpdatePlayer(deviceId, data) {
     try {
-        let url = FB_URL + '/leaderboard/' + deviceId + '.json';
-        try { const user = firebase.auth().currentUser; if (user) { const token = await user.getIdToken(); url += '?auth=' + token; } } catch(e) {}
-        const response = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (!response.ok) throw new Error('עדכון נכשל');
+        let token = null;
+        try {
+            let user = firebase.auth().currentUser;
+            if (!user) {
+                await new Promise(function(resolve) {
+                    const unsub = firebase.auth().onAuthStateChanged(function(u) {
+                        unsub(); user = u; resolve();
+                    });
+                    setTimeout(resolve, 3000);
+                });
+            }
+            if (user) token = await user.getIdToken(true);
+        } catch(e) { console.warn('getIdToken failed:', e); }
+
+        if (!token) { console.error('❌ אין טוקן'); return false; }
+
+        const url = FB_URL + '/leaderboard/' + deviceId + '.json?auth=' + token;
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error('❌ Firebase PUT נכשל:', response.status, errText);
+            return false;
+        }
         return true;
-    } catch(e) { console.warn('❌ שגיאה בעדכון שחקן:', e); return false; }
+    } catch(e) { console.warn('❌ שגיאה בעדכון:', e); return false; }
 }
 
 async function fbDeletePlayer(deviceId) {
@@ -629,14 +653,11 @@ window.openAdminPanel = function() {
 
         '<div style="border-top:1px solid #334155;padding-top:12px;margin-top:4px;">' +
         '<div style="font-size:12px;color:#94a3b8;margin-bottom:6px;">✏️ עריכת שחקן נבחר</div>' +
+        '<div style="font-size:10px;color:#f59e0b;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:6px 8px;margin-bottom:8px;">⚠️ עריכה משפיעה רק על הדירוג (Firebase). הזהב וXP של השחקן יישמרו גם לאחר רענון.</div>' +
         '<div id="adminEditTarget" style="font-size:11px;color:#64748b;margin-bottom:8px;padding:6px 8px;background:rgba(255,255,255,0.03);border-radius:6px;">לחץ על שחקן ברשימה לבחירה</div>' +
         '<input id="adminEditName" type="text" placeholder="👤 שם חדש (אופציונלי)" style="width:100%;padding:8px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:6px;font-size:13px;margin-bottom:8px;">' +
-        '<div style="font-size:10px;color:#64748b;margin-bottom:6px;">➕ הוסף לשחקן (יצטרף לסכום הקיים):</div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">' +
-        '<div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px;text-align:center;">' +
-        '<div style="font-size:9px;color:#94a3b8;margin-bottom:4px;">💰 כסף</div>' +
-        '<input id="adminEditAddMoney" type="number" placeholder="0" style="width:100%;padding:5px;background:transparent;color:#f59e0b;border:none;font-size:12px;text-align:center;">' +
-        '</div>' +
+        '<div style="font-size:10px;color:#64748b;margin-bottom:6px;">➕ הוסף לשחקן בדירוג:</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">' +
         '<div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px;text-align:center;">' +
         '<div style="font-size:9px;color:#94a3b8;margin-bottom:4px;">🪎 זהב</div>' +
         '<input id="adminEditAddBricks" type="number" placeholder="0" style="width:100%;padding:5px;background:transparent;color:#f59e0b;border:none;font-size:12px;text-align:center;">' +
@@ -735,11 +756,12 @@ window.openAdminPanel = function() {
             if (!player) { msgEl.style.color='#ef4444'; msgEl.innerText='❌ שחקן לא נמצא — רענן רשימה'; return; }
 
             const newName    = document.getElementById('adminEditName').value.trim();
-            const addMoney   = parseInt(document.getElementById('adminEditAddMoney').value)  || 0;
             const addBricks  = parseInt(document.getElementById('adminEditAddBricks').value) || 0;
             const addXp      = parseInt(document.getElementById('adminEditAddXp').value)     || 0;
 
-            // חישוב ערכים חדשים — הוספה על הקיים
+            const hasChange = newName || addBricks > 0 || addXp > 0;
+            if (!hasChange) { msgEl.style.color='#f59e0b'; msgEl.innerText='⚠️ מלא לפחות שדה אחד'; return; }
+
             const updatedBricks = (player.bricks || 0) + addBricks;
             const updatedXp     = (player.xp     || 0) + addXp;
             const updatedLevel  = (typeof getLevelData === 'function')
@@ -747,8 +769,8 @@ window.openAdminPanel = function() {
                 : (player.level || 1);
             const updatedName   = newName || player.name;
 
-            // בניית payload
-            const updated = {
+            // payload ללידרבורד
+            const lbPayload = {
                 name:   updatedName,
                 bricks: updatedBricks,
                 level:  updatedLevel,
@@ -756,47 +778,77 @@ window.openAdminPanel = function() {
                 ts:     Date.now()
             };
 
-            // לפחות שינוי אחד חייב להיות
-            const hasChange = newName || addMoney > 0 || addBricks > 0 || addXp > 0;
-            if (!hasChange) { msgEl.style.color='#f59e0b'; msgEl.innerText='⚠️ מלא לפחות שדה אחד'; return; }
+            // payload לplayerData — יוחל על המשחק המקומי של השחקן בטעינה הבאה
+            const overridePayload = {
+                goldBricks: updatedBricks,
+                lifeXP:     updatedXp,
+                name:       updatedName,
+                ts:         Date.now()
+            };
 
             this.innerText='⏳ שומר...'; this.disabled=true;
+            msgEl.style.color='#94a3b8'; msgEl.innerText='⏳ שומר ל-Firebase...';
+
             try {
-                const success = await fbUpdatePlayer(pid, updated);
-                if (success) {
-                    // אם זה השחקן הנוכחי — עדכן גם locally
+                // שלב 1 — עדכן לידרבורד
+                const lbOk = await fbUpdatePlayer(pid, lbPayload);
+
+                // שלב 2 — כתוב ל-playerData (עקיפת אדמין)
+                let overrideOk = false;
+                try {
+                    let token = null;
+                    let user = firebase.auth().currentUser;
+                    if (!user) {
+                        await new Promise(function(resolve) {
+                            const unsub = firebase.auth().onAuthStateChanged(function(u) {
+                                unsub(); user = u; resolve();
+                            });
+                            setTimeout(resolve, 3000);
+                        });
+                    }
+                    if (user) token = await user.getIdToken(true);
+
+                    if (token) {
+                        const overrideUrl = FB_URL + '/playerData/' + pid + '.json?auth=' + token;
+                        const res = await fetch(overrideUrl, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(overridePayload)
+                        });
+                        overrideOk = res.ok;
+                        if (!res.ok) console.error('playerData PUT failed:', res.status, await res.text());
+                    }
+                } catch(e) { console.warn('playerData write failed:', e); }
+
+                if (lbOk) {
+                    // אם זה השחקן הנוכחי — עדכן גם locally מיד
                     if (pid === getDeviceId()) {
                         window.goldBricks = updatedBricks;
                         window.lifeXP     = updatedXp;
-                        if (addMoney > 0) window.money += addMoney;
                         localStorage.setItem('playerName', updatedName);
                         updateProfileUI();
                         if (typeof saveGame === 'function') saveGame();
                     }
-                    // עדכן ב-playersList
+
                     player.name   = updatedName;
                     player.bricks = updatedBricks;
                     player.level  = updatedLevel;
                     player.xp     = updatedXp;
 
-                    // הצג סיכום מה נוסף
                     let summary = '✅ ' + updatedName + ' עודכן!';
                     const parts = [];
-                    if (addMoney  > 0) parts.push('+' + addMoney.toLocaleString()  + '₪');
                     if (addBricks > 0) parts.push('+' + addBricks + '🪎');
-                    if (addXp    > 0) parts.push('+' + addXp     + 'XP');
+                    if (addXp     > 0) parts.push('+' + addXp     + ' XP');
                     if (parts.length > 0) summary += ' (' + parts.join(' | ') + ')';
+                    if (overrideOk) summary += ' | 📲 יוחל בטעינה הבאה';
 
                     msgEl.style.color = '#22c55e';
                     msgEl.innerText   = summary;
                     if (typeof showMsg === 'function') showMsg(summary, 'var(--blue)');
 
-                    // נקה שדות הוספה
-                    document.getElementById('adminEditAddMoney').value  = '';
                     document.getElementById('adminEditAddBricks').value = '';
                     document.getElementById('adminEditAddXp').value     = '';
 
-                    // עדכן תצוגת target
                     const targetDiv = document.getElementById('adminEditTarget');
                     if (targetDiv) {
                         targetDiv.innerHTML = '✅ נבחר: <b>' + updatedName + '</b> | 🪎 ' + updatedBricks + ' | ⭐ רמה ' + updatedLevel;
