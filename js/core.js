@@ -169,8 +169,73 @@ function showOfflineModal(offlineEarnings, eventLosses, eventCount, goldGained) 
     }, 15000);
 }
 
+// ⭐ טעינת עקיפת אדמין מ-Firebase playerData
+const FB_BASE = 'https://smart-money-faf43-default-rtdb.europe-west1.firebasedatabase.app';
+
+async function applyAdminOverride() {
+    try {
+        const deviceId = localStorage.getItem('deviceID');
+        if (!deviceId) return;
+        const res = await fetch(FB_BASE + '/playerData/' + deviceId + '.json');
+        if (!res.ok) return;
+        const override = await res.json();
+        if (!override || !override.ts) return;
+
+        // אם כבר החלנו את ה-override הזה — דלג
+        const alreadyApplied = localStorage.getItem('lastAdminOverrideTs');
+        if (alreadyApplied && parseInt(alreadyApplied) >= override.ts) return;
+
+        // החל את כל השדות
+        if (override.goldBricks !== undefined) window.goldBricks = override.goldBricks;
+        if (override.lifeXP     !== undefined) window.lifeXP     = override.lifeXP;
+        if (override.money      !== undefined) window.money      = override.money;
+        if (override.name) {
+            localStorage.setItem('playerName', override.name);
+            window.playerName = override.name;
+        }
+
+        // שמור timestamp — כדי לא להחיל פעמיים
+        localStorage.setItem('lastAdminOverrideTs', override.ts.toString());
+        // ⭐ שמור את ה-override ב-localStorage כדי שיישרד רענון
+        localStorage.setItem('adminOverrideData', JSON.stringify(override));
+
+        // ⭐ שמור ל-localStorage מיד — כדי שגם saveGame הבא יכיל את הנתונים החדשים
+        if (typeof saveGame === 'function') saveGame();
+        if (typeof updateUI === 'function') updateUI();
+        if (typeof showMsg  === 'function') showMsg('✅ נתונים עודכנו על ידי המנהל', 'var(--green)');
+        console.log('✅ Admin override applied:', override);
+
+    } catch(e) {
+        console.warn('applyAdminOverride failed:', e);
+    }
+}
+
 function loadGame() {
     try {
+        // ⭐ טען override אדמין לתוך ה-save לפני כל דבר
+        try {
+            const pendingOverride = localStorage.getItem('adminOverrideData');
+            if (pendingOverride) {
+                const ov = JSON.parse(pendingOverride);
+                const alreadyApplied = localStorage.getItem('lastAdminOverrideTs');
+                if (ov && ov.ts && (!alreadyApplied || parseInt(alreadyApplied) < ov.ts)) {
+                    const saved = localStorage.getItem(SAVE_KEY);
+                    if (saved) {
+                        const saveData = JSON.parse(saved);
+                        const d = saveData.data || saveData;
+                        if (ov.goldBricks !== undefined) d.goldBricks = ov.goldBricks;
+                        if (ov.lifeXP     !== undefined) d.lifeXP     = ov.lifeXP;
+                        if (ov.money      !== undefined) d.money      = ov.money;
+                        if (ov.name)                     d.playerName = ov.name;
+                        saveData.data = d;
+                        localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+                        localStorage.setItem('lastAdminOverrideTs', ov.ts.toString());
+                        console.log('✅ Override injected into save:', ov);
+                    }
+                }
+            }
+        } catch(e) { console.warn('override inject failed:', e); }
+
         const saved = localStorage.getItem(SAVE_KEY);
         if (saved) {
             const saveData = JSON.parse(saved);
@@ -345,6 +410,8 @@ function resetGame() {
     localStorage.removeItem('lastJailTime');
     localStorage.removeItem('eventLog');
     localStorage.removeItem('lastEventTick');
+    localStorage.removeItem('lastAdminOverrideTs');
+    localStorage.removeItem('adminOverrideData');
     location.reload();
 }
 
@@ -417,6 +484,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (el) el.style.display = "flex";
     }
     loadGame();
+
+    // ⭐ בדוק עקיפת אדמין מ-Firebase אחרי 1 שניה
+    setTimeout(() => {
+        applyAdminOverride();
+    }, 1000);
 
     setTimeout(() => {
         if (typeof window.recalcPassive === 'function') {
