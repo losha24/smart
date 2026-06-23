@@ -440,6 +440,8 @@ setInterval(() => {
             if (gbEl) gbEl.innerText = window.goldBricks;
             showMsg('🏅 צברת 2B ₪! קיבלת לבנת זהב! סה"כ: ' + window.goldBricks, 'var(--yellow)');
             saveGame();
+            // ⭐ עדכן לידרבורד מיד עם הזהב החדש
+            if (typeof syncPlayerData === 'function') syncPlayerData();
         }
         const mEl = document.getElementById('money');
         if (mEl) mEl.innerText = Math.floor(window.money).toLocaleString();
@@ -453,6 +455,11 @@ setInterval(() => {
 }, 1000);
 
 setInterval(saveGame, 15000);
+
+// ⭐ סינכרון לידרבורד ברקע כל 5 דקות
+setInterval(() => {
+    if (typeof syncPlayerData === 'function') syncPlayerData();
+}, 5 * 60 * 1000);
 
 window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 60;
 const EVENT_INTERVAL = 60;
