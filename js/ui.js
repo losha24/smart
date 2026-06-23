@@ -71,18 +71,28 @@ async function syncPlayerData() {
         const ld = getLevelData(window.lifeXP || 0);
         window.goldBricks = window.goldBricks || 0;
         const payload = {
-            name:   localStorage.getItem('playerName') || 'שחקן',
-            bricks: window.goldBricks,
-            level:  ld.level,
-            xp:     window.lifeXP || 0,
-            ts:     Date.now()
+            name:     localStorage.getItem('playerName') || 'שחקן',
+            bricks:   window.goldBricks,
+            level:    ld.level,
+            xp:       window.lifeXP || 0,
+            deviceId: deviceId,   // ⭐ נשמר לצורך Rules
+            ts:       Date.now()
         };
         let url = FB_URL + '/leaderboard/' + deviceId + '.json';
+        // נסה לצרף טוקן אם מחובר
         try {
             const user = firebase.auth().currentUser;
             if (user) { const token = await user.getIdToken(); url += '?auth=' + token; }
         } catch(e) {}
-        await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const res = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+            console.warn('syncPlayerData failed:', res.status, await res.text());
+            return false;
+        }
         return true;
     } catch(e) { console.warn('❌ שגיאה בסינכרון:', e); return false; }
 }
