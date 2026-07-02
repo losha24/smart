@@ -1,8 +1,8 @@
-/* Smart Money Pro - js/core.js - v9.9.11
-   שינויים: הוספת lastMining לsaveGame/loadGame
+/* Smart Money Pro - js/core.js - v9.9.12
+   שינויים: resetGame מנקה גם bmMissionBase/bmMissionRewards/bmGoldMissions (v9.3.0 blackmarket.js)
 */
 
-const VERSION = "9.9.11";
+const VERSION = "9.9.12";
 const SAVE_KEY = "smartMoneySave_v8_main";
 const MAX_MONEY = 2000000000;
 
@@ -412,6 +412,10 @@ function resetGame() {
     localStorage.removeItem('lastEventTick');
     localStorage.removeItem('lastAdminOverrideTs');
     localStorage.removeItem('adminOverrideData');
+    // ⭐ v9.9.12: ניקוי נתוני "מבצעי זהב" ותגמול פרוגרסיבי של השוק השחור (blackmarket.js v9.3.0)
+    localStorage.removeItem('bmMissionBase');
+    localStorage.removeItem('bmMissionRewards');
+    localStorage.removeItem('bmGoldMissions');
     location.reload();
 }
 
