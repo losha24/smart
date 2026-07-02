@@ -40,7 +40,7 @@ const businessList = [
 ];
 
 const shopItems = [
-    { id: 's1',  name: 'חולצת טי פשוטה',    price: 150,   xp: 25,    icon: '👕' },
+    { id: 's1',  name: 'חולצה פשוטה',    price: 150,   xp: 25,    icon: '👕' },
     { id: 's2',  name: 'ג\'ינס אופנתי',       price: 450,   xp: 70,    icon: '👖' },
     { id: 's3',  name: 'נעלי ספורט',          price: 850,   xp: 130,   icon: '👟' },
     { id: 's4',  name: 'זקט עור',             price: 2200,  xp: 350,   icon: '🧥' },
