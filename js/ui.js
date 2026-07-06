@@ -1,4 +1,4 @@
-/* Smart Money Pro - js/ui.js - v9.9.43 */
+/* Smart Money Pro - js/ui.js - v9.9.44 */
 
 let deferredPrompt;
 let currentTab = 'home';
@@ -442,29 +442,54 @@ function startMiningTimer() {
 }
 
 // ============================================================
-// ⭐ המרת לבנת זהב
+// ⭐ המרת לבנות זהב — עודכן: אפשר להמיר כמה לבנות בבת אחת
 // ============================================================
-window.convertGoldBrick = function() {
+window.convertGoldBricks = function(amount) {
+    const input = document.getElementById('goldSellAmount');
+    let qty = amount;
+    if (qty === undefined || qty === null) {
+        qty = parseInt(input ? input.value : '') || 0;
+    }
+    qty = Math.floor(qty);
+
     if (!window.goldBricks || window.goldBricks <= 0) {
         if (typeof showMsg === 'function') showMsg('❌ אין לבנות זהב להמרה', 'var(--red)');
         return;
     }
+    if (!qty || qty <= 0) {
+        if (typeof showMsg === 'function') showMsg('❌ הכנס כמות תקינה של לבנות', 'var(--red)');
+        return;
+    }
+    if (qty > window.goldBricks) {
+        if (typeof showMsg === 'function') showMsg('❌ אין לך מספיק לבנות (יש לך ' + window.goldBricks + ')', 'var(--red)');
+        return;
+    }
+
+    const totalMoney = qty * 2000000000;
+
     showConfirmModal(
         '🪎 המרת זהב',
-        'להמיר לבנה אחת ל-<b>2,000,000,000 ₪</b>?<br><br>💡 הכסף יכנס ישירות ל<b>בנק</b><br><br>זהב נותרות: <b>' + (window.goldBricks - 1) + '</b>',
+        'להמיר <b>' + qty + '</b> לבנ' + (qty === 1 ? 'ה אחת' : 'ות') + ' זהב ל-<b>' + totalMoney.toLocaleString() + ' ₪</b>?<br><br>💡 הכסף יכנס ישירות ל<b>בנק</b><br><br>זהב נותרות: <b>' + (window.goldBricks - qty) + '</b>',
         function() {
-            window.goldBricks--;
-            window.bank += 2000000000;
+            window.goldBricks -= qty;
+            window.bank += totalMoney;
             const gbEl  = document.getElementById('gold-bricks');
             const hgbEl = document.getElementById('home-gold-bricks');
             if (gbEl)  gbEl.innerText  = window.goldBricks;
             if (hgbEl) hgbEl.innerText = window.goldBricks;
-            if (typeof showMsg  === 'function') showMsg('🏦 המרה בוצעה! +2,000,000,000₪ לבנק', 'var(--yellow)');
+            const sellInput = document.getElementById('goldSellAmount');
+            if (sellInput) { sellInput.value = ''; sellInput.setAttribute('max', window.goldBricks); }
+            if (typeof showMsg  === 'function') showMsg('🏦 הומרו ' + qty + ' לבנות! +' + totalMoney.toLocaleString() + '₪ לבנק', 'var(--yellow)');
             if (typeof saveGame === 'function') saveGame();
             if (typeof updateUI === 'function') updateUI();
             if (typeof window.openTab === 'function') window.openTab('home');
         }
     );
+};
+
+// שמירה על תאימות לאחור — קריאה ישנה בלי פרמטר תמיר לבנה אחת בלבד
+window.convertGoldBrick = function() {
+    window.convertGoldBricks(1);
 };
 
 // ============================================================
@@ -1026,8 +1051,12 @@ window.drawHome = function(c) {
         '<div class="card" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.4);text-align:center;padding:15px;margin-bottom:15px;">' +
         '<div style="font-size:12px;color:var(--yellow);font-weight:bold;margin-bottom:6px;">🪎 לבנות זהב</div>' +
         '<div style="font-size:28px;font-weight:bold;color:var(--yellow);" id="home-gold-bricks">' + (window.goldBricks||0) + '</div>' +
-        '<div style="font-size:11px;opacity:0.6;margin-bottom:10px;">כל לבנה = 2,000,000,000 ₪ לבנק | מצטבר גם אופליין</div>' +
-        '<button onclick="window.convertGoldBrick()" style="background:var(--yellow);color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">🏦 המר לבנה לבנק</button>' +
+        '<div style="font-size:11px;opacity:0.6;margin-bottom:12px;">כל לבנה = 2,000,000,000 ₪ לבנק | מצטבר גם אופליין</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+        '<input id="goldSellAmount" type="number" min="1" max="' + (window.goldBricks||0) + '" placeholder="כמות" style="flex:1;min-width:0;padding:10px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:8px;text-align:center;font-size:14px;">' +
+        '<button onclick="window.convertGoldBricks()" style="flex:1;background:var(--yellow);color:#000;border:none;padding:10px;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">🏦 המר כמות</button>' +
+        '</div>' +
+        '<button onclick="window.convertGoldBricks(window.goldBricks)" style="width:100%;background:rgba(245,158,11,0.15);color:var(--yellow);border:1px solid var(--yellow);padding:10px;border-radius:8px;font-weight:bold;font-size:12px;cursor:pointer;" ' + ((window.goldBricks||0) <= 0 ? 'disabled' : '') + '>💎 המר את כל הלבנות (' + (window.goldBricks||0) + ')</button>' +
         '</div>' +
 
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin:0 0 15px;background:rgba(30,41,59,0.5);border-radius:10px;border:1px solid rgba(51,65,85,0.5);font-size:11px;color:#94a3b8;">' +
@@ -1148,4 +1177,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-console.log('✅ UI.js v9.9.43 loaded');
+console.log('✅ UI.js v9.9.44 loaded');
