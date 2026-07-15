@@ -1,8 +1,10 @@
-/* Smart Money Pro - js/core.js - v9.9.12
-   שינויים: resetGame מנקה גם bmMissionBase/bmMissionRewards/bmGoldMissions (v9.3.0 blackmarket.js)
+/* Smart Money Pro - js/core.js - v9.9.13
+   שינויים: הוספת שדות מעקב ליהלום בחנות (diamondDailyCount, diamondResetAt, diamondsOwned)
+   נשמרים/נטענים ב-saveGame/loadGame. מוקנה ב-activities.js (window.buyDiamond).
+   שאר הקובץ זהה ל-v9.9.12.
 */
 
-const VERSION = "9.9.12";
+const VERSION = "9.9.13";
 const SAVE_KEY = "smartMoneySave_v8_main";
 const MAX_MONEY = 2000000000;
 
@@ -32,6 +34,9 @@ window.policeHeat = 0;
 window.gang = null;
 window.activeShipments = [];
 window.goldBricks = 0;
+window.diamondDailyCount = 0;   // ⭐ v9.9.13 - כמה יהלומים נקנו במחזור הנוכחי
+window.diamondResetAt = 0;      // ⭐ v9.9.13 - מתי המכסה מתאפסת (timestamp)
+window.diamondsOwned = 0;       // ⭐ v9.9.13 - סה"כ יהלומים שנקנו אי פעם (סטטיסטיקה)
 
 if (!localStorage.getItem("deviceID")) {
     localStorage.setItem("deviceID", 'dev_' + Math.random().toString(36).substr(2, 12));
@@ -265,6 +270,9 @@ function loadGame() {
             window.blackMoney      = data.blackMoney      ?? 0;
             window.activeShipments = data.activeShipments || [];
             window.goldBricks      = data.goldBricks      ?? 0;
+            window.diamondDailyCount = data.diamondDailyCount ?? 0;  // ⭐ v9.9.13
+            window.diamondResetAt    = data.diamondResetAt    ?? 0;  // ⭐ v9.9.13
+            window.diamondsOwned     = data.diamondsOwned     ?? 0;  // ⭐ v9.9.13
             window.lastKnownLevel  = getLevelData(window.lifeXP).level;
 
             if (data.lastSaveTime && window.passive > 0) {
@@ -363,7 +371,10 @@ function saveGame() {
         gang:            window.gang         || null,
         blackMoney:      window.blackMoney   || 0,
         activeShipments: window.activeShipments || [],
-        goldBricks:      window.goldBricks      || 0
+        goldBricks:      window.goldBricks      || 0,
+        diamondDailyCount: window.diamondDailyCount || 0,  // ⭐ v9.9.13
+        diamondResetAt:    window.diamondResetAt    || 0,  // ⭐ v9.9.13
+        diamondsOwned:     window.diamondsOwned     || 0   // ⭐ v9.9.13
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify({ data, hash: createHash(data) }));
     window.lastEventTick = Date.now();
