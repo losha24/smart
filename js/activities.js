@@ -1,4 +1,15 @@
-/* Smart Money Pro - js/activities.js - v9.1.1 - Bank removed (lives in economy.js only) */
+/* Smart Money Pro - js/activities.js - v9.1.5
+   שינויים מ-v9.1.4: upgradeShopItem - בונוס ה-XP משדרוג פריט בחנות עכשיו
+   גדל לינארית לפי הרמה החדשה (item.xp * 0.6 * level), כמו שהמחיר כבר גדל.
+   כרטיסי הפריטים בחנות מציגים תצוגה מקדימה של ה-XP הצפוי על גבי כפתור השדרוג.
+   שינויים מ-v9.1.3: מחיר היהלום ירד מ-10 ל-5 לבנות זהב. נוסף טיימר חי
+   (startDiamondTimer) שסופר לאחור עד לאיפוס המכסה היומית ומרענן את
+   הכרטיס אוטומטית כשהוא מגיע לאפס.
+   שינויים מ-v9.1.2: הוספת "יהלום נדיר" בחנות (drawShop), מגבלה 5 ליום
+   (מחזור מתגלגל 24 שעות), מעניק XP = 15% מ-xpForNext הנוכחי.
+   פונקציה חדשה: window.buyDiamond().
+   שאר הקובץ זהה ל-v9.1.2 (bank removed to economy.js, spendMoney/canAfford, recalcPassive).
+*/
 
 // ── נתונים ─────────────────────────────────────────────────
 
@@ -93,6 +104,10 @@ if (!window.carLevels)    window.carLevels    = {};
 if (!window.estateData)   window.estateData   = {};
 if (!window.invBuyPrice)  window.invBuyPrice  = {};
 if (!window.staffData)    window.staffData    = {};
+// ⭐ v9.1.3 - יהלום: אתחול בטיחותי (core.js כבר מגדיר את אלה, אבל ליתר ביטחון)
+if (window.diamondDailyCount === undefined) window.diamondDailyCount = 0;
+if (window.diamondResetAt    === undefined) window.diamondResetAt    = 0;
+if (window.diamondsOwned     === undefined) window.diamondsOwned     = 0;
 
 // ── תשלום חכם: מזומן + בנק ──────────────────────────────
 // מנסה לשלם סכום: קודם ממזומן, אחר כך מבנק אם חסר.
@@ -114,22 +129,6 @@ function spendMoney(amount) {
 function canAfford(amount) {
     return (window.money + window.bank) >= amount;
 }
-
-// ── דף הבית ────────────────────────────────────────────────
-window.drawHome = function(c) {
-    var hasItem = function(id, name) { return window.inventory.includes(id) || window.inventory.includes(name); };
-    var itemIcons = shopItems.filter(function(si) { return hasItem(si.id, si.name); })
-        .map(function(si) { return '<span title="' + si.name + '" style="font-size:32px;background:rgba(255,255,255,0.05);padding:8px;border-radius:10px;display:inline-block;margin:4px;">' + si.icon + '</span>'; }).join('');
-    var carIcons = carList.filter(function(car) { return window.cars.includes(car.name); })
-        .map(function(car) { return '<span title="' + car.name + '" style="font-size:32px;background:rgba(255,255,255,0.05);padding:8px;border-radius:10px;display:inline-block;margin:4px;">' + car.icon + '</span>'; }).join('');
-    var skillIcons = skillList.filter(function(sk) { return window.skills.includes(sk.name); })
-        .map(function(sk) { return '<span title="' + sk.name + '" style="font-size:32px;background:rgba(255,255,255,0.05);padding:8px;border-radius:10px;display:inline-block;margin:4px;">' + sk.icon + '</span>'; }).join('');
-    c.innerHTML = '<div class="fade-in"><h3 style="margin-bottom:15px;text-align:center;">🏠 מרכז שליטה אישי</h3>' +
-        '<div class="card" style="margin-bottom:12px;border-right:4px solid var(--purple);"><div style="font-weight:bold;color:var(--purple);font-size:14px;margin-bottom:10px;">📦 ארון ציוד וחפצים</div><div style="display:flex;flex-wrap:wrap;gap:5px;min-height:45px;">' + (itemIcons || '<small style="opacity:0.4;">הארון ריק...</small>') + '</div></div>' +
-        '<div class="card" style="margin-bottom:12px;border-right:4px solid var(--blue);"><div style="font-weight:bold;color:var(--blue);font-size:14px;margin-bottom:10px;">🏎️ החניה שלי</div><div style="display:flex;flex-wrap:wrap;gap:5px;min-height:45px;">' + (carIcons || '<small style="opacity:0.4;">אין רכבים בחניה</small>') + '</div></div>' +
-        '<div class="card" style="border-right:4px solid var(--green);"><div style="font-weight:bold;color:var(--green);font-size:14px;margin-bottom:10px;">🎓 הסמכות וכישורים</div><div style="display:flex;flex-wrap:wrap;gap:5px;min-height:45px;">' + (skillIcons || '<small style="opacity:0.4;">טרם נרכשו כישורים</small>') + '</div></div>' +
-        '</div>';
-};
 
 // ── עבודות ─────────────────────────────────────────────────
 window.drawWork = function(c) {
@@ -357,21 +356,59 @@ window.sellBusiness = function(id) {
 };
 
 // ── חנות + שדרוגים ─────────────────────────────────────────
+// ⭐ v9.1.3 - כרטיס "יהלום נדיר" הוסף בראש הטאב, לפני shopItems
 window.drawShop = function(c) {
     if (!window.itemLevels) window.itemLevels = {};
-    var html = '<h3>🛒 חנות מותגים</h3><div class="grid-2">';
+
+    // --- בדיקת מחזור יומי ליהלום ---
+    var now = Date.now();
+    if (!window.diamondResetAt || now >= window.diamondResetAt) {
+        window.diamondDailyCount = 0;
+        window.diamondResetAt = now + 24 * 60 * 60 * 1000;
+    }
+    var remaining = Math.max(0, 5 - (window.diamondDailyCount || 0));
+    var hasBricks = (window.goldBricks || 0) >= 5;
+    var canBuyDiamond = remaining > 0 && hasBricks;
+
+    var ld = (typeof getLevelData === 'function') ? getLevelData(window.lifeXP || 0) : { xpForNext: 1000 };
+    var xpPreview = Math.floor(ld.xpForNext * 0.15);
+
+    var diamondBtnLabel;
+    if (remaining <= 0) {
+        diamondBtnLabel = '⏳ המכסה היומית נגמרה (5/5)';
+    } else if (!hasBricks) {
+        diamondBtnLabel = '🪎 חסרות לבנות זהב (יש לך ' + (window.goldBricks || 0) + '/5)';
+    } else {
+        diamondBtnLabel = '💎 קנה יהלום ב-5 🪎';
+    }
+
+    var html = '<h3>🛒 חנות מותגים</h3>';
+
+    html += '<div class="card fade-in" style="text-align:center;border:2px solid var(--yellow);background:rgba(245,158,11,0.06);margin-bottom:15px;">' +
+        '<div style="font-size:40px;margin-bottom:6px;">💎</div>' +
+        '<div style="font-weight:bold;font-size:15px;color:var(--yellow);">יהלום נדיר</div>' +
+        '<div style="font-size:11px;opacity:0.7;margin:6px 0;">מומר מלבנות זהב ישירות לניסיון חיים</div>' +
+        '<div style="font-size:12px;color:var(--purple);margin-bottom:6px;">✨ מעניק כעת: <b>' + xpPreview.toLocaleString() + ' XP</b> (15% מה-XP לרמה הבאה)</div>' +
+        '<div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">נותרו היום: <b style="color:' + (remaining > 0 ? 'var(--green)' : 'var(--red)') + ';">' + remaining + ' / 5</b></div>' +
+        '<div id="diamondTimer" style="font-size:11px;color:var(--yellow);font-weight:bold;margin-bottom:10px;">טוען...</div>' +
+        '<button id="diamondBuyBtn" class="sys-btn" style="width:100%;background:rgba(245,158,11,0.15);border-color:var(--yellow);color:var(--yellow);font-weight:bold;" onclick="buyDiamond()" ' + (canBuyDiamond ? '' : 'disabled') + '>' + diamondBtnLabel + '</button>' +
+        '</div>';
+
+    html += '<div class="grid-2">';
     shopItems.forEach(function(item) {
         var hasItem = window.inventory.includes(item.id) || window.inventory.includes(item.name);
         var level = (window.itemLevels && window.itemLevels[item.id]) ? window.itemLevels[item.id] : 0;
         var upgradePrice = Math.floor(item.price * 0.7 * (level + 1));
+        var upgradeXpPreview = Math.floor(item.xp * 0.6 * (level + 1));
         html += '<div class="card fade-in" style="text-align:center;border:1px solid ' + (hasItem ? 'var(--green)' : 'var(--border)') + ';">' +
             '<div style="font-size:35px;margin-bottom:8px;">' + item.icon + '</div>' +
             '<div style="font-weight:bold;font-size:13px;">' + item.name + (level > 0 ? ' <small style="color:var(--yellow);">(רמה ' + level + ')</small>' : '') + '</div>' +
             '<button class="sys-btn" style="width:100%;margin-top:6px;margin-bottom:4px;" onclick="buyShopItem(\'' + item.id + '\')" ' + (hasItem ? 'disabled' : '') + '>' + (hasItem ? 'בבעלותך' : item.price.toLocaleString() + ' ₪') + '</button>' +
-            (hasItem ? '<button class="sys-btn" style="width:100%;font-size:10px;background:rgba(245,158,11,0.15);color:var(--yellow);border-color:var(--yellow);" onclick="upgradeShopItem(\'' + item.id + '\')">⬆️ שדרג (' + upgradePrice.toLocaleString() + '₪)</button>' : '') +
+            (hasItem ? '<button class="sys-btn" style="width:100%;font-size:10px;background:rgba(245,158,11,0.15);color:var(--yellow);border-color:var(--yellow);" onclick="upgradeShopItem(\'' + item.id + '\')">⬆️ שדרג (' + upgradePrice.toLocaleString() + '₪) +' + upgradeXpPreview.toLocaleString() + ' XP</button>' : '') +
             '</div>';
     });
     c.innerHTML = html + '</div>';
+    startDiamondTimer();
 };
 
 window.buyShopItem = function(id) {
@@ -391,13 +428,94 @@ window.upgradeShopItem = function(id) {
     var level = (window.itemLevels && window.itemLevels[id]) ? window.itemLevels[id] : 0;
     var upgradePrice = Math.floor(item.price * 0.7 * (level + 1));
     if (!canAfford(upgradePrice)) return showMsg('חסר כסף לשדרוג (גם בבנק)!', 'var(--red)');
-    var xpBonus = Math.floor(item.xp * 0.6);
+    // ⭐ v9.1.5 - הבונוס גדל לינארית לפי הרמה החדשה (כמו המחיר), כך שיחס
+    // ה-XP למחיר נשאר קבוע לאורך כל השדרוגים: רמה 1 → 0.6x, רמה 2 → 1.2x וכו'.
+    var xpBonus = Math.floor(item.xp * 0.6 * (level + 1));
     spendMoney(upgradePrice);
     window.itemLevels[id] = level + 1;
     window.lifeXP += xpBonus;
-    showMsg('✨ ' + item.name + ' שודרג לרמה ' + window.itemLevels[id] + '! +' + xpBonus + ' XP', 'var(--yellow)');
+    showMsg('✨ ' + item.name + ' שודרג לרמה ' + window.itemLevels[id] + '! +' + xpBonus.toLocaleString() + ' XP', 'var(--yellow)');
     saveGame(); updateUI(); drawShop(document.getElementById('content'));
 };
+
+// ── יהלום נדיר: קנייה תמורת לבנות זהב ──────────────────────
+// ⭐ v9.1.3
+// מחיר: 10 לבנות זהב | מגבלה: 5 ביום (מחזור מתגלגל 24 שעות)
+// תגמול: XP = 15% מ-xpForNext הנוכחי (מחושב מחדש בכל קנייה, כדי שיישאר
+// משמעותי גם ברמות גבוהות מאוד, בהן ה-XP הדרוש לרמה גדל אקספוננציאלית).
+window.buyDiamond = function() {
+    var now = Date.now();
+
+    // איפוס מחזור אם עבר הזמן
+    if (!window.diamondResetAt || now >= window.diamondResetAt) {
+        window.diamondDailyCount = 0;
+        window.diamondResetAt = now + 24 * 60 * 60 * 1000;
+    }
+
+    if ((window.diamondDailyCount || 0) >= 5) {
+        var msLeft = window.diamondResetAt - now;
+        var h = Math.floor(msLeft / 3600000);
+        var m = Math.floor((msLeft % 3600000) / 60000);
+        showMsg('⏳ הגעת למכסת 5 יהלומים היום. עוד ' + h + 'ש\' ' + m + 'ד\' לאיפוס', 'var(--red)');
+        return;
+    }
+
+    var cost = 5;
+    if ((window.goldBricks || 0) < cost) {
+        showMsg('❌ אין מספיק לבנות זהב! (יש לך ' + (window.goldBricks || 0) + ', צריך ' + cost + ')', 'var(--red)');
+        return;
+    }
+
+    var ld = getLevelData(window.lifeXP || 0);
+    var xpGain = Math.floor(ld.xpForNext * 0.15);
+
+    window.goldBricks -= cost;
+    window.lifeXP += xpGain;
+    window.diamondDailyCount = (window.diamondDailyCount || 0) + 1;
+    window.diamondsOwned = (window.diamondsOwned || 0) + 1;
+
+    showMsg('💎 קנית יהלום! -5 🪎 | +' + xpGain.toLocaleString() + ' XP', 'var(--yellow)');
+
+    saveGame(); updateUI(); window.drawShop(document.getElementById('content'));
+};
+
+// ── טיימר חי למכסת היהלום היומית ────────────────────────────
+// ⭐ v9.1.4 - סופר לאחור בכל שנייה עד לאיפוס המכסה (24 שעות מהרכישה
+// הראשונה במחזור). כשמגיע לאפס: מאפס את המונה, שומר, ומרנדר מחדש את
+// טאב החנות כדי שהכפתור/המונה יתעדכנו אוטומטית בלי לצאת ולהיכנס לטאב.
+var _diamondTimerInterval = null;
+
+function startDiamondTimer() {
+    if (_diamondTimerInterval) { clearInterval(_diamondTimerInterval); _diamondTimerInterval = null; }
+    var update = function() {
+        var timerEl = document.getElementById('diamondTimer');
+        if (!timerEl) { clearInterval(_diamondTimerInterval); _diamondTimerInterval = null; return; }
+
+        var now = Date.now();
+        if (!window.diamondResetAt || now >= window.diamondResetAt) {
+            window.diamondDailyCount = 0;
+            window.diamondResetAt = now + 24 * 60 * 60 * 1000;
+            if (typeof saveGame === 'function') saveGame();
+            var c = document.getElementById('content');
+            if (c && typeof window.drawShop === 'function') window.drawShop(c);
+            return;
+        }
+
+        var timeLeft = window.diamondResetAt - now;
+        var h = Math.floor(timeLeft / 3600000);
+        var m = Math.floor((timeLeft % 3600000) / 60000);
+        var s = Math.floor((timeLeft % 60000) / 1000);
+        var remaining = Math.max(0, 5 - (window.diamondDailyCount || 0));
+
+        if (remaining > 0) {
+            timerEl.innerText = '🔄 המכסה מתאפסת בעוד ' + h + 'ש\' ' + m + 'ד\' ' + s + 'ש\'';
+        } else {
+            timerEl.innerText = '⏳ המכסה תתחדש בעוד ' + h + 'ש\' ' + m + 'ד\' ' + s + 'ש\'';
+        }
+    };
+    update();
+    _diamondTimerInterval = setInterval(update, 1000);
+}
 
 // ── כישורים ─────────────────────────────────────────────────
 window.drawSkills = function(c) {
@@ -600,8 +718,48 @@ window.fireStaff = function(id) {
         });
 };
 
+// ── חישוב מחדש של הכנסה פסיבית ─────────────────────────────
+// נקרא ע"י core.js (loadGame) אחרי סימולציית אירועים אופליין, כדי
+// למנוע דריפט מצטבר. מחשב את window.passive מחדש מהמקור (jobPassive +
+// נדל"ן + עסקים + צוות) על סמך אותן נוסחאות המשמשות בכל draw*/buy*/hire*.
+// ⚠️ בכוונה לא קוראת ל-updateUI() כאן, כדי לא לדרוס את מודל האופליין
+// (showOfflineModal) לפני שהמשתמש הספיק לראות אותו.
+window.recalcPassive = function() {
+    var total = 0;
+
+    // עבודות — jobPassive כבר מוגבל ל-500 בתוך startWork
+    total += (window.jobPassive || 0);
+
+    // נדל"ן
+    estateList.forEach(function(e) {
+        var d = window.estateData[e.id] || { count: 0, level: 0 };
+        if (d.count > 0) {
+            total += (e.passive * 0.75) * d.count * (1 + (d.level || 0) * 0.20);
+        }
+    });
+
+    // עסקים
+    businessList.forEach(function(b) {
+        var level = window.inventory.filter(function(item) { return item === b.id; }).length;
+        if (level > 0) total += b.passive * level;
+    });
+
+    // צוות
+    Object.keys(window.staffData || {}).forEach(function(sid) {
+        var s = staffList.find(function(x) { return x.id === sid; });
+        if (s) {
+            var d = window.staffData[sid];
+            total += (s.passive * 0.7) * (d.count || 0) * (1 + (d.level || 0) * 0.15);
+        }
+    });
+
+    window.passive = Math.max(0, total);
+    return window.passive;
+};
+
 /* ============================================================
-   הערה: window.drawBank, window.executeBankOp/bankProcess,
+   הערה: window.drawHome, window.drawBank, window.executeBankOp/bankProcess,
    window.takeCustomLoan/repayLoan אינם בקובץ זה.
+   דף הבית (drawHome) מנוהל אך ורק ב-ui.js - הוסר כפילות v9.1.2.
    הבנק (הפקדה/משיכה בלבד, ללא הלוואה) מנוהל אך ורק ב-economy.js.
    ============================================================ */
