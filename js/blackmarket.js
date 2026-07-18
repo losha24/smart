@@ -1,3 +1,12 @@
+// Smart Money - Black Market System v9.3.2 - Gold Missions Bugfix Pass
+// v9.3.2 שינויים (רק במבצעי הזהב, שאר הקובץ ללא שינוי כלל):
+//  1. תוקן: לא נבדקה יתרת הכסף לפני תחילת אנימציית הטעינה של מבצע זהב - שחקן בלי מספיק כסף
+//     היה מחכה עד 30 שניות (ברמה הגבוהה) ורק בסוף מקבל הודעת שגיאה. עכשיו הבדיקה קודמת ללחיצה.
+//  2. תוקן: טיימר הקירור של מבצעי הזהב התעדכן רק כל 30 שניות - כפתור יכול היה להישאר
+//     "נעול" עד 28 שניות מיותרות אחרי שהקירור בפועל כבר הסתיים. שונה ל-1 שנייה.
+//  3. נוסף: הצגת סכום פיצוי הכסף השחור (25% מהעלות) בכפתור עצמו במקרה כישלון, כדי שהתשלום
+//     המוצג יהיה שקוף ותואם למה שבאמת קורה בלוגיקה (goldMineAction).
+// ============================================================
 // Smart Money - Black Market System v9.3.1 - Full Economy Balance Pass
 // ============================================================
 // v9.3.1: אחוזי הזכייה במבצעי הזהב הועלו לפי בקשה - רמה 1 = 5% (היה 0.02%),
@@ -170,6 +179,7 @@ function renderGoldMissionBtn(g, lvl) {
     const isLockedLevel = lvl < g.level;
     const onCooldown = !isLockedLevel && remaining > 0;
     const disabled = isLockedLevel || onCooldown;
+    const consolation = Math.floor(g.cost * 0.25);
 
     let statusHtml;
     if (isLockedLevel) {
@@ -179,11 +189,11 @@ function renderGoldMissionBtn(g, lvl) {
         statusHtml = `<div class="risk-tag gold-cd" data-tier="${g.tier}" style="color:#facc15;">⏳ ${h}ש ${m}ד</div>`;
     } else {
         const chanceDisplay = g.chance < 1 ? g.chance.toFixed(2) : g.chance.toFixed(1);
-        statusHtml = `<div class="risk-tag" style="color:#4ade80;">🎲 סיכוי: ${chanceDisplay}%</div>`;
+        statusHtml = `<div class="risk-tag" style="color:#4ade80;">🎲 סיכוי: ${chanceDisplay}%</div><div class="fee-tag">🎁 בכישלון: +${consolation.toLocaleString()} ₪ שחורים</div>`;
     }
 
     return `
-    <button class="btn-work-bm btn-gold" ${disabled ? 'disabled' : ''} onclick="handleBMAction(this, ${parseFloat(g.dur) * 1000}, () => goldMineAction(${g.tier}, ${g.cost}, ${g.chance}))">
+    <button class="btn-work-bm btn-gold" ${disabled ? 'disabled' : ''} onclick="if(window.money < ${g.cost}){bmNotify('❌ שגיאה','אין מספיק כסף למבצע (חסר ' + (${g.cost} - window.money).toLocaleString() + ' ₪)','red');}else{handleBMAction(this, ${parseFloat(g.dur) * 1000}, () => goldMineAction(${g.tier}, ${g.cost}, ${g.chance}))}">
         <span class="progress-overlay-bm"></span>
         <div style="position:relative; z-index:2;">
             <b style="font-size:11px; display:block;">${g.name}</b>
@@ -480,7 +490,7 @@ setInterval(function() {
         }
     });
     if (needsFullRerender) renderBlackMarket();
-}, 30000);
+}, 1000);
 
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById("content")) {
