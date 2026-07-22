@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "com.alexey.smartmoneypro",
-        "sha256_cert_fingerprints": ["2D:DE:C9:75:30:96:0D:56:FB:F2:34:AD:70:96:B8:A6:70:C3:BD:FE:1F:29:63:89:2A:7C:2E:06:93:AC:06:B2"]
+        "sha256_cert_fingerprints": ["41:03:29:E1:29:57:E9:D4:EB:8E:18:4B:C2:F7:23:9D:08:C9:2F:F8:C4:1E:56:FA:60:A0:F2:9E:DF:76:70:A6"]
       }
     }]
