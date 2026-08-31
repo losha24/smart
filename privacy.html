@@ -1,64 +1,210 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מדיניות פרטיות — Smart Money Pro</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #0f172a; color: #f1f5f9; line-height: 1.8; }
-        h1 { color: #38bdf8; border-bottom: 2px solid #38bdf8; padding-bottom: 10px; }
-        h2 { color: #22c55e; margin-top: 30px; }
-        a { color: #38bdf8; }
-        .date { color: #94a3b8; font-size: 14px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מדיניות פרטיות | Privacy Policy - Smart Money Pro</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #f1f5f9;
+    --blue: #38bdf8;
+    --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.7;
+  }
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+  }
+  .header {
+    text-align: center;
+    padding: 25px 0;
+    border-bottom: 2px solid var(--blue);
+    margin-bottom: 25px;
+  }
+  .header h1 { margin: 0; font-size: 22px; color: var(--blue); }
+  .header small { opacity: 0.6; }
+  .lang-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0 30px;
+  }
+  .lang-toggle button {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1px solid var(--blue);
+    background: transparent;
+    color: var(--blue);
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .lang-toggle button.active {
+    background: var(--blue);
+    color: #0f172a;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    margin-top: 0;
+    font-size: 16px;
+    color: var(--blue);
+  }
+  .card p, .card li { font-size: 14px; opacity: 0.92; }
+  ul { padding-inline-start: 20px; margin: 8px 0; }
+  footer {
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.5;
+    margin-top: 30px;
+  }
+  #en { display: none; direction: ltr; text-align: left; }
+</style>
 </head>
 <body>
-    <h1>מדיניות פרטיות — Smart Money Pro</h1>
-    <p class="date">עדכון אחרון: יוני 2026</p>
+<div class="container">
 
-    <h2>1. מבוא</h2>
-    <p>Smart Money Pro ("האפליקציה") היא משחק סימולציה פיננסי. מדיניות פרטיות זו מסבירה כיצד אנו מטפלים במידע.</p>
+  <div class="header">
+    <h1>🛡️ Smart Money Pro</h1>
+    <small>מדיניות פרטיות · Privacy Policy</small>
+  </div>
 
-    <h2>2. מידע שנאסף</h2>
-    <p>האפליקציה אוספת מידע מינימלי בלבד:</p>
-    <ul>
-        <li><b>שם שחקן</b> — שם שתבחר להציג בדירוג העולמי</li>
-        <li><b>נתוני משחק</b> — ניקוד, רמה, ונכסים — נשמרים מקומית במכשיר שלך</li>
-        <li><b>מזהה מכשיר אנונימי</b> — לצורך הדירוג העולמי בלבד</li>
-    </ul>
+  <div class="lang-toggle">
+    <button id="btnHe" class="active" onclick="showLang('he')">עברית</button>
+    <button id="btnEn" onclick="showLang('en')">English</button>
+  </div>
 
-    <h2>3. מידע שלא נאסף</h2>
-    <ul>
-        <li>לא נאספים פרטים אישיים מזהים</li>
-        <li>לא נאספת כתובת אימייל</li>
-        <li>לא נאספים נתוני מיקום</li>
-        <li>לא נאספים נתוני תשלום (האפליקציה חינמית לחלוטין)</li>
-    </ul>
+  <!-- ===================== HEBREW ===================== -->
+  <div id="he">
+    <p style="opacity:0.6; font-size:13px;">עודכן לאחרונה: אוגוסט 2026</p>
 
-    <h2>4. שימוש במידע</h2>
-    <p>המידע משמש אך ורק ל:</p>
-    <ul>
-        <li>הצגת שמך בדירוג העולמי (אם בחרת בכך)</li>
-        <li>שמירת התקדמות המשחק שלך</li>
-    </ul>
+    <div class="card">
+      <h2>👤 מי אנחנו</h2>
+      <p>Smart Money Pro הוא משחק סימולציה כלכלית (idle/incremental) המפותח על ידי מפתח עצמאי, אלכסיי זבודיסקר ("המפתח"). ניתן ליצור קשר בכתובת: <b>losha22@gmail.com</b>.</p>
+    </div>
 
-    <h2>5. שיתוף מידע</h2>
-    <p>איננו מוכרים, סוחרים, או משתפים מידע אישי עם צדדים שלישיים.</p>
-    <p>הדירוג העולמי מופעל על ידי <b>Firebase (Google)</b> — מדיניות הפרטיות של Google חלה: <a href="https://policies.google.com/privacy" target="_blank">policies.google.com/privacy</a></p>
+    <div class="card">
+      <h2>📦 אילו נתונים נאספים</h2>
+      <ul>
+        <li><b>מזהה מכשיר (Device ID):</b> מזהה אקראי שנוצר אוטומטית ונשמר על המכשיר שלך. הוא אינו מכיל ואינו קשור לשם האמיתי שלך, כתובת האימייל שלך או כל פרט מזהה אישי אחר.</li>
+        <li><b>שם שחקן:</b> שם בדוי שאתה בוחר בעצמך בתחילת המשחק, המוצג בטבלת הדירוגים (Leaderboard).</li>
+        <li><b>נתוני התקדמות במשחק:</b> כגון כמות כסף, רמה, ולבנות זהב שנצברו — לצורך הצגתם בטבלת הדירוגים העולמית.</li>
+      </ul>
+      <p>אנו <b>לא</b> אוספים: שם אמיתי, כתובת אימייל, מספר טלפון, מיקום גיאוגרפי, אנשי קשר, תמונות, או כל מידע מזהה אישי אחר.</p>
+    </div>
 
-    <h2>6. אבטחת מידע</h2>
-    <p>נתוני המשחק נשמרים מקומית במכשיר שלך. הדירוג מאובטח דרך Firebase.</p>
+    <div class="card">
+      <h2>💾 היכן נשמר המידע</h2>
+      <ul>
+        <li><b>מקומית במכשיר:</b> עיקר נתוני ההתקדמות במשחק (Local Storage) נשמרים ישירות על המכשיר שלך ואינם עוזבים אותו.</li>
+        <li><b>Firebase Realtime Database (Google):</b> נתוני טבלת הדירוגים (שם שחקן, רמה, מזהה מכשיר אנונימי) נשמרים בשרתי Firebase של גוגל לצורך הפעלת הדירוג העולמי בין שחקנים.</li>
+      </ul>
+    </div>
 
-    <h2>7. ילדים</h2>
-    <p>האפליקציה מיועדת לגילאי 12+. איננו אוספים מידע מילדים מתחת לגיל 13 ביודעין.</p>
+    <div class="card">
+      <h2>🚫 מה אנחנו לא עושים</h2>
+      <ul>
+        <li>איננו מציגים פרסומות (Ads) באפליקציה.</li>
+        <li>איננו משתמשים בכלי מעקב או אנליטיקס של צד שלישי.</li>
+        <li>איננו מוכרים, משכירים או משתפים מידע עם צדדים שלישיים למטרות שיווקיות.</li>
+      </ul>
+    </div>
 
-    <h2>8. שינויים במדיניות</h2>
-    <p>נעדכן עמוד זה במקרה של שינויים. תאריך העדכון האחרון מוצג בראש העמוד.</p>
+    <div class="card">
+      <h2>🗑️ מחיקת מידע</h2>
+      <p>ניתן למחוק את כל נתוני ההתקדמות המקומיים בכל עת דרך כפתור "איפוס חשבון" בתוך המשחק. למחיקת הרשומה שלך מטבלת הדירוגים העולמית, ניתן לפנות למפתח בכתובת המייל שלמעלה בבקשה למחיקה, תוך ציון מזהה המכשיר (Device ID) הרלוונטי אם ידוע.</p>
+    </div>
 
-    <h2>9. יצירת קשר</h2>
-    <p>לשאלות: <a href="mailto:losha22@gmail.com">losha22@gmail.com</a></p>
+    <div class="card">
+      <h2>👶 פרטיות ילדים</h2>
+      <p>האפליקציה אינה מיועדת לילדים מתחת לגיל 13 ואינה אוספת ביודעין מידע מזהה אישי מילדים. אם נודע לנו שנאסף מידע כאמור, נפעל למחיקתו.</p>
+    </div>
 
-    <hr style="border-color:#334155; margin-top:40px;">
-    <p style="color:#64748b; font-size:12px; text-align:center;">© 2026 Smart Money Pro | אלכסיי זבודיסקר</p>
+    <div class="card">
+      <h2>🔄 שינויים במדיניות</h2>
+      <p>מדיניות זו עשויה להתעדכן מעת לעת. שינויים מהותיים יפורסמו בעמוד זה עם תאריך עדכון חדש.</p>
+    </div>
+  </div>
+
+  <!-- ===================== ENGLISH ===================== -->
+  <div id="en">
+    <p style="opacity:0.6; font-size:13px;">Last updated: August 2026</p>
+
+    <div class="card">
+      <h2>👤 About Us</h2>
+      <p>Smart Money Pro is an idle/incremental financial simulation game developed by an independent developer, Aleksey Zabudiskar ("the Developer"). Contact: <b>losha22@gmail.com</b>.</p>
+    </div>
+
+    <div class="card">
+      <h2>📦 Data We Collect</h2>
+      <ul>
+        <li><b>Device ID:</b> A randomly generated identifier stored on your device. It does not contain and is not linked to your real name, email address, or any other personally identifiable information.</li>
+        <li><b>Player Name:</b> A nickname you choose yourself at the start of the game, displayed on the public Leaderboard.</li>
+        <li><b>Game Progress Data:</b> Such as in-game money, level, and gold bricks earned, used solely to display the global leaderboard.</li>
+      </ul>
+      <p>We do <b>not</b> collect: your real name, email address, phone number, geographic location, contacts, photos, or any other personal identifying information.</p>
+    </div>
+
+    <div class="card">
+      <h2>💾 Where Data Is Stored</h2>
+      <ul>
+        <li><b>On your device:</b> Most game progress data (Local Storage) is saved directly on your device and never leaves it.</li>
+        <li><b>Firebase Realtime Database (Google):</b> Leaderboard data (player name, level, anonymous device ID) is stored on Google's Firebase servers to power the global leaderboard between players.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>🚫 What We Don't Do</h2>
+      <ul>
+        <li>We do not display any advertisements in the app.</li>
+        <li>We do not use third-party tracking or analytics tools.</li>
+        <li>We do not sell, rent, or share your data with third parties for marketing purposes.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>🗑️ Data Deletion</h2>
+      <p>You may delete all local progress data at any time using the "Reset Account" button inside the game. To request removal of your entry from the global leaderboard, contact the developer at the email above, including your Device ID if known.</p>
+    </div>
+
+    <div class="card">
+      <h2>👶 Children's Privacy</h2>
+      <p>This app is not directed at children under 13 and does not knowingly collect personal information from children. If we become aware that such data was collected, we will take steps to delete it.</p>
+    </div>
+
+    <div class="card">
+      <h2>🔄 Changes to This Policy</h2>
+      <p>This policy may be updated from time to time. Material changes will be reflected on this page with a new update date.</p>
+    </div>
+  </div>
+
+  <footer>© 2026 Smart Money Pro · Aleksey Zabudiskar (Losha)</footer>
+</div>
+
+<script>
+function showLang(lang) {
+  document.getElementById('he').style.display = lang === 'he' ? 'block' : 'none';
+  document.getElementById('en').style.display = lang === 'en' ? 'block' : 'none';
+  document.getElementById('btnHe').classList.toggle('active', lang === 'he');
+  document.getElementById('btnEn').classList.toggle('active', lang === 'en');
+  document.documentElement.setAttribute('dir', lang === 'he' ? 'rtl' : 'ltr');
+  document.documentElement.setAttribute('lang', lang);
+}
+</script>
 </body>
 </html>
