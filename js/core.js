@@ -1,10 +1,13 @@
-/* Smart Money Pro - js/core.js - v9.9.13
-   שינויים: הוספת שדות מעקב ליהלום בחנות (diamondDailyCount, diamondResetAt, diamondsOwned)
-   נשמרים/נטענים ב-saveGame/loadGame. מוקנה ב-activities.js (window.buyDiamond).
-   שאר הקובץ זהה ל-v9.9.12.
+/* Smart Money Pro - js/core.js - v9.9.15
+   שינויים מ-v9.9.14: הוספת "קוד שחזור" קצר (6 תווים) במקום להזדקק למזהה מכשיר מלא:
+   - randomRecoveryCode() / fbEnsureRecoveryCode(): מייצר קוד קצר וייחודי, שומר אותו
+     ב-/recoveryCodes/{code} => deviceId, ושומר מקומית ב-localStorage('myRecoveryCode')
+   - fbResolveRecoveryCode(code): הופך קוד קצר בחזרה ל-deviceId
+   - window.restoreFromDeviceId מקבל עכשיו גם קוד קצר וגם מזהה מכשיר מלא (dev_...)
+   שאר הקובץ זהה ל-v9.9.14.
 */
 
-const VERSION = "9.9.13";
+const VERSION = "9.9.15";
 const SAVE_KEY = "smartMoneySave_v8_main";
 const MAX_MONEY = 2000000000;
 
@@ -214,6 +217,187 @@ async function applyAdminOverride() {
         console.warn('applyAdminOverride failed:', e);
     }
 }
+
+// ============================================================
+// ⭐ v9.9.14 - גיבוי מלא לענן (כל משאבי השחקן, לא רק לידרבורד)
+// ============================================================
+
+// אוסף לחבילה אחת את כל מה שמפוזר היום בין SAVE_KEY לבין מפתחות localStorage נפרדים
+// (שוק שחור: currentLaunderFee/bmMissionBase/bmMissionRewards/bmGoldMissions,
+//  כלא: jailUntil/jailPassiveSaved/lastJailTime, ויומן אירועים)
+function buildFullBackupPayload() {
+    let core = {};
+    try {
+        const saved = localStorage.getItem(SAVE_KEY);
+        if (saved) {
+            const sd = JSON.parse(saved);
+            core = sd.data || sd;
+        }
+    } catch(e) { console.warn('buildFullBackupPayload: saved data parse failed', e); }
+
+    let eventLog = [];
+    try { eventLog = JSON.parse(localStorage.getItem('eventLog') || '[]').slice(-100); } catch(e) {}
+
+    let bmMissionBase = {}, bmMissionRewards = {}, bmGoldMissions = {};
+    try { bmMissionBase    = JSON.parse(localStorage.getItem('bmMissionBase')    || '{}'); } catch(e) {}
+    try { bmMissionRewards = JSON.parse(localStorage.getItem('bmMissionRewards') || '{}'); } catch(e) {}
+    try { bmGoldMissions   = JSON.parse(localStorage.getItem('bmGoldMissions')   || '{}'); } catch(e) {}
+
+    return {
+        core: core,
+        blackmarket: {
+            currentLaunderFee: parseInt(localStorage.getItem('launderFee')) || 25,
+            bmMissionBase:     bmMissionBase,
+            bmMissionRewards:  bmMissionRewards,
+            bmGoldMissions:    bmGoldMissions
+        },
+        jail: {
+            jailUntil:        parseInt(localStorage.getItem('jailUntil'))         || 0,
+            jailPassiveSaved: parseFloat(localStorage.getItem('jailPassiveSaved')) || 0,
+            lastJailTime:     parseInt(localStorage.getItem('lastJailTime'))       || 0
+        },
+        eventLog: eventLog,
+        deviceId: window.deviceID,
+        ts: Date.now()
+    };
+}
+
+window._lastCloudBackupTs = 0;
+
+async function fbBackupFullSave(force) {
+    try {
+        const deviceId = window.deviceID || localStorage.getItem('deviceID');
+        if (!deviceId) return false;
+        // מונע כתיבות כפולות צפופות מדי (למשל שני טיימרים שקוראים יחד)
+        const now = Date.now();
+        if (!force && (now - window._lastCloudBackupTs) < 5000) return false;
+        window._lastCloudBackupTs = now;
+
+        const payload = buildFullBackupPayload();
+        const res = await fetch(FB_BASE + '/players/' + deviceId + '/backup.json', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) { console.warn('fbBackupFullSave failed:', res.status); return false; }
+        localStorage.setItem('lastCloudBackupTs', now.toString());
+        return true;
+    } catch(e) { console.warn('fbBackupFullSave error:', e); return false; }
+}
+window.fbBackupFullSave = fbBackupFullSave;
+
+async function fbRestoreFromBackup(sourceDeviceId) {
+    try {
+        if (!sourceDeviceId) return null;
+        const res = await fetch(FB_BASE + '/players/' + sourceDeviceId.trim() + '/backup.json');
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data || !data.core) return null;
+        return data;
+    } catch(e) { console.warn('fbRestoreFromBackup error:', e); return null; }
+}
+window.fbRestoreFromBackup = fbRestoreFromBackup;
+
+// ============================================================
+// ⭐ v9.9.15 - קוד שחזור קצר (6 תווים) במקום מזהה מכשיר מלא
+// ============================================================
+function randomRecoveryCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // בלי 0/O ו-1/I/L - קל להקליד בלי טעויות
+    let code = '';
+    for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    return code;
+}
+
+async function fbEnsureRecoveryCode() {
+    try {
+        const existing = localStorage.getItem('myRecoveryCode');
+        if (existing) {
+            window.myRecoveryCode = existing;
+            const el = document.getElementById('myRecoveryCodeDisplay');
+            if (el) el.value = existing;
+            return existing;
+        }
+
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const candidate = randomRecoveryCode();
+            const checkRes = await fetch(FB_BASE + '/recoveryCodes/' + candidate + '.json');
+            const taken = checkRes.ok ? await checkRes.json() : null;
+            if (!taken) {
+                const putRes = await fetch(FB_BASE + '/recoveryCodes/' + candidate + '.json', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(window.deviceID)
+                });
+                if (putRes.ok) {
+                    localStorage.setItem('myRecoveryCode', candidate);
+                    window.myRecoveryCode = candidate;
+                    // אם דף הבית כבר מוצג - עדכן את השדה מיד בלי לחכות לרינדור הבא
+                    const displayEl = document.getElementById('myRecoveryCodeDisplay');
+                    if (displayEl) displayEl.value = candidate;
+                    return candidate;
+                }
+            }
+        }
+        return null;
+    } catch(e) { console.warn('fbEnsureRecoveryCode failed:', e); return null; }
+}
+window.fbEnsureRecoveryCode = fbEnsureRecoveryCode;
+
+async function fbResolveRecoveryCode(code) {
+    try {
+        const res = await fetch(FB_BASE + '/recoveryCodes/' + code.trim().toUpperCase() + '.json');
+        if (!res.ok) return null;
+        const deviceId = await res.json();
+        return deviceId || null;
+    } catch(e) { return null; }
+}
+window.fbResolveRecoveryCode = fbResolveRecoveryCode;
+
+// נקרא מה-UI (כפתור "שחזר נתונים") — מקבל קוד שחזור קצר (למשל "K7X29P") או מזהה מכשיר מלא (dev_...)
+window.restoreFromDeviceId = async function(inputValue) {
+    let sourceDeviceId = (inputValue || '').trim();
+    if (!sourceDeviceId) return false;
+
+    if (!sourceDeviceId.startsWith('dev_')) {
+        // כנראה קוד שחזור קצר - תרגם אותו למזהה מכשיר אמיתי קודם
+        const resolved = await fbResolveRecoveryCode(sourceDeviceId);
+        if (!resolved) {
+            if (typeof showMsg === 'function') showMsg('❌ קוד שחזור לא נמצא - בדוק שהקלדת נכון', 'var(--red)');
+            return false;
+        }
+        sourceDeviceId = resolved;
+    }
+
+    const backup = await fbRestoreFromBackup(sourceDeviceId);
+    if (!backup) {
+        if (typeof showMsg === 'function') showMsg('❌ לא נמצא גיבוי עבור המזהה הזה', 'var(--red)');
+        return false;
+    }
+    try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({ data: backup.core, hash: createHash(backup.core) }));
+        if (backup.blackmarket) {
+            localStorage.setItem('launderFee', backup.blackmarket.currentLaunderFee || 25);
+            localStorage.setItem('bmMissionBase', JSON.stringify(backup.blackmarket.bmMissionBase || {}));
+            localStorage.setItem('bmMissionRewards', JSON.stringify(backup.blackmarket.bmMissionRewards || {}));
+            localStorage.setItem('bmGoldMissions', JSON.stringify(backup.blackmarket.bmGoldMissions || {}));
+        }
+        if (backup.jail) {
+            localStorage.setItem('jailUntil', backup.jail.jailUntil || 0);
+            localStorage.setItem('jailPassiveSaved', backup.jail.jailPassiveSaved || 0);
+            localStorage.setItem('lastJailTime', backup.jail.lastJailTime || 0);
+        }
+        if (backup.eventLog) localStorage.setItem('eventLog', JSON.stringify(backup.eventLog));
+        // שים לב: deviceID של המכשיר הנוכחי לא משתנה — הגיבוי רק מייבא את הנתונים אליו,
+        // וההעתקה הבאה (כל 15 שניות) תשמור אותם תחת ה-deviceId החדש.
+        if (typeof showMsg === 'function') showMsg('✅ הנתונים שוחזרו! טוען מחדש...', 'var(--green)');
+        setTimeout(() => location.reload(), 1200);
+        return true;
+    } catch(e) {
+        console.error('restoreFromDeviceId apply failed:', e);
+        if (typeof showMsg === 'function') showMsg('❌ שגיאה בשחזור הנתונים', 'var(--red)');
+        return false;
+    }
+};
 
 function loadGame() {
     try {
@@ -467,7 +651,10 @@ setInterval(() => {
     }
 }, 1000);
 
-setInterval(saveGame, 15000);
+setInterval(() => {
+    saveGame();
+    fbBackupFullSave(); // ⭐ v9.9.14 - מגבה את כל המשאבים לענן יחד עם כל שמירה אוטומטית
+}, 15000);
 
 window.nextEventTime = parseInt(localStorage.getItem('nextEventTime')) || 60;
 const EVENT_INTERVAL = 60;
@@ -511,5 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         updateUI();
         startEventTimer();
+        fbBackupFullSave(true); // ⭐ v9.9.14 - מגבה גיבוי ראשוני מיד עם טעינת המשחק
+        fbEnsureRecoveryCode(); // ⭐ v9.9.15 - מוודא שיש קוד שחזור קצר למכשיר הזה
     }, 200);
 });
