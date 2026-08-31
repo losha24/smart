@@ -1,4 +1,8 @@
-/* Smart Money Pro - js/ui.js - v9.9.44 */
+/* Smart Money Pro - js/ui.js - v9.9.46
+   שינויים מ-v9.9.45: כרטיס "☁️ גיבוי ושחזור" בדף הבית עודכן להציג קוד שחזור קצר
+   (6 תווים, מ-core.js v9.9.15 - window.myRecoveryCode) במקום מזהה מכשיר מלא כברירת מחדל.
+   שדה השחזור מקבל גם קוד קצר וגם מזהה מכשיר מלא.
+*/
 
 let deferredPrompt;
 let currentTab = 'home';
@@ -1080,6 +1084,20 @@ window.drawHome = function(c) {
         '</div></div>' +
         '<div id="event-log-container"><div style="text-align:center;opacity:0.4;padding:10px;font-size:12px;">טוען...</div></div></div>' +
 
+        // ⭐ v9.9.46 - כרטיס גיבוי ושחזור ענן (קוד שחזור קצר במקום מזהה מכשיר מלא)
+        '<div class="card" style="padding:14px;background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.25);margin-top:15px;">' +
+        '<div style="font-size:12px;font-weight:bold;color:var(--blue);margin-bottom:8px;">☁️ גיבוי ושחזור</div>' +
+        '<div style="font-size:11px;opacity:0.7;margin-bottom:8px;">כל ההתקדמות מגובה אוטומטית לענן כל 15 שניות. שמור את קוד השחזור שלך כדי לשחזר במכשיר אחר:</div>' +
+        '<div style="display:flex;gap:6px;margin-bottom:10px;">' +
+        '<input id="myRecoveryCodeDisplay" type="text" readonly value="' + (window.myRecoveryCode || 'טוען...') + '" style="flex:1;min-width:0;padding:10px;background:#0f172a;color:var(--yellow);border:1px solid #334155;border-radius:6px;font-size:16px;font-weight:bold;letter-spacing:2px;text-align:center;">' +
+        '<button class="sys-btn" style="padding:8px 12px;" onclick="copyRecoveryCode()">📋 העתק</button>' +
+        '</div>' +
+        '<div style="font-size:11px;opacity:0.7;margin-bottom:6px;">יש לך קוד שחזור ממכשיר קודם? הדבק כאן:</div>' +
+        '<div style="display:flex;gap:6px;">' +
+        '<input id="restoreDeviceIdInput" type="text" placeholder="קוד שחזור (למשל K7X29P)" style="flex:1;min-width:0;padding:8px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:6px;font-size:12px;text-align:center;text-transform:uppercase;">' +
+        '<button class="sys-btn" style="padding:8px 12px;background:rgba(245,158,11,0.15);color:var(--yellow);border-color:var(--yellow);" onclick="handleRestoreClick()">🔄 שחזר</button>' +
+        '</div></div>' +
+
         '<div id="install-container" style="margin-top:20px;"></div>' +
         '<button class="sys-btn" style="border:1px solid #451a1a;color:#ef4444;margin-top:15px;font-size:11px;padding:10px;width:100%;opacity:0.7;" onclick="if(confirm(\'לאפס הכל?\')) resetGame()">🗑️ איפוס חשבון</button>' +
         '</div>';
@@ -1155,6 +1173,46 @@ window.clearEventLog = function() {
     if (typeof showMsg==='function') showMsg('🗑️ יומן אירועים נוקה', 'var(--blue)');
 };
 
+// ⭐ v9.9.46 - גיבוי ושחזור ענן (קוד שחזור קצר)
+window.copyRecoveryCode = function() {
+    const input = document.getElementById('myRecoveryCodeDisplay');
+    if (!input || !input.value || input.value === 'טוען...') {
+        if (typeof showMsg === 'function') showMsg('⏳ הקוד עדיין נטען, נסה שוב בעוד רגע', 'var(--yellow)');
+        return;
+    }
+    input.select();
+    input.setSelectionRange(0, 99999);
+    try {
+        navigator.clipboard.writeText(input.value).then(function() {
+            if (typeof showMsg === 'function') showMsg('📋 קוד השחזור הועתק! שמור אותו במקום בטוח', 'var(--blue)');
+        }).catch(function() {
+            document.execCommand('copy');
+            if (typeof showMsg === 'function') showMsg('📋 קוד השחזור הועתק!', 'var(--blue)');
+        });
+    } catch(e) {
+        document.execCommand('copy');
+        if (typeof showMsg === 'function') showMsg('📋 קוד השחזור הועתק!', 'var(--blue)');
+    }
+};
+
+window.handleRestoreClick = function() {
+    const input = document.getElementById('restoreDeviceIdInput');
+    const code = input ? input.value.trim() : '';
+    if (!code) { if (typeof showMsg === 'function') showMsg('הכנס קוד שחזור', 'var(--red)'); return; }
+    if (window.myRecoveryCode && code.toUpperCase() === window.myRecoveryCode.toUpperCase()) {
+        if (typeof showMsg === 'function') showMsg('זה כבר קוד השחזור של המכשיר הזה', 'var(--yellow)');
+        return;
+    }
+    showConfirmModal(
+        '☁️ שחזור נתונים',
+        'זה ידרוס את כל ההתקדמות הנוכחית במכשיר הזה בגיבוי מהקוד:<br><b style="font-size:16px;letter-spacing:2px;">' + code.toUpperCase() + '</b><br><br>להמשיך?',
+        function() {
+            if (typeof showMsg === 'function') showMsg('⏳ מחפש גיבוי...', 'var(--blue)');
+            window.restoreFromDeviceId(code);
+        }
+    );
+};
+
 function renderInstallBtn() {
     const cont = document.getElementById('install-container');
     if (!cont || window.matchMedia('(display-mode: standalone)').matches || !deferredPrompt) return;
@@ -1177,4 +1235,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-console.log('✅ UI.js v9.9.44 loaded');
+console.log('✅ UI.js v9.9.46 loaded');
