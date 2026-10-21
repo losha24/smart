@@ -71,6 +71,7 @@ async function fbLoadConfig() {
 
 async function syncPlayerData() {
     try {
+        if (window.seasonId === undefined) return false; // ⭐ עונות - ממתינים לבדיקת עונה לפני כתיבה לדירוג
         const deviceId = getDeviceId();
         const ld = getLevelData(window.lifeXP || 0);
         window.goldBricks = window.goldBricks || 0;
@@ -80,6 +81,7 @@ async function syncPlayerData() {
             level:    ld.level,
             xp:       window.lifeXP || 0,
             deviceId: deviceId,   // ⭐ נשמר לצורך Rules
+            season:   window.seasonId, // ⭐ עונות - רשומות מעונה קודמת מסוננות מהדירוג
             ts:       Date.now()
         };
         let url = FB_URL + '/leaderboard/' + deviceId + '.json';
@@ -110,6 +112,7 @@ async function fbGetLeaderboard() {
         const data = await res.json();
         if (!data) return [];
         return Object.entries(data)
+            .filter(([id, p]) => (p.season || 0) === (window.seasonId || 0)) // ⭐ עונות
             .map(([id, p]) => ({ ...p, id }))
             .sort((a, b) => (b.bricks || 0) - (a.bricks || 0) || (b.level || 1) - (a.level || 1))
             .slice(0, 5);
@@ -122,7 +125,9 @@ async function fbGetAllPlayers() {
         if (!res.ok) return null;
         const data = await res.json();
         if (!data) return [];
-        return Object.entries(data).map(([id, p]) => ({
+        return Object.entries(data)
+            .filter(([id, p]) => (p.season || 0) === (window.seasonId || 0)) // ⭐ עונות
+            .map(([id, p]) => ({
             id, name: p.name || 'שחקן אנונימי', bricks: p.bricks || 0, level: p.level || 1, xp: p.xp || 0
         }));
     } catch(e) { return null; }
@@ -814,6 +819,7 @@ window.openAdminPanel = function() {
                 bricks: updatedBricks,
                 level:  updatedLevel,
                 xp:     updatedXp,
+                season: window.seasonId || 0, // ⭐ עונות - בלי זה השחקן נעלם מהדירוג אחרי עריכה
                 ts:     Date.now()
             };
 
