@@ -257,6 +257,7 @@ function buildFullBackupPayload() {
             lastJailTime:     parseInt(localStorage.getItem('lastJailTime'))       || 0
         },
         eventLog: eventLog,
+        season: parseInt(localStorage.getItem('seasonId')) || 0, // ⭐ עונות - מונע שחזור גיבוי מעונה קודמת
         deviceId: window.deviceID,
         ts: Date.now()
     };
@@ -265,6 +266,7 @@ function buildFullBackupPayload() {
 window._lastCloudBackupTs = 0;
 
 async function fbBackupFullSave(force) {
+    if (window._resetting) return false; // ⭐ עונות - לא מגבים בזמן איפוס עונה
     try {
         const deviceId = window.deviceID || localStorage.getItem('deviceID');
         if (!deviceId) return false;
@@ -371,6 +373,11 @@ window.restoreFromDeviceId = async function(inputValue) {
     const backup = await fbRestoreFromBackup(sourceDeviceId);
     if (!backup) {
         if (typeof showMsg === 'function') showMsg('❌ לא נמצא גיבוי עבור המזהה הזה', 'var(--red)');
+        return false;
+    }
+    // ⭐ עונות - לא משחזרים גיבוי שנוצר בעונה קודמת
+    if ((backup.season || 0) < (parseInt(localStorage.getItem('seasonId')) || 0)) {
+        if (typeof showMsg === 'function') showMsg('❌ הגיבוי שייך לעונה קודמת', 'var(--red)');
         return false;
     }
     try {
@@ -526,6 +533,7 @@ function loadGame() {
 }
 
 function saveGame() {
+    if (window._resetting) return; // ⭐ עונות - חוסם שמירה בזמן איפוס עונה
     window.lastSaveTime  = Date.now();
     window.lastEventTick = window.lastEventTick || Date.now();
     const data = {
