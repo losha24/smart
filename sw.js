@@ -6,7 +6,7 @@
    Firebase   → מדולג (חיצוני)
 */
 
-const CACHE_NAME = 'smart-money-pro-v9.9.2';
+const CACHE_NAME = 'smart-money-pro-v9.9.3';
 const BASE = '/smart/';
 
 const CORE_ASSETS = [
@@ -27,7 +27,8 @@ const JS_ASSETS = [
   BASE + 'js/activities.js',
   BASE + 'js/economy.js',
   BASE + 'js/ui.js',
-  BASE + 'js/blackmarket.js'
+  BASE + 'js/blackmarket.js',
+  BASE + 'js/season.js'
 ];
 
 const ALL_ASSETS = [...CORE_ASSETS, ...JS_ASSETS];
